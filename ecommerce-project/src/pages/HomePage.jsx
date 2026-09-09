@@ -39,9 +39,6 @@ export function HomePage() {
         </a>
       </div>
 
-
-
-
       <div className="products-grid">
         <div className="product-container">
           <div className="product-image-container">
@@ -206,7 +203,6 @@ export function HomePage() {
             <img src="images/icons/checkmark.png" />
             Added
           </div>
-
 
           <button className="add-to-cart-button button-primary">
             Add to Cart
