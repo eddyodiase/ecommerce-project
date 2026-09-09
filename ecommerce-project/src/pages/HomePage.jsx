@@ -1,5 +1,6 @@
-import ",/header.css";
+import "./header.css";
 import "./HomePage.css";
+
 export function HomePage() {
   return (
 <>
@@ -215,28 +216,5 @@ export function HomePage() {
 
     </>
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  );}
+ );}
    
