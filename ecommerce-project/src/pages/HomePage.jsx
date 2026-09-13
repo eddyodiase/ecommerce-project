@@ -1,14 +1,17 @@
+import { useEffect } from "react";
 import "./header.css";
 import "./HomePage.css";
 
 export function HomePage() {
+  useEffect(() => {
+    document.title = "ecommerce project";
+  }, []);
+
   return (
 <>
-
-<title>ecommerce project</title>
       <header className="header">
       <div className="left-section">
-        <a href="index.html" className="header-link">
+        <a href="/" className="header-link">
           <img className="logo"
             src="/images/logo-white.png" />
           <img className="mobile-logo"
@@ -35,7 +38,7 @@ export function HomePage() {
         </a>
 
 
-        <a className="cart-link header-link" href="checkout.html">
+        <a className="cart-link header-link" href="/checkout" target="_blank" rel="noopener noreferrer">
           <img className="cart-icon" src="/images/icons/cart-icon.png" />
           <div className="cart-quantity">3</div>
           <div className="cart-text">Cart</div>
