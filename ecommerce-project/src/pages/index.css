@@ -82,8 +82,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-
-  height: 180px;
+  /* let images size naturally while keeping them centered */
+  height: auto;
   margin-bottom: 20px;
 }
 
@@ -91,12 +91,13 @@
   /* Images overflow the container by default. To prevent this, set
      max-width and max-height to 100% to stay inside container. */
   max-width: 100%;
-  max-height: 100%;
+  height: auto;
+  object-fit: contain;
   border-radius: 5px;
 }
 
 .home-page .product-name {
-  height: 40px;
+  height: 20px;
   margin-bottom: 5px;
 }
 
@@ -107,7 +108,7 @@
 }
 
 .home-page .product-rating-stars {
-  width: 100px;
+  width: 40px;
   margin-right: 6px;
 }
 

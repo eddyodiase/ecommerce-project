@@ -119,7 +119,9 @@
 
 .orders-page .product-image-container img {
   max-width: 110px;
-  max-height: 110px;
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .orders-page .product-name {
@@ -189,7 +191,9 @@
 
   .orders-page .product-image-container img {
     max-width: 150px;
-    max-height: 150px;
+    width: 100%;
+    height: auto;
+    display: block;
   }
 
   .orders-page .product-name {

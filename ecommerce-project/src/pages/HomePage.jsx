@@ -4,12 +4,13 @@ import "./HomePage.css";
 export function HomePage() {
   return (
 <>
+      <header className="header">
       <div className="left-section">
         <a href="index.html" className="header-link">
           <img className="logo"
-            src="images/logo-white.png" />
+            src="/images/logo-white.png" />
           <img className="mobile-logo"
-            src="images/mobile-logo-white.png" />
+            src="/images/mobile-logo-white.png" />
         </a>
       </div>
 
@@ -19,7 +20,7 @@ export function HomePage() {
 
 
         <button className="search-button">
-          <img className="search-icon" src="images/icons/search-icon.png" />
+          <img className="search-icon" src="/images/icons/search-icon.png" />
         </button>
       </div>
 
@@ -33,17 +34,20 @@ export function HomePage() {
 
 
         <a className="cart-link header-link" href="checkout.html">
-          <img className="cart-icon" src="images/icons/cart-icon.png" />
+          <img className="cart-icon" src="/images/icons/cart-icon.png" />
           <div className="cart-quantity">3</div>
           <div className="cart-text">Cart</div>
         </a>
       </div>
 
+      </header>
+
+      <main className="home-page">
       <div className="products-grid">
         <div className="product-container">
           <div className="product-image-container">
             <img className="product-image"
-              src="images/products/athletic-cotton-socks-6-pairs.jpg" />
+              src="/images/products/athletic-cotton-socks-6-pairs.jpg" />
           </div>
 
 
@@ -54,7 +58,7 @@ export function HomePage() {
 
           <div className="product-rating-container">
             <img className="product-rating-stars"
-              src="images/ratings/rating-45.png" />
+              src="/images/ratings/rating-45.png" />
             <div className="product-rating-count link-primary">
               87
             </div>
@@ -86,7 +90,7 @@ export function HomePage() {
 
 
           <div className="added-to-cart">
-            <img src="images/icons/checkmark.png" />
+            <img src="/images/icons/checkmark.png" />
             Added
           </div>
 
@@ -100,7 +104,7 @@ export function HomePage() {
         <div className="product-container">
           <div className="product-image-container">
             <img className="product-image"
-              src="images/products/intermediate-composite-basketball.jpg" />
+              src="/images/products/intermediate-composite-basketball.jpg" />
           </div>
 
 
@@ -111,7 +115,7 @@ export function HomePage() {
 
           <div className="product-rating-container">
             <img className="product-rating-stars"
-              src="images/ratings/rating-40.png" />
+              src="/images/ratings/rating-40.png" />
             <div className="product-rating-count link-primary">
               127
             </div>
@@ -143,7 +147,7 @@ export function HomePage() {
 
 
           <div className="added-to-cart">
-            <img src="images/icons/checkmark.png" />
+            <img src="/images/icons/checkmark.png" />
             Added
           </div>
 
@@ -157,7 +161,7 @@ export function HomePage() {
         <div className="product-container">
           <div className="product-image-container">
             <img className="product-image"
-              src="images/products/adults-plain-cotton-tshirt-2-pack-teal.jpg" />
+              src="/images/products/adults-plain-cotton-tshirt-2-pack-teal.jpg" />
           </div>
 
 
@@ -168,7 +172,7 @@ export function HomePage() {
 
           <div className="product-rating-container">
             <img className="product-rating-stars"
-              src="images/ratings/rating-45.png" />
+              src="/images/ratings/rating-45.png" />
             <div className="product-rating-count link-primary">
               56
             </div>
@@ -200,7 +204,7 @@ export function HomePage() {
 
 
           <div className="added-to-cart">
-            <img src="images/icons/checkmark.png" />
+            <img src="/images/icons/checkmark.png" />
             Added
           </div>
 
@@ -209,8 +213,9 @@ export function HomePage() {
           </button>
         </div>
       </div>
+      </main>
 
-    </>
-  
+</>
+
  );}
    

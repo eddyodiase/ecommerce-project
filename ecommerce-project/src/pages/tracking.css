@@ -30,9 +30,11 @@
 
 .tracking-page .product-image {
   max-width: 150px;
-  max-height: 150px;
+  width: 100%;
+  height: auto;
   margin-top: 25px;
   margin-bottom: 50px;
+  display: block;
 }
 
 .tracking-page .progress-labels-container {

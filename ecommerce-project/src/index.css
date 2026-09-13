@@ -1,0 +1,17 @@
+@import "./pages/HomePage.css";
+
+/* Root-level app styles can go here in future. */
+
+/* Make all images and media scale responsively */
+img, picture, video, svg {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+/* Optional: keep icons inline when needed */
+.img-inline {
+	display: inline-block;
+	max-width: none;
+	height: auto;
+}

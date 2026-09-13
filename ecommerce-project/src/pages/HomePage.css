@@ -1,9 +1,37 @@
 body {
+
   font-family: Roboto, Arial;
   color: rgb(33, 33, 33);
   /* The <body> element has a default margin of 8px
      on all sides. This removes the default margins. */
   margin: 0;
+}
+
+/* Ensure page content is not hidden behind the fixed header */
+.home-page {
+  padding-top: 70px;
+}
+
+/* Layout products in rows */
+.products-grid {
+  display: flex;
+  gap: 36px;
+  flex-wrap: wrap;
+  padding: 160px;
+  justify-content: center;
+}
+
+.product-container {
+  width: 120px;
+  box-sizing: border-box;
+}
+
+/* Ensure images inside product containers are responsive */
+.product-container img,
+.product-container .product-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* Remove the default margins of <p> elements. */
