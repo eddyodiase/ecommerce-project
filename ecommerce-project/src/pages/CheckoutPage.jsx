@@ -1,14 +1,10 @@
 
-import { useEffect } from "react";
+
 import "./checkout-header.css";
 import "./CheckoutPage.css";
 
 export function CheckoutPage() {
-  useEffect(() => {
-    document.title = "Checkout";
-  }, []);
-
-  return (
+ return (
 
    <>
       <div className="checkout-header">
@@ -62,7 +58,7 @@ export function CheckoutPage() {
                 Choose a delivery option:
               </div>
               <div className="delivery-option">
-                <input type="radio" checked
+                <input type="radio" defaultChecked={true}
                   className="delivery-option-input"
                   name="delivery-option-1" />
                 <div>
@@ -146,7 +142,7 @@ export function CheckoutPage() {
                 </div>
               </div>
               <div className="delivery-option">
-                <input type="radio" checked className="delivery-option-input"
+                <input type="radio" defaultChecked={true} className="delivery-option-input"
                   name="delivery-option-2" />
                 <div>
                   <div className="delivery-option-date">

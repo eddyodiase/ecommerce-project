@@ -1,13 +1,9 @@
-import { useEffect } from "react";
+
 import "./header.css";
 import "./HomePage.css";
 
 export function HomePage() {
-  useEffect(() => {
-    document.title = "ecommerce project";
-  }, []);
-
-  return (
+ return (
 <>
       <header className="header">
       <div className="left-section">
