@@ -1,19 +1,32 @@
 {
   "name": "ecommerce-backend",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js",
+    "zip": "node zipFiles.js",
+    "postinstall": "patch-package"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "description": "This is the backend for the [ecommerce-project](https://github.com/SuperSimpleDev/ecommerce-project). - 95% of the code was generated with AI.",
   "dependencies": {
     "cors": "^2.8.6",
-    "express": "^5.2.1"
+    "express": "^4.22.3",
+    "mysql2": "^3.14.1",
+    "patch-package": "^8.0.1",
+    "pg": "^8.16.0",
+    "sequelize": "^6.37.8",
+    "sql.js": "1.10.3",
+    "sql.js-as-sqlite3": "0.2.1"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "eslint": "^8.0.0",
+    "nodemon": "^3.1.9"
   }
 }
