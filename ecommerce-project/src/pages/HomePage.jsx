@@ -5,6 +5,7 @@ import "./HomePage.css";
 
 export function HomePage() {
   const [products, setProducts] = useState([]);
+  const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     axios
@@ -15,11 +16,20 @@ export function HomePage() {
       .catch((error) => {
         console.error("Error loading products:", error);
       });
+
+      axios
+      .get("http://localhost:3000/api/cart-items")
+      .then((response) => {
+        setCartItems("Cart data:", response.data);
+      })
+      .catch((error) => {
+        console.error("Error loading cart:", error);
+      });
   }, []);
 
   return (
     <>
-      <Header />
+      <Header cartItems={cartItems} />
       <main className="home-page">
         <div className="products-grid">
           {products.map((product) => (
