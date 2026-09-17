@@ -1,17 +1,33 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import "./CheckoutHeader.css";
 
 export function CheckoutHeader() {
+  const [totalItems, setTotalItems] = useState(0);
+
+  useEffect(() => {
+    axios
+      .get("/api/payment-summary")
+      .then((response) => {
+        setTotalItems(response.data?.totalItems || 0);
+      })
+      .catch((error) => {
+        console.error("Error loading checkout summary:", error);
+      });
+  }, []);
+
   return (
     <div className="checkout-header">
       <div className="header-content">
         <div className="checkout-header-left-section">
-          <a href="/">
+          <Link to="/">
             <img className="logo" src="/images/logo.png" alt="logo" />
             <img className="mobile-logo" src="/images/mobile-logo.png" alt="mobile logo" />
-          </a>
+          </Link>
         </div>
         <div className="checkout-header-middle-section">
-          Checkout (<a className="return-to-home-link" href="/">3 items</a>)
+          Checkout (<Link className="return-to-home-link" to="/">{totalItems} items</Link>)
         </div>
         <div className="checkout-header-right-section">
           <img src="/images/icons/checkout-lock-icon.png" alt="secure checkout" />

@@ -1,18 +1,13 @@
-
-import {Header} from "../components/Header";
+import { Header } from "../components/Header";
 import "./OrdersPage.css";
 
 export function OrdersPage() {
+  return (
+    <>
+      <Header />
 
-    return (
-        <>
- 
-          <title>Orders</title> 
-
-  <Header />
-  
-   <div className="orders-page">
-      <div className="page-title">Your Orders</div>
+      <div className="orders-page">
+        <div className="page-title">Your Orders</div>
 
 
       <div className="orders-grid">
