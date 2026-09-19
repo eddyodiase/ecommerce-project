@@ -1,30 +1,41 @@
 
 
-//import axios from "axios"
-import { Routes, Route } from "react-router-dom"
-//import {useState,  useEffect } from "react"
-import { HomePage } from "./pages/HomePage"
-import { CheckoutPage } from "./pages/checkout/CheckoutPage"
-import { OrdersPage } from "./pages/OrdersPage"
-import { TrackingPage } from "./pages/TrackingPage"
-import { CheckoutHeader } from "./pages/checkout/CheckoutHeader"
-import "./App.css"
+import { Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import { HomePage } from "./pages/HomePage";
+import { CheckoutPage } from "./pages/checkout/CheckoutPage";
+import { OrdersPage } from "./pages/OrdersPage";
+import { TrackingPage } from "./pages/TrackingPage";
+import { CheckoutHeader } from "./pages/checkout/CheckoutHeader";
+import "./App.css";
 
 function App() {
+  const [quantityByProduct, setQuantityByProduct] = useState({});
+
   return (
     <Routes>
-      <Route index element={<HomePage  />} />
-      <Route path="checkout" element={
+      <Route
+        index
+        element={
+          <HomePage
+            quantityByProduct={quantityByProduct}
+            setQuantityByProduct={setQuantityByProduct}
+          />
+        }
+      />
+      <Route
+        path="checkout"
+        element={
           <>
             <CheckoutHeader />
-            <CheckoutPage  />
+            <CheckoutPage quantityByProduct={quantityByProduct} />
           </>
         }
       />
       <Route path="orders" element={<OrdersPage />} />
       <Route path="tracking" element={<TrackingPage />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { Header } from "../components/Header";
 import "./HomePage.css";
 
-export function HomePage() {
+export function HomePage({ quantityByProduct, setQuantityByProduct }) {
   const [products, setProducts] = useState([]);
-  const [quantityByProduct, setQuantityByProduct] = useState({});
   const [addedProductId, setAddedProductId] = useState(null);
 
   useEffect(() => {
-      axios.get("/api/products")
+    axios
+      .get("/api/products")
       .then((response) => {
         setProducts(response.data || []);
       })
@@ -76,7 +76,7 @@ export function HomePage() {
                     value={selectedQuantity}
                     onChange={(event) => handleQuantityChange(product.id, event.target.value)}
                   >
-                    {[1,2,3,4,5,6,7,8,9,10].map((value) => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
                       <option key={value} value={value}>{value}</option>
                     ))}
                   </select>
