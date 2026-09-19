@@ -9,8 +9,7 @@ export function HomePage() {
   const [addedProductId, setAddedProductId] = useState(null);
 
   useEffect(() => {
-    axios
-      .get("/api/products")
+      axios.get("/api/products")
       .then((response) => {
         setProducts(response.data || []);
       })
