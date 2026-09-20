@@ -1,5 +1,6 @@
 
 import axios from "axios";
+import {formatMoney} from "../../utils/money";
 import { useEffect, useState } from "react";
 import "./CheckoutHeader.css";
 import "./CheckoutPage.css";
