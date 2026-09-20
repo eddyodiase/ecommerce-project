@@ -1,11 +1,12 @@
 
 import axios from "axios";
-import {formatMoney} from "../../utils/money";
+import dayjs from "dayjs";
+import { formatMoney } from "../../utils/money";
 import { useEffect, useState } from "react";
 import "./CheckoutHeader.css";
 import "./CheckoutPage.css";
 
-const toCurrency = (cents) => `$${((cents || 0) / 100).toFixed(2)}`;
+const toCurrency = (cents) => formatMoney(cents);
 
 export function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -121,7 +122,9 @@ export function CheckoutPage() {
                 return (
                   <div key={item.productId} className="cart-item-container">
                     <div className="delivery-date">
-                      Delivery date: {selectedDeliveryOption ? new Date(selectedDeliveryOption.estimatedDeliveryTimeMs).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "As scheduled"}
+                      Delivery date: {selectedDeliveryOption
+                        ? dayjs(selectedDeliveryOption.estimatedDeliveryTimeMs).format("MMM D")
+                        : "As scheduled"}
                     </div>
 
                     <div className="cart-item-details-grid">
@@ -168,10 +171,7 @@ export function CheckoutPage() {
                             />
                             <div>
                               <div className="delivery-option-date">
-                                {new Date(option.estimatedDeliveryTimeMs).toLocaleDateString(
-                                  "en-US",
-                                  { month: "short", day: "numeric" }
-                                )}
+                                {dayjs(option.estimatedDeliveryTimeMs).format("MMM D")}
                               </div>
                               <div className="delivery-option-price">
                                 {option.priceCents === 0
