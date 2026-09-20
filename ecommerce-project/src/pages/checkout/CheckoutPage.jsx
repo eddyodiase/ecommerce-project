@@ -1,3 +1,4 @@
+
 import axios from "axios";
 import { useEffect, useState } from "react";
 import "./CheckoutHeader.css";
@@ -7,6 +8,7 @@ const toCurrency = (cents) => `$${((cents || 0) / 100).toFixed(2)}`;
 
 export function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);
+  const [deliveryOptions, setDeliveryOptions] = useState([]);
   const [summary, setSummary] = useState({
     totalItems: 0,
     productCostCents: 0,
@@ -19,12 +21,14 @@ export function CheckoutPage() {
 
   const loadCheckoutData = async () => {
     try {
-      const [cartResponse, paymentSummaryResponse] = await Promise.all([
+      const [cartResponse, deliveryOptionsResponse, paymentSummaryResponse] = await Promise.all([
         axios.get("/api/cart-items?expand=product"),
+        axios.get("/api/delivery-options?expand=estimatedDeliveryTime"),
         axios.get("/api/payment-summary"),
       ]);
 
       setCartItems(cartResponse.data || []);
+      setDeliveryOptions(deliveryOptionsResponse.data || []);
       setSummary(paymentSummaryResponse.data || {});
     } catch (error) {
       console.error("Error loading checkout data:", error);
@@ -34,7 +38,37 @@ export function CheckoutPage() {
   };
 
   useEffect(() => {
-    loadCheckoutData();
+    let active = true;
+
+    const fetchCheckoutData = async () => {
+      try {
+        const [cartResponse, deliveryOptionsResponse, paymentSummaryResponse] = await Promise.all([
+          axios.get("/api/cart-items?expand=product"),
+          axios.get("/api/delivery-options?expand=estimatedDeliveryTime"),
+          axios.get("/api/payment-summary"),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        setCartItems(cartResponse.data || []);
+        setDeliveryOptions(deliveryOptionsResponse.data || []);
+        setSummary(paymentSummaryResponse.data || {});
+      } catch (error) {
+        console.error("Error loading checkout data:", error);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCheckoutData();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleQuantityUpdate = async (productId, quantity) => {
@@ -55,6 +89,15 @@ export function CheckoutPage() {
     }
   };
 
+  const handleDeliveryOptionChange = async (productId, deliveryOptionId) => {
+    try {
+      await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId });
+      await loadCheckoutData();
+    } catch (error) {
+      console.error("Error updating delivery option:", error);
+    }
+  };
+
   return (
     <>
       <title>Checkout</title>
@@ -70,32 +113,40 @@ export function CheckoutPage() {
             <div className="order-summary">
               {cartItems.map((item) => {
                 const product = item.product || {};
+                const selectedDeliveryOption =
+                  deliveryOptions.find((option) => option.id === item.deliveryOptionId) ||
+                  deliveryOptions[0];
 
                 return (
-                  <div className="cart-item-container" key={item.productId}>
-                    <div className="delivery-date">Delivery date: {item.deliveryOptionId ? "Arriving soon" : "As scheduled"}</div>
+                  <div key={item.productId} className="cart-item-container">
+                    <div className="delivery-date">
+                      Delivery date: {selectedDeliveryOption ? new Date(selectedDeliveryOption.estimatedDeliveryTimeMs).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "As scheduled"}
+                    </div>
+
                     <div className="cart-item-details-grid">
                       <img className="product-image" src={product.image} alt={product.name} />
 
                       <div className="cart-item-details">
                         <div className="product-name">{product.name}</div>
-                        <div className="product-price">{toCurrency(product.priceCents)}</div>
+                        <div className="product-price">{toCurrency(product.priceCents || 0)}</div>
                         <div className="product-quantity">
-                          <span>
-                            Quantity:
-                            <select
-                              className="quantity-selector"
-                              value={item.quantity}
-                              onChange={(event) => handleQuantityUpdate(item.productId, Number(event.target.value))}
-                            >
-                              {[1,2,3,4,5,6,7,8,9,10].map((value) => (
-                                <option key={value} value={value}>{value}</option>
-                              ))}
-                            </select>
-                          </span>
+                          <span>Quantity:</span>
+                          <select
+                            className="quantity-selector"
+                            value={item.quantity || 1}
+                            onChange={(event) =>
+                              handleQuantityUpdate(item.productId, Number(event.target.value))
+                            }
+                          >
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+                              <option key={value} value={value}>
+                                {value}
+                              </option>
+                            ))}
+                          </select>
                           <button
                             type="button"
-                            className="delete-quantity-link link-primary"
+                            className="delete-quantity-link"
                             onClick={() => handleDelete(item.productId)}
                           >
                             Delete
@@ -105,27 +156,30 @@ export function CheckoutPage() {
 
                       <div className="delivery-options">
                         <div className="delivery-options-title">Choose a delivery option:</div>
-                        <div className="delivery-option">
-                          <input type="radio" defaultChecked className="delivery-option-input" name={`delivery-option-${item.productId}`} />
-                          <div>
-                            <div className="delivery-option-date">Tuesday, June 21</div>
-                            <div className="delivery-option-price">FREE Shipping</div>
-                          </div>
-                        </div>
-                        <div className="delivery-option">
-                          <input type="radio" className="delivery-option-input" name={`delivery-option-${item.productId}`} />
-                          <div>
-                            <div className="delivery-option-date">Wednesday, June 15</div>
-                            <div className="delivery-option-price">$4.99 - Shipping</div>
-                          </div>
-                        </div>
-                        <div className="delivery-option">
-                          <input type="radio" className="delivery-option-input" name={`delivery-option-${item.productId}`} />
-                          <div>
-                            <div className="delivery-option-date">Monday, June 13</div>
-                            <div className="delivery-option-price">$9.99 - Shipping</div>
-                          </div>
-                        </div>
+                        {deliveryOptions.map((option) => (
+                          <label key={option.id} className="delivery-option">
+                            <input
+                              className="delivery-option-input"
+                              type="radio"
+                              name={`delivery-option-${item.productId}`}
+                              checked={selectedDeliveryOption?.id === option.id}
+                              onChange={() => handleDeliveryOptionChange(item.productId, option.id)}
+                            />
+                            <div>
+                              <div className="delivery-option-date">
+                                {new Date(option.estimatedDeliveryTimeMs).toLocaleDateString(
+                                  "en-US",
+                                  { month: "short", day: "numeric" }
+                                )}
+                              </div>
+                              <div className="delivery-option-price">
+                                {option.priceCents === 0
+                                  ? "Free"
+                                  : `${toCurrency(option.priceCents)} - Shipping`}
+                              </div>
+                            </div>
+                          </label>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -165,3 +219,4 @@ export function CheckoutPage() {
     </>
   );
 }
+
