@@ -16,7 +16,7 @@ export function CheckoutPage() {
     productCostCents: 0,
     shippingCostCents: 0,
     totalCostBeforeTaxCents: 0,
-    taxCents: 0,
+    taxCents: 0, 
     totalCostCents: 0,
   });
   const [loading, setLoading] = useState(true);
