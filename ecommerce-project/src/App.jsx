@@ -32,7 +32,7 @@ function App() {
           </>
         }
       />
-      <Route path="orders" element={<OrdersPage />} />
+      <Route path="orders" element={<OrdersPage quantityByProduct={quantityByProduct} />} />
       <Route path="tracking" element={<TrackingPage />} />
     </Routes>
   );
