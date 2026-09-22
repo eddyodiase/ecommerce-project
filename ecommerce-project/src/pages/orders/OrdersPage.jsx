@@ -77,7 +77,7 @@ function OrderCard({ order }) {
   );
 }
 
-export function OrdersPage(quantityByProduct) {
+export function OrdersPage({ quantityByProduct }) {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export function OrdersPage(quantityByProduct) {
 
   return (
     <>
-      <Header quantityByProduct={quantityByProduct}/>
+      <Header quantityByProduct={quantityByProduct} />
 
       <div className="orders-page">
         <div className="page-title">Your Orders</div>
