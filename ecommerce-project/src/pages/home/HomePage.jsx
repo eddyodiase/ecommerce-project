@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Header } from "../components/Header";
-import { formatMoney } from "../utils/money";
+import { Header } from "../../components/Header";
+import { formatMoney } from "../../utils/money";
 import "./HomePage.css";
 
 export function HomePage({ quantityByProduct, setQuantityByProduct }) {
@@ -45,7 +45,7 @@ export function HomePage({ quantityByProduct, setQuantityByProduct }) {
   };
 
   return (
-    <>
+   <>
       <Header />
       <main className="home-page">
         <div className="products-grid">
@@ -102,8 +102,8 @@ export function HomePage({ quantityByProduct, setQuantityByProduct }) {
               </div>
             );
           })}
-        </div>
+            </div>
       </main>
-    </>
+   </>
   );
 }
