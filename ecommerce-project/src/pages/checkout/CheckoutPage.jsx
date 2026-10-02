@@ -21,6 +21,8 @@ export function CheckoutPage() {
   });
   const [loading, setLoading] = useState(true);
 
+  const quantityOptions = Array.from({ length: 10 }, (_, index) => index + 1);
+
   const loadCheckoutData = async () => {
     try {
       const [cartResponse, deliveryOptionsResponse, paymentSummaryResponse] = await Promise.all([
@@ -142,7 +144,7 @@ export function CheckoutPage() {
                               handleQuantityUpdate(item.productId, Number(event.target.value))
                             }
                           >
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+                            {quantityOptions.map((value) => (
                               <option key={value} value={value}>
                                 {value}
                               </option>
