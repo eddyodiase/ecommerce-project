@@ -1,6 +1,7 @@
 import axios from "axios";
 import dayjs from "dayjs";
 import { Fragment, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Header } from "../../components/Header";
 import { formatMoney } from "../../utils/money";
 import "./OrdersPage.css";
@@ -27,11 +28,9 @@ function OrderRow({ product, quantity, estimatedDeliveryTimeMs }) {
       </div>
 
       <div className="product-actions">
-        <a href="/tracking">
-          <button type="button" className="track-package-button button-secondary">
-            Track package
-          </button>
-        </a>
+        <Link className="track-package-button button-secondary" to="/tracking">
+          Track package
+        </Link>
       </div>
     </Fragment>
   );
