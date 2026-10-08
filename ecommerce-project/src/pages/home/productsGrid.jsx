@@ -1,3 +1,5 @@
+
+//import axios from "axios";
 import { Fragment } from "react";
 import { formatMoney } from "../../utils/money";
 
@@ -51,6 +53,7 @@ export default function ProductsGrid({
                 className="add-to-cart-button button-primary"
                 type="button"
                 onClick={() => handleAddToCart(product)}
+              
               >
                 Add to Cart
               </button>

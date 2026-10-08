@@ -4,9 +4,8 @@ import { Link } from "react-router-dom";
 
 import "./Header.css";
 
-export function Header() {
-
-const [cartItems, setCartItems] = useState([]);
+export function Header({ cartRefreshKey = 0 }) {
+  const [cartItems, setCartItems] = useState([]);
 
   const loadCart = () => {
     axios
@@ -21,7 +20,7 @@ const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     loadCart();
-  }, []);
+  }, [cartRefreshKey]);
 
   const totalQuantity = cartItems.reduce(
     (sum, cartItem) => sum + (Number(cartItem.quantity) || 0),

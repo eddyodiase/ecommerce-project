@@ -7,6 +7,7 @@ import "./HomePage.css";
 export function HomePage({ quantityByProduct, setQuantityByProduct }) {
   const [products, setProducts] = useState([]);
   const [addedProductId, setAddedProductId] = useState(null);
+  const [cartRefreshKey, setCartRefreshKey] = useState(0);
 
   useEffect(() => {
     axios 
@@ -35,6 +36,7 @@ export function HomePage({ quantityByProduct, setQuantityByProduct }) {
         quantity,
       });
 
+      setCartRefreshKey((current) => current + 1);
       setAddedProductId(product.id);
       window.setTimeout(() => {
         setAddedProductId((current) => (current === product.id ? null : current));
@@ -46,7 +48,7 @@ export function HomePage({ quantityByProduct, setQuantityByProduct }) {
 
   return (
    <>
-      <Header />
+      <Header cartRefreshKey={cartRefreshKey} />
       <main className="home-page">
         <ProductsGrid
           products={products}
