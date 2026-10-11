@@ -71,7 +71,7 @@ export function CheckoutPage() {
     };
   }, []);
 
-  const handleQuantityUpdate = async (productId, quantity) => {
+  const onQuantityChange = async (productId, quantity) => {
     try {
       await axios.put(`/api/cart-items/${productId}`, { quantity });
       await loadCheckoutData();
@@ -80,7 +80,7 @@ export function CheckoutPage() {
     }
   };
 
-  const handleDelete = async (productId) => {
+  const onRemoveItem = async (productId) => {
     try {
       await axios.delete(`/api/cart-items/${productId}`);
       await loadCheckoutData();
@@ -89,7 +89,7 @@ export function CheckoutPage() {
     }
   };
 
-  const handleDeliveryOptionChange = async (productId, deliveryOptionId) => {
+  const onDeliveryOptionChange = async (productId, deliveryOptionId) => {
     try {
       await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId });
       await loadCheckoutData();
@@ -111,12 +111,12 @@ export function CheckoutPage() {
           <OrderSummary
             cartItems={cartItems}
             deliveryOptions={deliveryOptions}
-            handleQuantityUpdate={handleQuantityUpdate}
-            handleDelete={handleDelete}
-            handleDeliveryOptionChange={handleDeliveryOptionChange}
+            onQuantityChange={onQuantityChange}
+            onRemoveItem={onRemoveItem}
+            onDeliveryOptionChange={onDeliveryOptionChange}
           />
 
-          <PaymentSummary summary={summary} />
+          <PaymentSummary paymentSummary={summary} />
 
         </div>
       )}

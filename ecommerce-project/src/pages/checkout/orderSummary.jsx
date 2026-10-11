@@ -6,9 +6,9 @@ import { DeliveryOptions } from "./DeliveryOptions";
 export function OrderSummary({
   cartItems,
   deliveryOptions,
-  handleQuantityUpdate,
-  handleDelete,
-  handleDeliveryOptionChange,
+  onQuantityChange,
+  onRemoveItem,
+  onDeliveryOptionChange,
 }) {
   return (
     <div className="order-summary">
@@ -36,7 +36,7 @@ export function OrderSummary({
                     className="quantity-selector"
                     value={item.quantity || 1}
                     onChange={(event) =>
-                      handleQuantityUpdate(item.productId, Number(event.target.value))
+                      onQuantityChange(item.productId, Number(event.target.value))
                     }
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
@@ -48,7 +48,7 @@ export function OrderSummary({
                   <button
                     type="button"
                     className="delete-quantity-link"
-                    onClick={() => handleDelete(item.productId)}
+                    onClick={() => onRemoveItem(item.productId)}
                   >
                     Delete
                   </button>
@@ -59,7 +59,7 @@ export function OrderSummary({
                 deliveryOptions={deliveryOptions}
                 item={item}
                 selectedDeliveryOption={selectedDeliveryOption}
-                handleDeliveryOptionChange={handleDeliveryOptionChange}
+                onDeliveryOptionChange={onDeliveryOptionChange}
               />
               
             </div>

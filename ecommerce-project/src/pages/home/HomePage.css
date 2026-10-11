@@ -123,8 +123,8 @@ input:focus {
 }
 
 .home-page .product-rating-stars {
-  width: 40px;
-  margin-right: 6px;
+  width: 80px;
+  margin-right: 8px;
 }
 
 .home-page .product-rating-count {
