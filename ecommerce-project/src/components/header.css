@@ -79,7 +79,7 @@
   width: 0;
   font-size: 14px;
   height: 34px;
-  padding-left: 12px;
+  padding-left: 10px;
   border: none;
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
@@ -119,18 +119,18 @@
   display: flex;
   align-items: center;
   padding-left: 4px;
-  padding-right: 6px;
+  padding-right: 4px;
   background: transparent;
   border: 1px solid transparent;
-  margin-right: 2px;
+  margin-right: 1px;
   margin-left: -1.5px;
 }
 
 .header .orders-text {
   display: block;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.2;
   letter-spacing: 0.01em;
 }
 
@@ -152,8 +152,8 @@
 }
 
 .header .cart-text {
-  margin-left: 5px;
-  font-size: 17px;
+  margin-left: 4px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.01em;
@@ -163,15 +163,15 @@
   color: rgb(8, 79, 45);
   font-size: 15px;
   font-weight: 700;
-  line-height: 1.2;
-  border-radius: 999px;
+  line-height: 1.0;
+  border-radius: 900px;
 
   position: absolute;
-  top: 42%;
+  top: 40%;
   left: 15px;
   transform: translateY(-50%);
 
-  width: 18px;
+  width: 15px;
   text-align: center;
   display: flex;
   align-items: center;

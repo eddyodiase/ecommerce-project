@@ -5,6 +5,12 @@ export default defineConfig({
   root: 'src',
   publicDir: '../public',
   plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './test/setup.js',
+    css: true,
+  },
   server: {
     proxy: {
       '/api': {
