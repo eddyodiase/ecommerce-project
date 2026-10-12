@@ -1,12 +1,14 @@
 import axios from "axios";
 import dayjs from "dayjs";
 import { Fragment, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/Header";
 import { formatMoney } from "../../utils/money";
 import "./OrdersPage.css";
 
 function OrderRow({ product, quantity, estimatedDeliveryTimeMs }) {
+  const navigate = useNavigate();
+
   return (
     <Fragment key={`${product.id}-${quantity}`}>
       <div className="product-image-container">
@@ -28,9 +30,9 @@ function OrderRow({ product, quantity, estimatedDeliveryTimeMs }) {
       </div>
 
       <div className="product-actions">
-        <Link className="track-package-button button-secondary" to="/tracking">
+        <button type="button" className="track-package-button button-secondary" onClick={() => navigate("/tracking")}>
           Track package
-        </Link>
+        </button>
       </div>
     </Fragment>
   );

@@ -1,17 +1,19 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
 import "./TrackingPage.css";
 
 export function TrackingPage() {
+  const navigate = useNavigate();
+
   return (
     <>
       <Header />
 
       <div className="tracking-page">
         <div className="order-tracking">
-          <Link className="back-to-orders-link link-primary" to="/orders">
+          <button type="button" className="back-to-orders-link link-primary" onClick={() => navigate("/orders")}>
             View all orders
-          </Link>
+          </button>
 
           <div className="delivery-date">Arriving on Monday, June 13</div>
 

@@ -48,6 +48,20 @@
   color: rgb(25, 135, 84);
   text-decoration: none;
   cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 8px;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.checkout-header .return-to-home-link:hover {
+  background-color: rgba(25, 135, 84, 0.06);
+  border-color: rgba(25, 135, 84, 0.2);
+}
+
+.checkout-header .return-to-home-link:active {
+  transform: translateY(1px);
 }
 
 .checkout-header .checkout-header-right-section {

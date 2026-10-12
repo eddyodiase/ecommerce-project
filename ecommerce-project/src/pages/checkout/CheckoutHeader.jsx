@@ -1,9 +1,10 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./CheckoutHeader.css";
 
 export function CheckoutHeader() {
+  const navigate = useNavigate();
   const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
@@ -27,7 +28,11 @@ export function CheckoutHeader() {
           </Link>
         </div>
         <div className="checkout-header-middle-section">
-          Checkout (<Link className="return-to-home-link" to="/">{totalItems} items</Link>)
+          Checkout (
+          <button type="button" className="return-to-home-link" onClick={() => navigate("/")}>
+            {totalItems} items
+          </button>
+          )
         </div>
         <div className="checkout-header-right-section">
           <img src="/images/icons/checkout-lock-icon.png" alt="secure checkout" />

@@ -11,6 +11,11 @@ import "./App.css";
 
 function App() {
   const [quantityByProduct, setQuantityByProduct] = useState({});
+  const [cartRefreshKey, setCartRefreshKey] = useState(0);
+
+  const refreshCart = () => {
+    setCartRefreshKey((current) => current + 1);
+  };
 
   return (
     <Routes>
@@ -27,8 +32,11 @@ function App() {
         path="checkout"
         element={
           <>
-            <CheckoutHeader />
-            <CheckoutPage quantityByProduct={quantityByProduct} />
+            <CheckoutHeader cartRefreshKey={cartRefreshKey} />
+            <CheckoutPage
+              quantityByProduct={quantityByProduct}
+              onCartChange={refreshCart}
+            />
           </>
         }
       />

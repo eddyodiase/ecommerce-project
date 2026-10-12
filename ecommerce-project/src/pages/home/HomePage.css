@@ -2,24 +2,39 @@ body {
   font-family: Roboto, Arial;
   color: rgb(33, 33, 33);
   margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+@keyframes pageFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .home-page {
-  padding-top: 70px;
+  padding-top: 64px;
+  animation: pageFade 0.25s ease;
 }
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(120px, 1fr));
+  grid-template-columns: repeat(8, minmax(100px, 1fr));
   gap: 0;
   align-items: stretch;
-  padding: 40px 20px 80px;
+  padding: 12px 8px 56px;
 }
 
 .product-container {
   width: 100%;
   box-sizing: border-box;
-  padding: 40px 25px 25px;
+  padding: 14px 10px 12px;
   border-right: 1px solid rgb(240, 240, 240);
   border-bottom: 1px solid rgb(240, 240, 240);
   display: flex;
@@ -53,18 +68,37 @@ input, select, button {
 .button-primary {
   color: rgb(255, 255, 255);
   background-color: rgb(25, 135, 84);
-  border: 1px solid transparent;
-  border-radius: 5px;
+  border: 1px solid rgb(25, 135, 84);
+  border-radius: 4px;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(220, 220, 220, 0.5);
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 2px 5px rgba(220, 220, 220, 0.48);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .button-primary:hover {
-  background-color: rgba(25, 135, 84, 0.75);
+  background-color: rgb(21, 117, 73);
+  border-color: rgb(21, 117, 73);
+  box-shadow: 0 3px 8px rgba(25, 135, 84, 0.2);
 }
 
 .button-primary:active {
+  transform: translateY(1px);
+}
+
+.button-secondary {
+  color: rgb(25, 135, 84);
+  background-color: rgb(255, 255, 255);
+  border: 1px solid rgb(25, 135, 84);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.button-secondary:hover {
+  background-color: rgba(25, 135, 84, 0.06);
+}
+
+.button-secondary:active {
   transform: translateY(1px);
 }
 
@@ -101,7 +135,8 @@ input:focus {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
+  min-height: 120px;
 }
 
 .home-page .product-image {
@@ -109,22 +144,26 @@ input:focus {
   height: auto;
   object-fit: contain;
   border-radius: 5px;
+  max-height: 120px;
 }
 
 .home-page .product-name {
-  height: 20px;
-  margin-bottom: 5px;
+  height: 16px;
+  margin-bottom: 4px;
+  line-height: 1.2;
+  font-size: 13px;
 }
 
 .home-page .product-rating-container {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  min-height: 18px;
 }
 
 .home-page .product-rating-stars {
-  width: 80px;
-  margin-right: 8px;
+  width: 68px;
+  margin-right: 6px;
 }
 
 .home-page .product-rating-count {
@@ -135,11 +174,12 @@ input:focus {
 
 .home-page .product-price {
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  font-size: 13px;
 }
 
 .home-page .product-quantity-container {
-  margin-bottom: 17px;
+  margin-bottom: 8px;
 }
 
 .home-page .product-spacer {
@@ -169,9 +209,11 @@ input:focus {
 
 .home-page .add-to-cart-button {
   width: 100%;
-  padding: 8px;
-  height: 34px;
+  padding: 5px 8px;
+  height: 28px;
   margin-top: 1px;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 @media (max-width: 2000px) {

@@ -1,10 +1,11 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import "./Header.css";
 
 export function Header({ cartRefreshKey = 0 }) {
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
 
   const loadCart = () => {
@@ -45,14 +46,14 @@ export function Header({ cartRefreshKey = 0 }) {
       </div>
 
       <div className="right-section">
-        <Link className="orders-link header-link" to="/orders">
+        <button type="button" className="orders-link header-link" onClick={() => navigate("/orders")}>
           <span className="orders-text">Orders</span>
-        </Link>
-        <Link className="cart-link header-link" to="/checkout">
+        </button>
+        <button type="button" className="cart-link header-link" onClick={() => navigate("/checkout")}>
           <img className="cart-icon" src="/images/icons/cart-icon.png" alt="cart" />
           <div className="cart-quantity">{totalQuantity}</div>
           <div className="cart-text">Cart</div>
-        </Link>
+        </button>
       </div>
     </header>
   );

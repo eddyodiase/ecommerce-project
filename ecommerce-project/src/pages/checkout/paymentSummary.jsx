@@ -1,7 +1,14 @@
 
+import { useNavigate } from "react-router-dom";
 import { toCurrency } from "../../utils/money";
 
 export function PaymentSummary({ paymentSummary = {} }) {
+  const navigate = useNavigate();
+
+  const handlePlaceOrder = () => {
+    navigate("/orders");
+  };
+
   return (
     <div className="payment-summary">
       <div className="payment-summary-title">Payment Summary</div>
@@ -25,7 +32,7 @@ export function PaymentSummary({ paymentSummary = {} }) {
         <div>Order total:</div>
         <div className="payment-summary-money">{toCurrency(paymentSummary.totalCostCents || 0)}</div>
       </div>
-      <button className="place-order-button button-primary" type="button">
+      <button className="place-order-button button-primary" type="button" onClick={handlePlaceOrder}>
         Place your order
       </button>
     </div>
