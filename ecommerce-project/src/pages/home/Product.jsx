@@ -77,6 +77,7 @@ export function Product({
       <button
         className="add-to-cart-button button-primary"
         type="button"
+        data-testid="add-to-cart-button"
         onClick={handleAddToCart}
       >
         Add to Cart
