@@ -8,8 +8,8 @@ import { Header } from './Header';
 vi.mock('axios', () => ({
   default: {
     get: vi.fn(() => Promise.resolve({ data: [{ quantity: 2 }, { quantity: 1 }] })),
+    post: vi.fn(),
   },
-
 }));
 
 describe('Header', () => {
@@ -24,6 +24,6 @@ describe('Header', () => {
     expect(screen.getByText('Cart')).toBeInTheDocument();
     expect(await screen.findByText('3')).toBeInTheDocument();
     expect(axios.get).toHaveBeenCalledWith('/api/cart-items');
-    expect(axios.post).nottoHaveBeenCalled();
+    expect(axios.post).not.toHaveBeenCalled();
   });
 });
