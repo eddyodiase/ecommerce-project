@@ -26,7 +26,9 @@ export function Product({
   return (
     <div key={product.id} className="product-container">
       <div className="product-image-container">
-        <img className="product-image" src={product.image} alt={product.name} />
+        <img className="product-image" 
+        data-testid="product-image"
+        src={product.image} alt={product.name} />
       </div>
 
 
@@ -38,8 +40,9 @@ export function Product({
           className="product-rating-stars"
           src={`/images/ratings/rating-${product.rating.stars * 10}.png`}
           alt={`${product.rating.stars} star rating`}
+          data-testid="product-rating-stars"
         />
-        <div className="product-rating-count link-primary">
+        <div className="product-rating-count link-primary" data-testid="product-rating-count">
           {product.rating.count}
         </div>
       </div>
