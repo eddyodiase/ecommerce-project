@@ -1,0 +1,98 @@
+.tracking-page {
+  max-width: 820px;
+  margin-top: 82px;
+  margin-bottom: 90px;
+  padding-left: 24px;
+  padding-right: 24px;
+
+  /* margin-left: auto;
+     margin-right auto;
+     Is a trick for centering an element horizontally
+     without needing a container. */
+  margin-left: auto;
+  margin-right: auto;
+  animation: pageFade 0.25s ease;
+}
+
+.tracking-page .back-to-orders-link {
+  display: inline-block;
+  margin-bottom: 22px;
+  background: transparent;
+  border: none;
+  color: rgb(25, 135, 84);
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.tracking-page .back-to-orders-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.tracking-page .delivery-date {
+  font-size: 23px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.tracking-page .product-info {
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+
+.tracking-page .product-image {
+  max-width: 140px;
+  width: 100%;
+  height: auto;
+  margin-top: 18px;
+  margin-bottom: 32px;
+  display: block;
+}
+
+.tracking-page .progress-labels-container {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.tracking-page .current-status {
+  color: rgb(25, 135, 84);
+}
+
+@media (max-width: 575px) {
+  .tracking-page .progress-labels-container {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 450px) {
+  .tracking-page .progress-labels-container {
+    flex-direction: column;
+    margin-bottom: 5px;
+  }
+
+  .tracking-page .progress-label {
+    margin-bottom: 3px;
+  }
+}
+
+.tracking-page .progress-bar-container {
+  height: 22px;
+  width: 100%;
+
+  border: 1px solid rgb(200, 200, 200);
+  border-radius: 50px;
+  overflow: hidden;
+}
+
+.tracking-page .progress-bar {
+  height: 100%;
+  background-color: rgb(25, 135, 84);
+  border-radius: 50px;
+  width: 50%;
+}
