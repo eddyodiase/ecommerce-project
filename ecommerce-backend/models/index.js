@@ -1,5 +1,4 @@
 import { Sequelize } from 'sequelize';
-import sqlJsAsSqlite3 from 'sql.js-as-sqlite3';
 import fs from 'fs';
 
 const isUsingRDS = process.env.RDS_HOSTNAME && process.env.RDS_USERNAME && process.env.RDS_PASSWORD;
@@ -25,7 +24,7 @@ if (isUsingRDS) {
 } else {
   sequelize = new Sequelize({
     dialect: 'sqlite',
-    dialectModule: sqlJsAsSqlite3,
+    storage: 'database.sqlite',
     logging: false
   });
 
@@ -41,8 +40,18 @@ if (isUsingRDS) {
 }
 
 export async function saveDatabaseToFile() {
-  const dbInstance = await sequelize.connectionManager.getConnection();
-  const binaryArray = dbInstance.database.export();
-  const buffer = Buffer.from(binaryArray);
-  fs.writeFileSync('database.sqlite', buffer);
+  try {
+    const dbInstance = await sequelize.connectionManager.getConnection();
+    const database = dbInstance?.database ?? dbInstance;
+
+    if (!database || typeof database.export !== 'function') {
+      return;
+    }
+
+    const binaryArray = database.export();
+    const buffer = Buffer.from(binaryArray);
+    fs.writeFileSync('database.sqlite', buffer);
+  } catch (error) {
+    console.warn('Database snapshot save skipped:', error.message);
+  }
 }

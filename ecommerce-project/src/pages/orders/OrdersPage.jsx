@@ -6,8 +6,20 @@ import { Header } from "../../components/Header";
 import { formatMoney } from "../../utils/money";
 import "./OrdersPage.css";
 
-function OrderRow({ product, quantity, estimatedDeliveryTimeMs }) {
+function OrderRow({ order, product, quantity, estimatedDeliveryTimeMs, onCartRefresh }) {
   const navigate = useNavigate();
+
+  const handleAddToCart = async () => {
+    try {
+      await axios.post("/api/cart-items", {
+        productId: product.id,
+        quantity,
+      });
+      onCartRefresh?.();
+    } catch (error) {
+      console.error("Error adding previous order item to cart:", error);
+    }
+  };
 
   return (
     <Fragment key={`${product.id}-${quantity}`}>
@@ -23,14 +35,27 @@ function OrderRow({ product, quantity, estimatedDeliveryTimeMs }) {
             : "Delivery date pending"}
         </div>
         <div className="product-quantity">Quantity: {quantity}</div>
-        <button type="button" className="buy-again-button button-primary">
+        <button type="button" className="buy-again-button button-primary" onClick={handleAddToCart}>
           <img className="buy-again-icon" src="/images/icons/buy-again.png" alt="buy again" />
           <span className="buy-again-message">Add to Cart</span>
         </button>
       </div>
 
       <div className="product-actions">
-        <button type="button" className="track-package-button button-secondary" onClick={() => navigate("/tracking")}>
+        <button
+          type="button"
+          className="track-package-button button-secondary"
+          onClick={() =>
+            navigate("/tracking", {
+              state: {
+                orderId: order.id,
+                product,
+                quantity,
+                estimatedDeliveryTimeMs,
+              },
+            })
+          }
+        >
           Track package
         </button>
       </div>
@@ -38,7 +63,7 @@ function OrderRow({ product, quantity, estimatedDeliveryTimeMs }) {
   );
 }
 
-function OrderCard({ order }) {
+function OrderCard({ order, onCartRefresh }) {
   return (
     <div className="order-container">
       <div className="order-header">
@@ -67,9 +92,11 @@ function OrderCard({ order }) {
           return (
             <OrderRow
               key={productKey}
+              order={order}
               product={product}
               quantity={productEntry.quantity}
               estimatedDeliveryTimeMs={productEntry.estimatedDeliveryTimeMs}
+              onCartRefresh={onCartRefresh}
             />
           );
         })}
@@ -78,19 +105,19 @@ function OrderCard({ order }) {
   );
 }
 
-export function OrdersPage({ quantityByProduct }) {
+export function OrdersPage({ quantityByProduct, onCartRefresh }) {
   const [orders, setOrders] = useState([]);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get("/api/orders?expand=products");
-        setOrders(response.data || []);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
-    };
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get("/api/orders?expand=products");
+      setOrders(response.data || []);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchOrders();
   }, []);
 
@@ -106,7 +133,7 @@ export function OrdersPage({ quantityByProduct }) {
         ) : (
           <div className="orders-grid">
             {orders.map((order) => (
-              <OrderCard key={order.id} order={order} />
+              <OrderCard key={order.id} order={order} onCartRefresh={onCartRefresh} />
             ))}
           </div>
         )}

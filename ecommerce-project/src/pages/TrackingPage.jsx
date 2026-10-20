@@ -1,9 +1,46 @@
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
 import "./TrackingPage.css";
 
 export function TrackingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [trackingItem, setTrackingItem] = useState(null);
+
+  useEffect(() => {
+    const hydrateTrackingInfo = async () => {
+      if (location.state) {
+        setTrackingItem(location.state);
+        return;
+      }
+
+      try {
+        const response = await axios.get("/api/orders?expand=products");
+        const latestOrder = response.data?.[0];
+        const latestProduct = latestOrder?.products?.[0];
+
+        if (latestOrder && latestProduct) {
+          setTrackingItem({
+            orderId: latestOrder.id,
+            product: latestProduct.product,
+            quantity: latestProduct.quantity,
+            estimatedDeliveryTimeMs: latestProduct.estimatedDeliveryTimeMs,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading tracking info:", error);
+      }
+    };
+
+    hydrateTrackingInfo();
+  }, [location.state]);
+
+  const product = trackingItem?.product;
+  const quantity = trackingItem?.quantity || 1;
+  const estimatedDeliveryTimeMs = trackingItem?.estimatedDeliveryTimeMs;
 
   return (
     <>
@@ -15,18 +52,19 @@ export function TrackingPage() {
             View all orders
           </button>
 
-          <div className="delivery-date">Arriving on Monday, June 13</div>
-
-          <div className="product-info">
-            Black and Gray Athletic Cotton Socks - 6 Pairs
+          <div className="delivery-date">
+            {estimatedDeliveryTimeMs
+              ? `Arriving on ${dayjs(estimatedDeliveryTimeMs).format("dddd, MMMM D")}`
+              : "Delivery date pending"}
           </div>
 
-          <div className="product-info">Quantity: 1</div>
+          <div className="product-info">{product?.name || "Product"}</div>
 
-          <img
-            className="product-image"
-            src="/images/products/athletic-cotton-socks-6-pairs.jpg"
-          />
+          <div className="product-info">Quantity: {quantity}</div>
+
+          {product?.image ? (
+            <img className="product-image" src={product.image} alt={product.name} />
+          ) : null}
 
           <div className="progress-labels-container">
             <div className="progress-label">Preparing</div>

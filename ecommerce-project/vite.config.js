@@ -5,6 +5,10 @@ export default defineConfig({
   root: 'src',
   publicDir: '../public',
   plugins: [react()],
+  build: {
+    outDir: '../ecommerce-backend/dist',
+    emptyOutDir: true,
+  },
   test: {
     globals: true,
     environment: 'jsdom',

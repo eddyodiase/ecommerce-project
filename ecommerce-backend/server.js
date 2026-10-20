@@ -60,44 +60,65 @@ app.use((err, req, res, next) => {
 });
 /* eslint-enable no-unused-vars */
 
-// Sync database and load default data if none exist
+// Sync database and ensure default data exists for all required tables.
 await sequelize.sync();
 
-const productCount = await Product.count();
-if (productCount === 0) {
+async function ensureDefaultData() {
   const timestamp = Date.now();
 
-  const productsWithTimestamps = defaultProducts.map((product, index) => ({
-    ...product,
-    createdAt: new Date(timestamp + index),
-    updatedAt: new Date(timestamp + index)
-  }));
+  const [productCount, deliveryOptionCount, cartItemCount, orderCount] = await Promise.all([
+    Product.count(),
+    DeliveryOption.count(),
+    CartItem.count(),
+    Order.count(),
+  ]);
 
-  const deliveryOptionsWithTimestamps = defaultDeliveryOptions.map((option, index) => ({
-    ...option,
-    createdAt: new Date(timestamp + index),
-    updatedAt: new Date(timestamp + index)
-  }));
+  if (productCount === 0) {
+    const productsWithTimestamps = defaultProducts.map((product, index) => ({
+      ...product,
+      createdAt: new Date(timestamp + index),
+      updatedAt: new Date(timestamp + index)
+    }));
 
-  const cartItemsWithTimestamps = defaultCart.map((item, index) => ({
-    ...item,
-    createdAt: new Date(timestamp + index),
-    updatedAt: new Date(timestamp + index)
-  }));
+    await Product.bulkCreate(productsWithTimestamps);
+    console.log('Default products added to the database.');
+  }
 
-  const ordersWithTimestamps = defaultOrders.map((order, index) => ({
-    ...order,
-    createdAt: new Date(timestamp + index),
-    updatedAt: new Date(timestamp + index)
-  }));
+  if (deliveryOptionCount === 0) {
+    const deliveryOptionsWithTimestamps = defaultDeliveryOptions.map((option, index) => ({
+      ...option,
+      createdAt: new Date(timestamp + index),
+      updatedAt: new Date(timestamp + index)
+    }));
 
-  await Product.bulkCreate(productsWithTimestamps);
-  await DeliveryOption.bulkCreate(deliveryOptionsWithTimestamps);
-  await CartItem.bulkCreate(cartItemsWithTimestamps);
-  await Order.bulkCreate(ordersWithTimestamps);
+    await DeliveryOption.bulkCreate(deliveryOptionsWithTimestamps);
+    console.log('Default delivery options added to the database.');
+  }
 
-  console.log('Default data added to the database.');
+  if (cartItemCount === 0) {
+    const cartItemsWithTimestamps = defaultCart.map((item, index) => ({
+      ...item,
+      createdAt: new Date(timestamp + index),
+      updatedAt: new Date(timestamp + index)
+    }));
+
+    await CartItem.bulkCreate(cartItemsWithTimestamps);
+    console.log('Default cart data added to the database.');
+  }
+
+  if (orderCount === 0) {
+    const ordersWithTimestamps = defaultOrders.map((order, index) => ({
+      ...order,
+      createdAt: new Date(timestamp + index),
+      updatedAt: new Date(timestamp + index)
+    }));
+
+    await Order.bulkCreate(ordersWithTimestamps);
+    console.log('Default orders added to the database.');
+  }
 }
+
+await ensureDefaultData();
 
 // Start server
 app.listen(PORT, () => {

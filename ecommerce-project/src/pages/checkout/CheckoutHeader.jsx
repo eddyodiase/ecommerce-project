@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./CheckoutHeader.css";
 
-export function CheckoutHeader() {
+export function CheckoutHeader({ cartRefreshKey = 0 }) {
   const navigate = useNavigate();
   const [totalItems, setTotalItems] = useState(0);
 
@@ -16,7 +16,7 @@ export function CheckoutHeader() {
       .catch((error) => {
         console.error("Error loading checkout summary:", error);
       });
-  }, []);
+  }, [cartRefreshKey]);
 
   return (
     <div className="checkout-header">
