@@ -23,7 +23,7 @@ export function CheckoutHeader({ cartRefreshKey = 0 }) {
       <div className="header-content">
         <div className="checkout-header-left-section">
           <Link to="/">
-            <img className="logo" src="/images/logo.png" alt="logo" />
+            <img className="logo" src="/images/logo-white.png" alt="logo" />
             <img className="mobile-logo" src="/images/mobile-logo.png" alt="mobile logo" />
           </Link>
         </div>
