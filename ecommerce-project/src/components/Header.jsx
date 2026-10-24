@@ -46,6 +46,10 @@ export function Header({ cartRefreshKey = 0 }) {
       </div>
 
       <div className="right-section">
+        <button type="button" className="login-link header-link" onClick={() => navigate("/orders")}>
+          <img className="login-icon" src="/images/icons/login-icon.png" alt="login" />
+          <span className="login-text">Login</span>
+        </button>
         <button type="button" className="orders-link header-link" onClick={() => navigate("/orders")}>
           <span className="orders-text">Orders</span>
         </button>

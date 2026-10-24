@@ -67,16 +67,19 @@
 }
 
 .header .middle-section {
-  flex: 1;
-  max-width: 770px;
-  margin-left: 8px;
-  margin-right: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 700px;
+  margin-left: 5px;
+  margin-right: 7px;
   display: flex;
+  align-items: center;
 }
 
 .header .search-bar {
-  flex: 1;
-  width: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
   font-size: 14px;
   height: 34px;
   padding-left: 10px;
@@ -106,27 +109,52 @@
 }
 
 .header .right-section {
-  width: 148px;
+  width: auto;
+  max-width: 100%;
   flex-shrink: 0;
   display: flex;
-  justify-content: end;
+  justify-content: flex-start;
   align-items: center;
   margin-left: -1.5px;
+  gap: 10px;
 }
 
+.header .login-link,
 .header .orders-link {
-  color: white;
   display: flex;
   align-items: center;
-  padding-left: 4px;
-  padding-right: 4px;
-  background: transparent;
+  justify-content: center;
+  padding-left: 15px;
+  padding-right: 15px;
+  background: white;
   border: 1px solid transparent;
   margin-right: 1px;
   margin-left: -1.5px;
 }
 
+.header a.login-link,
+.header a.login-link:visited,
+.header a.login-link:hover,
+.header a.login-link:active,
+.header a.login-link .login-text,
+.header a.login-link:visited .login-text,
+.header a.login-link:hover .login-text,
+.header a.login-link:active .login-text {
+  color: black !important;
+  text-decoration: none;
+}
+
+.header .login-icon {
+  width: 15px;
+  height: 15px;
+  margin-right: 15px;
+  filter: none;
+}
+
+.header .login-text,
 .header .orders-text {
+  background: white;
+  color: black;
   display: block;
   font-size: 16px;
   font-weight: 700;
