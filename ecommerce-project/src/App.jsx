@@ -112,17 +112,13 @@ function App() {
       <Route
         path="checkout"
         element={
-          isAuthenticated ? (
-            <>
-              <CheckoutHeader cartRefreshKey={cartRefreshKey} user={auth.user} onLogout={handleLogout} />
-              <CheckoutPage
-                quantityByProduct={quantityByProduct}
-                onCartChange={refreshCart}
-              />
-            </>
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <>
+            <CheckoutHeader cartRefreshKey={cartRefreshKey} user={auth.user} onLogout={handleLogout} />
+            <CheckoutPage
+              quantityByProduct={quantityByProduct}
+              onCartChange={refreshCart}
+            />
+          </>
         }
       />
       <Route

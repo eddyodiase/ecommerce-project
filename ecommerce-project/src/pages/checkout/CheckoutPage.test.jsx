@@ -5,6 +5,7 @@ import axios from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CheckoutPage } from './CheckoutPage';
+import { CheckoutHeader } from './CheckoutHeader';
 
 vi.mock('axios');
 
@@ -37,6 +38,9 @@ describe('CheckoutPage', () => {
   ];
 
   beforeEach(() => {
+    localStorage.setItem('authToken', 'test-token');
+    localStorage.removeItem('guestCart');
+
     axios.get.mockImplementation((url) => {
       if (url === '/api/cart-items?expand=product') {
         return Promise.resolve({ data: cartItems });
@@ -75,6 +79,26 @@ describe('CheckoutPage', () => {
     expect(await screen.findByText('Payment Summary')).toBeInTheDocument();
     expect(screen.getByText('Items (2):')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /place your order/i })).toBeInTheDocument();
+  });
+
+  it('shows the guest cart item count in checkout header without a login', () => {
+    localStorage.removeItem('authToken');
+    localStorage.setItem('guestCart', JSON.stringify({
+      p1: { productId: 'p1', quantity: 2 },
+      p2: { productId: 'p2', quantity: 1 },
+    }));
+
+    axios.get.mockResolvedValue({
+      data: { totalItems: 0 },
+    });
+
+    render(
+      <MemoryRouter>
+        <CheckoutHeader />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/3 items/i)).toBeInTheDocument();
   });
 
   it('navigates to the orders page when the order is placed', async () => {

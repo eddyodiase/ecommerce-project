@@ -7,6 +7,11 @@ export function PaymentSummary({ paymentSummary = {} }) {
   const navigate = useNavigate();
 
   const handlePlaceOrder = async () => {
+    if (!localStorage.getItem("authToken")) {
+      navigate("/login");
+      return;
+    }
+
     try {
       await axios.post("/api/orders");
       navigate("/orders");

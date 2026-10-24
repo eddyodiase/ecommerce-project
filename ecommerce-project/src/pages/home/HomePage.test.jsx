@@ -62,4 +62,25 @@ describe('HomePage', () => {
       });
     });
   });
+
+  it('stores guest items in localStorage without requiring login', async () => {
+    localStorage.removeItem('authToken');
+    axios.get.mockResolvedValue({ data: products });
+
+    render(
+      <MemoryRouter>
+        <HomePage quantityByProduct={{}} setQuantityByProduct={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    const addButton = await screen.findByRole('button', { name: /add to cart/i });
+    await userEvent.click(addButton);
+
+    await waitFor(() => {
+      const guestCart = JSON.parse(localStorage.getItem('guestCart') || '{}');
+      expect(guestCart.p1.quantity).toBe(1);
+    });
+
+    expect(axios.post).not.toHaveBeenCalled();
+  });
 });

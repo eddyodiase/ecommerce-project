@@ -8,8 +8,27 @@ export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
   const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+
+    if (!authToken) {
+      try {
+        const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
+        const nextTotalItems = Object.values(guestCart || {}).reduce(
+          (sum, item) => sum + (Number(item.quantity) || 0),
+          0
+        );
+        setTotalItems(nextTotalItems);
+      } catch (error) {
+        console.error("Error loading guest cart summary:", error);
+        setTotalItems(0);
+      }
+      return;
+    }
+
     axios
-      .get("/api/payment-summary")
+      .get("/api/payment-summary", {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
       .then((response) => {
         setTotalItems(response.data?.totalItems || 0);
       })

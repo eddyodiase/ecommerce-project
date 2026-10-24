@@ -13,7 +13,17 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
 
   const loadCart = () => {
     if (!authToken) {
-      setCartItems([]);
+      try {
+        const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
+        const items = Object.values(guestCart || {}).map((item) => ({
+          ...item,
+          product: item.product || null,
+        }));
+        setCartItems(items);
+      } catch (error) {
+        console.error("Error loading guest cart:", error);
+        setCartItems([]);
+      }
       return;
     }
 
