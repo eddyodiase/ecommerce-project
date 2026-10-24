@@ -36,13 +36,12 @@ function getStoredAuth() {
 function App() {
   const [quantityByProduct, setQuantityByProduct] = useState({});
   const [cartRefreshKey, setCartRefreshKey] = useState(0);
-  const [auth, setAuth] = useState(getStoredAuth);
+  const [auth, setAuth] = useState(() => getStoredAuth());
 
   useEffect(() => {
     const { token, user } = getStoredAuth();
 
     if (!token) {
-      setAuth({ token: null, user: null });
       return;
     }
 
