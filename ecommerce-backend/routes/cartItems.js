@@ -2,8 +2,11 @@ import express from 'express';
 import { CartItem } from '../models/CartItem.js';
 import { Product } from '../models/Product.js';
 import { DeliveryOption } from '../models/DeliveryOption.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
+
+router.use(requireAuth);
 
 router.get('/', async (req, res) => {
   const expand = req.query.expand;

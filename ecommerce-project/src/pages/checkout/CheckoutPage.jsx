@@ -20,9 +20,13 @@ export function CheckoutPage({ onCartChange }) {
   const [loading, setLoading] = useState(true);
 
   const loadCheckoutData = async () => {
+    const token = localStorage.getItem("authToken");
+
     try {
       const [cartResponse, deliveryOptionsResponse, paymentSummaryResponse] = await Promise.all([
-        axios.get("/api/cart-items?expand=product"),
+        axios.get("/api/cart-items?expand=product", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
         axios.get("/api/delivery-options?expand=estimatedDeliveryTime"),
         axios.get("/api/payment-summary"),
       ]);
@@ -41,9 +45,13 @@ export function CheckoutPage({ onCartChange }) {
     let isMounted = true;
 
     const fetchCheckoutData = async () => {
+      const token = localStorage.getItem("authToken");
+
       try {
         const [cartResponse, deliveryOptionsResponse, paymentSummaryResponse] = await Promise.all([
-          axios.get("/api/cart-items?expand=product"),
+          axios.get("/api/cart-items?expand=product", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
           axios.get("/api/delivery-options?expand=estimatedDeliveryTime"),
           axios.get("/api/payment-summary"),
         ]);
@@ -72,8 +80,12 @@ export function CheckoutPage({ onCartChange }) {
   }, []);
 
   const onQuantityChange = async (productId, quantity) => {
+    const token = localStorage.getItem("authToken");
+
     try {
-      await axios.put(`/api/cart-items/${productId}`, { quantity });
+      await axios.put(`/api/cart-items/${productId}`, { quantity }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       await loadCheckoutData();
       onCartChange?.();
     } catch (error) {
@@ -82,8 +94,12 @@ export function CheckoutPage({ onCartChange }) {
   };
 
   const onRemoveItem = async (productId) => {
+    const token = localStorage.getItem("authToken");
+
     try {
-      await axios.delete(`/api/cart-items/${productId}`);
+      await axios.delete(`/api/cart-items/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       await loadCheckoutData();
       onCartChange?.();
     } catch (error) {
@@ -92,8 +108,12 @@ export function CheckoutPage({ onCartChange }) {
   };
 
   const onDeliveryOptionChange = async (productId, deliveryOptionId) => {
+    const token = localStorage.getItem("authToken");
+
     try {
-      await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId });
+      await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       await loadCheckoutData();
       onCartChange?.();
     } catch (error) {

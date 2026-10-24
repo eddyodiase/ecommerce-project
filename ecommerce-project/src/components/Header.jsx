@@ -4,17 +4,32 @@ import { Link, useNavigate } from "react-router-dom";
 
 import "./Header.css";
 
-export function Header({ cartRefreshKey = 0 }) {
+export function Header({ cartRefreshKey = 0, user, onLogout }) {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const authToken = localStorage.getItem("authToken");
+  const isLoggedIn = Boolean(user || authToken);
+  const firstName = user?.name?.split(" ")?.[0] || "User";
 
   const loadCart = () => {
+    if (!authToken) {
+      setCartItems([]);
+      return;
+    }
+
     axios
-      .get("/api/cart-items")
+      .get("/api/cart-items", {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
       .then((response) => {
         setCartItems(response.data || []);
       })
       .catch((error) => {
+        if (error.response?.status === 401) {
+          setCartItems([]);
+          return;
+        }
+
         console.error("Error loading cart:", error);
       });
   };
@@ -46,10 +61,40 @@ export function Header({ cartRefreshKey = 0 }) {
       </div>
 
       <div className="right-section">
-        <button type="button" className="login-link header-link" onClick={() => navigate("/orders")}>
-          <img className="login-icon" src="/images/icons/login-icon.png" alt="login" />
-          <span className="login-text">Login</span>
-        </button>
+        {isLoggedIn ? (
+          <>
+            <button
+              type="button"
+              className="user-badge header-link"
+              onClick={() => navigate("/profile")}
+              style={{
+                color: "#fff",
+                fontSize: "0.85rem",
+                padding: "6px 10px",
+                borderRadius: "999px",
+                background: "rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.14)",
+              }}
+            >
+              Hi, {firstName}
+            </button>
+            <button
+              type="button"
+              className="logout-link header-link"
+              onClick={() => {
+                onLogout?.();
+                navigate("/");
+              }}
+            >
+              <span className="login-text">Logout</span>
+            </button>
+          </>
+        ) : (
+          <button type="button" className="login-link header-link" onClick={() => navigate("/login")}>
+            <img className="login-icon" src="/images/icons/login-icon.png" alt="login" />
+            <span className="login-text">Login</span>
+          </button>
+        )}
         <button type="button" className="orders-link header-link" onClick={() => navigate("/orders")}>
           <span className="orders-text">Orders</span>
         </button>

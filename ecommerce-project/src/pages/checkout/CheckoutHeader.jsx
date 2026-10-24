@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./CheckoutHeader.css";
 
-export function CheckoutHeader({ cartRefreshKey = 0 }) {
+export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
   const navigate = useNavigate();
   const [totalItems, setTotalItems] = useState(0);
 
@@ -34,7 +34,19 @@ export function CheckoutHeader({ cartRefreshKey = 0 }) {
           </button>
           )
         </div>
-        <div className="checkout-header-right-section">
+        <div className="checkout-header-right-section" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {user ? (
+            <button
+              type="button"
+              className="return-to-home-link"
+              onClick={() => {
+                onLogout?.();
+                navigate("/");
+              }}
+            >
+              Logout
+            </button>
+          ) : null}
           <img src="/images/icons/checkout-lock-icon.png" alt="secure checkout" />
         </div>
       </div>

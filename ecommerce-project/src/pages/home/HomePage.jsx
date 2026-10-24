@@ -1,10 +1,12 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/Header";
 import ProductsGrid from "./productsGrid";
 import "./HomePage.css";
 
-export function HomePage({ quantityByProduct, setQuantityByProduct }) {
+export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogout }) {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [addedProductId, setAddedProductId] = useState(null);
   const [cartRefreshKey, setCartRefreshKey] = useState(0);
@@ -28,12 +30,20 @@ export function HomePage({ quantityByProduct, setQuantityByProduct }) {
   };
 
   const handleAddToCart = async (product) => {
+    const token = localStorage.getItem("authToken");
     const quantity = quantityByProduct[product.id] ?? 1;
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
     try {
       await axios.post("/api/cart-items", {
         productId: product.id,
         quantity,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setCartRefreshKey((current) => current + 1);
@@ -48,7 +58,7 @@ export function HomePage({ quantityByProduct, setQuantityByProduct }) {
 
   return (
    <>
-      <Header cartRefreshKey={cartRefreshKey} />
+      <Header cartRefreshKey={cartRefreshKey} user={user} onLogout={onLogout} />
       <main className="home-page">
         <ProductsGrid
           products={products}

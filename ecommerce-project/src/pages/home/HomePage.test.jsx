@@ -24,6 +24,7 @@ describe('HomePage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('authToken', 'test-token');
   });
 
   it('renders the product list from the API', async () => {
@@ -56,6 +57,8 @@ describe('HomePage', () => {
       expect(axios.post).toHaveBeenCalledWith('/api/cart-items', {
         productId: 'p1',
         quantity: 1,
+      }, {
+        headers: { Authorization: 'Bearer test-token' },
       });
     });
   });
