@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import "./ProductsSearchPage.css";
@@ -217,8 +217,8 @@ export function ProductsSearchPage() {
   const [selectedSellers, setSelectedSellers] = useState([]);
   const [sortBy, setSortBy] = useState("featured");
   const [page, setPage] = useState(1);
-  const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState(() => buildSampleProducts());
+  const [isLoading, setIsLoading] = useState(false);
   const [cartCount, setCartCount] = useState(() => Number(localStorage.getItem("cartCount") || 0));
 
   const brandOptions = ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell"];
@@ -226,48 +226,42 @@ export function ProductsSearchPage() {
   const cardTypeOptions = ["Visa", "Mastercard", "Gift cards", "PayPal"];
   const sellerOptions = ["NorthPeak Living", "HomeStyle Living", "Peak & Co", "Aurelia Beauty", "Edgewell Studio"];
 
-  useEffect(() => {
-    let isCancelled = false;
+  const loadProducts = useCallback(async () => {
+    const params = {
+      q: searchTerm,
+      category: selectedCategory === "All" ? "" : selectedCategory,
+      brand: selectedBrands.join(",") || undefined,
+      rating: selectedRatings.length ? Math.min(...selectedRatings) : undefined,
+      sort: sortBy,
+      page,
+    };
 
-    const fetchProducts = async () => {
-      setIsLoading(true);
+    setIsLoading(true);
 
-      const params = {
-        q: searchTerm,
-        category: selectedCategory === "All" ? "" : selectedCategory,
-        brand: selectedBrands.join(",") || undefined,
-        rating: selectedRatings.length ? Math.min(...selectedRatings) : undefined,
-        sort: sortBy,
-        page,
-      };
+    try {
+      const response = await axios.get("/api/products", {
+        params,
+        timeout: 1500,
+      });
 
-      try {
-        const response = await axios.get("/api/products", { params });
-        const nextProducts = Array.isArray(response.data)
-          ? response.data
-          : response.data?.products || [];
+      const nextProducts = Array.isArray(response.data)
+        ? response.data
+        : response.data?.products || [];
 
-        if (!isCancelled) {
-          setProducts(nextProducts.length ? nextProducts : buildSampleProducts());
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          console.error("Falling back to sample product data:", error);
-          setProducts(buildSampleProducts());
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
+      if (nextProducts.length > 0) {
+        setProducts(nextProducts);
       }
-    };
+    } catch (error) {
+      console.error("Using sample product data fallback:", error);
+      setProducts(buildSampleProducts());
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, searchTerm, selectedBrands, selectedCardTypes, selectedCategory, selectedDeliveryTypes, selectedRatings, selectedSellers, sortBy]);
 
-    fetchProducts();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [searchTerm, selectedCategory, selectedBrands, selectedDeliveryTypes, selectedCardTypes, selectedRatings, selectedSellers, sortBy, page]);
+  useEffect(() => {
+    void loadProducts();
+  }, [loadProducts]);
 
   const filteredProducts = useMemo(() => {
     const sourceProducts = products.length ? products : buildSampleProducts();
@@ -366,7 +360,7 @@ export function ProductsSearchPage() {
               className="primary-search-button"
               onClick={() => {
                 setPage(1);
-                setIsLoading(true);
+                void loadProducts();
               }}
             >
               Search
@@ -490,7 +484,7 @@ export function ProductsSearchPage() {
             </label>
           </div>
 
-          {isLoading ? (
+          {isLoading && products.length === 0 ? (
             <div className="loading-state">Loading products...</div>
           ) : pageProducts.length === 0 ? (
             <div className="empty-results">No products match these filters.</div>
