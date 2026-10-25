@@ -23,6 +23,16 @@ body {
   animation: pageFade 0.25s ease;
 }
 
+.home-page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: rgb(99, 99, 99);
+  font-size: 18px;
+  font-weight: 500;
+}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(100px, 1fr));

@@ -28,7 +28,7 @@ describe('HomePage', () => {
   });
 
   it('renders the product list from the API', async () => {
-    axios.get.mockResolvedValue({ data: products });
+    axios.get.mockResolvedValue({ data: { products } });
 
     render(
       <MemoryRouter>
@@ -61,6 +61,25 @@ describe('HomePage', () => {
         headers: { Authorization: 'Bearer test-token' },
       });
     });
+  });
+
+  it('shows a loading state while products are still loading', async () => {
+    let resolveProducts;
+    axios.get.mockReturnValue(new Promise((resolve) => {
+      resolveProducts = resolve;
+    }));
+
+    render(
+      <MemoryRouter>
+        <HomePage quantityByProduct={{}} setQuantityByProduct={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/loading products/i)).toBeInTheDocument();
+
+    resolveProducts({ data: products });
+
+    expect(await screen.findByText('Black and Gray Athletic Cotton Socks - 6 Pairs')).toBeInTheDocument();
   });
 
   it('stores guest items in localStorage without requiring login', async () => {

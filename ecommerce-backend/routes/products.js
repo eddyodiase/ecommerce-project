@@ -5,6 +5,30 @@ const router = express.Router();
 
 const normalizeString = (value) => String(value || '').trim().toLowerCase();
 
+const normalizeProductImagePath = (image) => {
+  if (!image) return '';
+
+  const normalized = String(image).trim();
+
+  if (/^(https?:)?\/\//i.test(normalized) || normalized.startsWith('data:')) {
+    return normalized;
+  }
+
+  if (normalized.startsWith('/images/')) {
+    return normalized;
+  }
+
+  if (normalized.startsWith('images/')) {
+    return `/${normalized}`;
+  }
+
+  if (normalized.startsWith('/')) {
+    return `/images${normalized}`;
+  }
+
+  return `/images/${normalized}`;
+};
+
 const deriveBrand = (product) => {
   const name = normalizeString(product?.name);
   if (name.includes('northpeak')) return 'NorthPeak';
@@ -35,7 +59,7 @@ router.get('/', async (req, res) => {
       stars: 4 + ((index % 3) * 0.5),
       count: 75 + ((index * 37) % 5000),
     },
-    image: product.image.startsWith('images/') ? `/images/${product.image}` : product.image,
+    image: normalizeProductImagePath(product.image),
   }));
 
   let filteredProducts = [...normalizedProducts];

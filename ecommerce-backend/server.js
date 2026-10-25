@@ -127,6 +127,16 @@ async function ensureDefaultData() {
 await ensureDefaultData();
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Stop the stale backend process and try again.`);
+    process.exit(1);
+  }
+
+  console.error('Server startup error:', error);
+  process.exit(1);
 });

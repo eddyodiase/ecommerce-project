@@ -10,18 +10,42 @@ import "./HomePage.css";
 export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogout }) {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [addedProductId, setAddedProductId] = useState(null);
   const [cartRefreshKey, setCartRefreshKey] = useState(0);
 
   useEffect(() => {
-    axios 
+    let isMounted = true;
+
+    setIsLoading(true);
+
+    axios
       .get("/api/products")
       .then((response) => {
-        setProducts(response.data || []);
+        if (!isMounted) {
+          return;
+        }
+
+        const nextProducts = Array.isArray(response.data)
+          ? response.data
+          : Array.isArray(response.data?.products)
+            ? response.data.products
+            : [];
+
+        setProducts(nextProducts);
       })
       .catch((error) => {
         console.error("Error loading products:", error);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleQuantityChange = (productId, value) => {
@@ -67,14 +91,20 @@ export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogo
    <>
       <Header cartRefreshKey={cartRefreshKey} user={user} onLogout={onLogout} />
       <main className="home-page">
-        <ProductsGrid
-          products={products}
-          quantityByProduct={quantityByProduct}
-          setQuantityByProduct={setQuantityByProduct}
-          addedProductId={addedProductId}
-          handleAddToCart={handleAddToCart}
-          handleQuantityChange={handleQuantityChange}
-        />
+        {isLoading ? (
+          <div className="home-page-loading" aria-live="polite">
+            Loading products...
+          </div>
+        ) : (
+          <ProductsGrid
+            products={products}
+            quantityByProduct={quantityByProduct}
+            setQuantityByProduct={setQuantityByProduct}
+            addedProductId={addedProductId}
+            handleAddToCart={handleAddToCart}
+            handleQuantityChange={handleQuantityChange}
+          />
+        )}
       </main>
    </>
   );

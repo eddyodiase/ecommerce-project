@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node scripts/free-port.js && node server.js",
+    "dev": "node scripts/free-port.js && nodemon server.js",
     "zip": "node zipFiles.js"
   },
   "keywords": [],
@@ -14,10 +14,8 @@
   "license": "ISC",
   "description": "This is the backend for the [ecommerce-project](https://github.com/SuperSimpleDev/ecommerce-project). - 95% of the code was generated with AI.",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "express": "^4.22.3",
-    "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.14.1",
     "patch-package": "^8.0.1",
     "pg": "^8.16.0",

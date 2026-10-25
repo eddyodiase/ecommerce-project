@@ -1,5 +1,4 @@
 import { Sequelize } from 'sequelize';
-import fs from 'fs';
 
 const isUsingRDS = process.env.RDS_HOSTNAME && process.env.RDS_USERNAME && process.env.RDS_PASSWORD;
 const dbType = process.env.DB_TYPE || 'mysql';
@@ -27,31 +26,9 @@ if (isUsingRDS) {
     storage: 'database.sqlite',
     logging: false
   });
-
-  // Save database to file after write operations.
-  sequelize.addHook('afterCreate', saveDatabaseToFile);
-  sequelize.addHook('afterDestroy', saveDatabaseToFile);
-  sequelize.addHook('afterUpdate', saveDatabaseToFile);
-  sequelize.addHook('afterSave', saveDatabaseToFile);
-  sequelize.addHook('afterUpsert', saveDatabaseToFile);
-  sequelize.addHook('afterBulkCreate', saveDatabaseToFile);
-  sequelize.addHook('afterBulkDestroy', saveDatabaseToFile);
-  sequelize.addHook('afterBulkUpdate', saveDatabaseToFile);
 }
 
 export async function saveDatabaseToFile() {
-  try {
-    const dbInstance = await sequelize.connectionManager.getConnection();
-    const database = dbInstance?.database ?? dbInstance;
-
-    if (!database || typeof database.export !== 'function') {
-      return;
-    }
-
-    const binaryArray = database.export();
-    const buffer = Buffer.from(binaryArray);
-    fs.writeFileSync('database.sqlite', buffer);
-  } catch (error) {
-    console.warn('Database snapshot save skipped:', error.message);
-  }
+  // sqlite3 persists directly to the configured storage file; no custom export hook is needed.
+  return undefined;
 }

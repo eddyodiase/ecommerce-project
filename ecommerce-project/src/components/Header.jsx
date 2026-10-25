@@ -23,7 +23,13 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
         headers: { Authorization: `Bearer ${authToken}` },
       })
       .then((response) => {
-        setCartItems(response.data || []);
+        const nextCartItems = Array.isArray(response.data)
+          ? response.data
+          : Array.isArray(response.data?.cartItems)
+            ? response.data.cartItems
+            : [];
+
+        setCartItems(nextCartItems);
       })
       .catch((error) => {
         if (error.response?.status === 401) {
