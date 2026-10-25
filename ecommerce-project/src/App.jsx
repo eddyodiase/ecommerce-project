@@ -11,6 +11,7 @@ import { CheckoutHeader } from "./pages/checkout/CheckoutHeader";
 import { LoginPage } from "./pages/login/LoginPage";
 import { RegisterPage } from "./pages/register/RegisterPage";
 import { ProfilePage } from "./pages/profile/ProfilePage";
+import { ProductsSearchPage } from "./pages/products/ProductsSearchPage";
 import "./App.css";
 
 function getStoredAuth() {
@@ -137,6 +138,7 @@ function App() {
         }
       />
       <Route path="tracking" element={<TrackingPage />} />
+      <Route path="products" element={<ProductsSearchPage />} />
     </Routes>
   );
 }

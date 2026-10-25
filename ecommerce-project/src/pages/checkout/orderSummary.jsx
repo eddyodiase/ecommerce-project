@@ -1,5 +1,6 @@
 
 import dayjs from "dayjs";
+import { getProductDisplayName } from "../../utils/cart";
 import { toCurrency } from "../../utils/money";
 import { DeliveryOptions } from "./DeliveryOptions";
 
@@ -14,6 +15,7 @@ export function OrderSummary({
     <div className="order-summary">
       {cartItems.map((item) => {
         const product = item.product || {};
+        const productName = getProductDisplayName(product);
         const selectedDeliveryOption =
           deliveryOptions.find((option) => option.id === item.deliveryOptionId) ||
           deliveryOptions[0];
@@ -26,9 +28,9 @@ export function OrderSummary({
                 : "As scheduled"}
             </div>
             <div className="cart-item-details-grid">
-              <img className="product-image" src={product.image} alt={product.name} />
+              <img className="product-image" src={product.image} alt={productName} />
               <div className="cart-item-details">
-                <div className="product-name">{product.name}</div>
+                <div className="product-name">{productName}</div>
                 <div className="product-price">{toCurrency(product.priceCents || 0)}</div>
                 <div className="product-quantity">
                   <span>Quantity:</span>

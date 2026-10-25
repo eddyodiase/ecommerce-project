@@ -1,3 +1,18 @@
+export function getProductDisplayName(product) {
+  const productObject = product || {};
+  return productObject.name || productObject.productName || productObject.title || "Product";
+}
+
+export function normalizeCartProduct(product) {
+  const productObject = product || {};
+  const name = getProductDisplayName(productObject);
+
+  return {
+    ...productObject,
+    name,
+  };
+}
+
 export function getGuestCart() {
   try {
     const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
@@ -14,19 +29,25 @@ export function saveGuestCart(nextCart) {
 }
 
 export function addGuestCartItem(product, quantity = 1) {
+  const normalizedProduct = normalizeCartProduct(product);
   const guestCart = getGuestCart();
-  const existingItem = guestCart[product.id] || {};
+  const existingItem = guestCart[normalizedProduct.id] || {};
   const nextCart = {
     ...guestCart,
-    [product.id]: {
+    [normalizedProduct.id]: {
       ...existingItem,
-      productId: product.id,
+      productId: normalizedProduct.id,
       quantity: (Number(existingItem.quantity) || 0) + (Number(quantity) || 0),
       deliveryOptionId: existingItem.deliveryOptionId || "1",
       product: {
         ...(existingItem.product || {}),
-        ...(product || {}),
-        id: product.id,
+        ...normalizedProduct,
+        id: normalizedProduct.id,
+        name: getProductDisplayName({
+          ...(existingItem.product || {}),
+          ...normalizedProduct,
+          id: normalizedProduct.id,
+        }),
       },
     },
   };
@@ -48,7 +69,7 @@ export function removeGuestCartItem(productId) {
 export function getGuestCartItems() {
   return Object.values(getGuestCart()).map((item) => ({
     ...item,
-    product: item.product || null,
+    product: normalizeCartProduct(item.product || null),
   }));
 }
 

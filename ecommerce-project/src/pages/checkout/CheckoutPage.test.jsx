@@ -101,6 +101,55 @@ describe('CheckoutPage', () => {
     expect(screen.getByText(/3 items/i)).toBeInTheDocument();
   });
 
+  it('uses the exact product name from the cart item when the record stores it under an alternate field', async () => {
+    const altNameCartItems = [
+      {
+        productId: 'p1',
+        quantity: 1,
+        deliveryOptionId: 'delivery-1',
+        product: {
+          id: 'p1',
+          productName: 'NorthPeak Towel Hook',
+          image: 'images/products/athletic-cotton-socks-6-pairs.jpg',
+          priceCents: 1090,
+        },
+      },
+    ];
+
+    axios.get.mockImplementation((url) => {
+      if (url === '/api/cart-items?expand=product') {
+        return Promise.resolve({ data: altNameCartItems });
+      }
+
+      if (url === '/api/delivery-options?expand=estimatedDeliveryTime') {
+        return Promise.resolve({ data: deliveryOptions });
+      }
+
+      if (url === '/api/payment-summary') {
+        return Promise.resolve({
+          data: {
+            totalItems: 1,
+            productCostCents: 1090,
+            shippingCostCents: 0,
+            totalCostBeforeTaxCents: 1090,
+            taxCents: 109,
+            totalCostCents: 1199,
+          },
+        });
+      }
+
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
+
+    render(
+      <MemoryRouter>
+        <CheckoutPage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('NorthPeak Towel Hook')).toBeInTheDocument();
+  });
+
   it('navigates to the orders page when the order is placed', async () => {
     render(
       <MemoryRouter initialEntries={['/checkout']}>

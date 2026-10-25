@@ -1,7 +1,12 @@
 ﻿import axios from "axios";
 import { useEffect, useState } from "react";
 
-import { getGuestCart, updateGuestCart, removeGuestCartItem } from "../../utils/cart";
+import {
+  getGuestCart,
+  updateGuestCart,
+  removeGuestCartItem,
+  normalizeCartProduct,
+} from "../../utils/cart";
 import { OrderSummary } from "./orderSummary";
 import { PaymentSummary } from "./paymentSummary";
 import "./CheckoutHeader.css";
@@ -50,7 +55,7 @@ export function CheckoutPage({ onCartChange }) {
       productId: item.productId || item.product?.id,
       quantity: Number(item.quantity) || 1,
       deliveryOptionId: item.deliveryOptionId || "1",
-      product: item.product || null,
+      product: normalizeCartProduct(item.product || null),
     }));
   };
 
