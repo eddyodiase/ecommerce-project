@@ -98,7 +98,7 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
           </>
         ) : (
           <button type="button" className="login-link header-link" onClick={() => navigate("/login")}>
-            <img className="login-icon" src="/images/icons/login-icon.png" alt="login" />
+            <img className="login-icon" src="/images/login-icon.png" alt="login" />
             <span className="login-text">Login</span>
           </button>
         )}
