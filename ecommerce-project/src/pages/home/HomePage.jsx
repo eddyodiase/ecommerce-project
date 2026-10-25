@@ -1,7 +1,9 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { Header } from "../../components/Header";
+import { addGuestCartItem } from "../../utils/cart";
 import ProductsGrid from "./productsGrid";
 import "./HomePage.css";
 
@@ -34,22 +36,7 @@ export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogo
     const quantity = quantityByProduct[product.id] ?? 1;
 
     if (!token) {
-      const storedGuestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
-      const existingQuantity = storedGuestCart[product.id]?.quantity || 0;
-      const updatedCart = {
-        ...storedGuestCart,
-        [product.id]: {
-          productId: product.id,
-          quantity: existingQuantity + quantity,
-          deliveryOptionId: "1",
-          product: {
-            ...product,
-            id: product.id,
-          },
-        },
-      };
-
-      localStorage.setItem("guestCart", JSON.stringify(updatedCart));
+      addGuestCartItem(product, quantity);
       setCartRefreshKey((current) => current + 1);
       setAddedProductId(product.id);
       window.setTimeout(() => {

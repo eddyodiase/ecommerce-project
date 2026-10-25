@@ -1,27 +1,19 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+import { getGuestCartTotalQuantity } from "../../utils/cart";
 import "./CheckoutHeader.css";
 
 export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
   const navigate = useNavigate();
   const [totalItems, setTotalItems] = useState(0);
+  const authToken = localStorage.getItem("authToken");
+
+  const guestTotalItems = getGuestCartTotalQuantity();
 
   useEffect(() => {
-    const authToken = localStorage.getItem("authToken");
-
     if (!authToken) {
-      try {
-        const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
-        const nextTotalItems = Object.values(guestCart || {}).reduce(
-          (sum, item) => sum + (Number(item.quantity) || 0),
-          0
-        );
-        setTotalItems(nextTotalItems);
-      } catch (error) {
-        console.error("Error loading guest cart summary:", error);
-        setTotalItems(0);
-      }
       return;
     }
 
@@ -35,7 +27,9 @@ export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
       .catch((error) => {
         console.error("Error loading checkout summary:", error);
       });
-  }, [cartRefreshKey]);
+  }, [authToken, cartRefreshKey]);
+
+  const displayTotalItems = authToken ? totalItems : guestTotalItems;
 
   return (
     <div className="checkout-header">
@@ -49,7 +43,7 @@ export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
         <div className="checkout-header-middle-section">
           Checkout (
           <button type="button" className="return-to-home-link" onClick={() => navigate("/")}>
-            {totalItems} items
+            {displayTotalItems} items
           </button>
           )
         </div>

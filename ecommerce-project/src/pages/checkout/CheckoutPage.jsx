@@ -1,5 +1,7 @@
 ﻿import axios from "axios";
 import { useEffect, useState } from "react";
+
+import { getGuestCart, updateGuestCart, removeGuestCartItem } from "../../utils/cart";
 import { OrderSummary } from "./orderSummary";
 import { PaymentSummary } from "./paymentSummary";
 import "./CheckoutHeader.css";
@@ -42,9 +44,8 @@ export function CheckoutPage({ onCartChange }) {
     };
   };
 
-  const getGuestCartItems = () => {
-    const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
-    return Object.values(guestCart || {}).map((item) => ({
+  const getGuestCartItemsForCheckout = () => {
+    return Object.values(getGuestCart()).map((item) => ({
       ...item,
       productId: item.productId || item.product?.id,
       quantity: Number(item.quantity) || 1,
@@ -66,7 +67,7 @@ export function CheckoutPage({ onCartChange }) {
       let nextCartItems = [];
 
       if (!token) {
-        nextCartItems = getGuestCartItems();
+        nextCartItems = getGuestCartItemsForCheckout();
       } else {
         const cartResponse = await axios.get("/api/cart-items?expand=product", {
           headers: { Authorization: `Bearer ${token}` },
@@ -110,7 +111,7 @@ export function CheckoutPage({ onCartChange }) {
           ? (await axios.get("/api/cart-items?expand=product", {
               headers: { Authorization: `Bearer ${token}` },
             })).data || []
-          : getGuestCartItems();
+          : getGuestCartItemsForCheckout();
 
         setCartItems(nextCartItems);
         setDeliveryOptions(nextDeliveryOptions);
@@ -134,11 +135,9 @@ export function CheckoutPage({ onCartChange }) {
     };
   }, []);
 
-  const updateGuestCart = (updater) => {
-    const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
-    const nextCart = updater(guestCart);
-    localStorage.setItem("guestCart", JSON.stringify(nextCart));
-    const nextCartItems = getGuestCartItems();
+  const updateGuestCartItems = (updater) => {
+    updateGuestCart(updater);
+    const nextCartItems = getGuestCartItemsForCheckout();
     setCartItems(nextCartItems);
     setSummary(calculateSummary(nextCartItems, deliveryOptions));
   };
@@ -147,7 +146,7 @@ export function CheckoutPage({ onCartChange }) {
     const token = localStorage.getItem("authToken");
 
     if (!token) {
-      updateGuestCart((guestCart) => {
+      updateGuestCartItems((guestCart) => {
         if (!guestCart[productId]) {
           return guestCart;
         }
@@ -179,11 +178,10 @@ export function CheckoutPage({ onCartChange }) {
     const token = localStorage.getItem("authToken");
 
     if (!token) {
-      updateGuestCart((guestCart) => {
-        const nextCart = { ...guestCart };
-        delete nextCart[productId];
-        return nextCart;
-      });
+      removeGuestCartItem(productId);
+      const nextCartItems = getGuestCartItemsForCheckout();
+      setCartItems(nextCartItems);
+      setSummary(calculateSummary(nextCartItems, deliveryOptions));
       onCartChange?.();
       return;
     }
@@ -203,7 +201,7 @@ export function CheckoutPage({ onCartChange }) {
     const token = localStorage.getItem("authToken");
 
     if (!token) {
-      updateGuestCart((guestCart) => {
+      updateGuestCartItems((guestCart) => {
         if (!guestCart[productId]) {
           return guestCart;
         }

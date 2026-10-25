@@ -1,7 +1,8 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { getGuestCartItems, getGuestCartTotalQuantity } from "../utils/cart";
 import "./Header.css";
 
 export function Header({ cartRefreshKey = 0, user, onLogout }) {
@@ -13,17 +14,7 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
 
   const loadCart = () => {
     if (!authToken) {
-      try {
-        const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
-        const items = Object.values(guestCart || {}).map((item) => ({
-          ...item,
-          product: item.product || null,
-        }));
-        setCartItems(items);
-      } catch (error) {
-        console.error("Error loading guest cart:", error);
-        setCartItems([]);
-      }
+      setCartItems(getGuestCartItems());
       return;
     }
 
@@ -48,10 +39,16 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
     loadCart();
   }, [cartRefreshKey]);
 
-  const totalQuantity = cartItems.reduce(
-    (sum, cartItem) => sum + (Number(cartItem.quantity) || 0),
-    0
-  );
+  const totalQuantity = useMemo(() => {
+    if (!authToken) {
+      return getGuestCartTotalQuantity();
+    }
+
+    return cartItems.reduce(
+      (sum, cartItem) => sum + (Number(cartItem.quantity) || 0),
+      0
+    );
+  }, [authToken, cartItems]);
 
   return (
     <header className="header">
