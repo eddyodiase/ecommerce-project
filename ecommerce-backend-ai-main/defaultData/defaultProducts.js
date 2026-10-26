@@ -471,5 +471,27 @@ export const defaultProducts = [
     },
     "priceCents": 1999,
     "keywords": ["kitchen", "Kitchen food", "product"]
+  },
+  {
+    "id": "7f6dc8e1-9cf1-4b0f-aa9c-bd9e224f96f2",
+    "image": "images/products/Pineapple-Home-Garden.jpg",
+    "name": "Pineapple - Home Garden",
+    "rating": {
+      "stars": 4.4,
+      "count": 18
+    },
+    "priceCents": 2499,
+    "keywords": ["pineapple", "fruit", "home", "garden"]
+  },
+  {
+    "id": "bc1e5bb0-1eb8-4b3d-b35f-0df36d58cb33",
+    "image": "images/products/Plantain Home-Garden.jpg",
+    "name": "Plantain - Home Garden",
+    "rating": {
+      "stars": 4.3,
+      "count": 16
+    },
+    "priceCents": 2299,
+    "keywords": ["plantain", "fruit", "home", "garden"]
   }
 ];
