@@ -9,6 +9,7 @@ const PAGE_SIZE = 48;
 export const PRODUCT_TAXONOMY = [
   "Home",
   "Electronics",
+  "Smart Phones",
   "Fashion",
   "Beauty",
   "Office",
@@ -23,10 +24,34 @@ const CATEGORY_LINKS = [
 const BACKEND_CATEGORY_KEYWORDS = {
   Home: ["home", "kitchen", "bath", "living"],
   Electronics: ["electronics", "tech", "device"],
+  "Smart Phones": ["smart phone", "smartphone", "phone", "mobile", "cell phone", "android", "iphone"],
   Fashion: ["fashion", "clothing", "apparel", "shoe"],
   Beauty: ["beauty", "cosmetic", "care"],
   Office: ["office", "work", "desk", "school"],
   "Gift Cards": ["gift", "card"],
+};
+
+const CATEGORY_BRANDS = {
+  "All": [
+    "NorthPeak",
+    "Aurelia",
+    "Peak & Co",
+    "HomeStyle",
+    "Nestline",
+    "Edgewell",
+    "Nexa",
+    "Luma",
+    "Zenith",
+    "Nova",
+  ],
+  "Home": ["NorthPeak", "HomeStyle", "Nestline"],
+  "Electronics": ["Peak & Co", "Nexa", "Luma", "Zenith", "Nova"],
+  "Smart Phones": ["Nexa", "Luma", "Zenith", "Nova"],
+  Fashion: ["NorthPeak", "Edgewell"],
+  Beauty: ["Aurelia", "NorthPeak"],
+  Office: ["Nestline", "Peak & Co", "HomeStyle"],
+  "Gift Cards": ["NorthPeak", "Peak & Co"],
+  "Best Sellers": ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell", "Nexa", "Luma", "Zenith", "Nova"],
 };
 
 const inferCategoryFromKeywords = (keywords = []) => {
@@ -79,6 +104,66 @@ export const matchesCategoryFilter = (category, product) => {
 };
 
 const RAW_PRODUCTS = [
+  {
+    id: "nexa-phone-1",
+    title: "Nexa X9 Pro 5G",
+    subtitle: "AI-powered smartphone with 256GB storage",
+    brand: "Nexa",
+    category: "Smart Phones",
+    seller: "Nexa Mobile",
+    deliveryType: "Next day",
+    cardType: "Visa",
+    price: 429000,
+    rating: 4.9,
+    reviewCount: 6840,
+    image: "/images/products/men-athletic-shoes-white.jpg",
+    badge: "Top Rated",
+  },
+  {
+    id: "luma-phone-2",
+    title: "Luma Pulse 8",
+    subtitle: "Ultra-bright AMOLED display and fast charging",
+    brand: "Luma",
+    category: "Smart Phones",
+    seller: "Luma Tech",
+    deliveryType: "Free delivery",
+    cardType: "Mastercard",
+    price: 348000,
+    rating: 4.7,
+    reviewCount: 5210,
+    image: "/images/products/countertop-push-blender-black.jpg",
+    badge: "Best Seller",
+  },
+  {
+    id: "zenith-phone-3",
+    title: "Zenith Aster Max",
+    subtitle: "Pocket-friendly flagship with dual cameras",
+    brand: "Zenith",
+    category: "Smart Phones",
+    seller: "Zenith Mobile",
+    deliveryType: "Free delivery",
+    cardType: "PayPal",
+    price: 289000,
+    rating: 4.6,
+    reviewCount: 4360,
+    image: "/images/products/blackout-curtains-set-teal.jpg",
+    badge: "Overall Pick",
+  },
+  {
+    id: "nova-phone-4",
+    title: "Nova Echo Mini",
+    subtitle: "Compact 5G device with all-day battery life",
+    brand: "Nova",
+    category: "Smart Phones",
+    seller: "Nova Devices",
+    deliveryType: "Standard",
+    cardType: "Gift cards",
+    price: 239000,
+    rating: 4.5,
+    reviewCount: 3090,
+    image: "/images/products/blackout-curtain-set-beige.jpg",
+    badge: "New",
+  },
   {
     id: "northpeak-hook-1",
     title: "NorthPeak Towel Hook",
@@ -369,10 +454,20 @@ export function ProductsSearchPage() {
   const navigate = useNavigate();
   const { cartCount, addToCart } = useCart();
 
-  const brandOptions = ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell"];
+  const brandOptions = useMemo(() => {
+    if (selectedCategory === "All" || selectedCategory === "Best Sellers") {
+      return CATEGORY_BRANDS["All"];
+    }
+
+    return CATEGORY_BRANDS[selectedCategory] || [];
+  }, [selectedCategory]);
   const deliveryTypeOptions = ["Free delivery", "Next day", "Standard"];
   const cardTypeOptions = ["Visa", "Mastercard", "Gift cards", "PayPal"];
   const sellerOptions = ["NorthPeak Living", "HomeStyle Living", "Peak & Co", "Aurelia Beauty", "Edgewell Studio"];
+
+  useEffect(() => {
+    setSelectedBrands((currentBrands) => currentBrands.filter((brand) => brandOptions.includes(brand)));
+  }, [brandOptions]);
 
   const loadProducts = useCallback(async () => {
     const params = {
@@ -448,11 +543,17 @@ export function ProductsSearchPage() {
     setPage(1);
   }, [searchTerm, selectedCategory, selectedBrands.join(","), selectedDeliveryTypes.join(","), selectedCardTypes.join(","), selectedRatings.join(","), selectedSellers.join(",")]);
 
+  const handleOpenProduct = (productId) => {
+    navigate(`/products/${productId}`);
+  };
+
   const handleAddToCart = async (productId) => {
     try {
       await addToCart(productId, 1);
+      handleOpenProduct(productId);
     } catch (error) {
       console.error("Error adding product to cart:", error);
+      handleOpenProduct(productId);
     }
   };
 
@@ -548,17 +649,21 @@ export function ProductsSearchPage() {
 
           <div className="filter-section">
             <h3>Brand</h3>
-            {brandOptions.map((option) => (
-              <label key={option} className="check-row">
-                <input
-                  type="checkbox"
-                  aria-label={option}
-                  checked={selectedBrands.includes(option)}
-                  onChange={() => toggleSelection(option, selectedBrands, setSelectedBrands)}
-                />
-                <span>{option}</span>
-              </label>
-            ))}
+            {brandOptions.length === 0 ? (
+              <p className="empty-results">No brands available for this category.</p>
+            ) : (
+              brandOptions.map((option) => (
+                <label key={option} className="check-row">
+                  <input
+                    type="checkbox"
+                    aria-label={option}
+                    checked={selectedBrands.includes(option)}
+                    onChange={() => toggleSelection(option, selectedBrands, setSelectedBrands)}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))
+            )}
           </div>
 
           <div className="filter-section">
@@ -638,11 +743,17 @@ export function ProductsSearchPage() {
                 <article key={product.id} className="product-card">
                   <div className="product-card-image-wrap">
                     {product.badge ? <span className="product-badge">{product.badge}</span> : null}
-                    <img src={product.image} alt={product.title} />
+                    <Link to={`/products/${product.id}`} aria-label={`View details for ${product.title}`}>
+                      <img src={product.image} alt={product.title} />
+                    </Link>
                   </div>
 
                   <div className="product-card-body">
-                    <h4>{product.title}</h4>
+                    <h4>
+                      <Link to={`/products/${product.id}`} onClick={(event) => event.stopPropagation()} style={{ color: "inherit", textDecoration: "none" }}>
+                        {product.title}
+                      </Link>
+                    </h4>
                     <p className="product-subtitle">{product.subtitle}</p>
 
                     <div className="product-rating-row" aria-label={`${product.rating} out of 5 stars`}>
@@ -660,7 +771,11 @@ export function ProductsSearchPage() {
                       <strong>{formatNaira(product.price)}</strong>
                     </div>
 
-                    <button type="button" className="add-to-cart-button" onClick={() => handleAddToCart(product.id)}>
+                    <button
+                      type="button"
+                      className="add-to-cart-button"
+                      onClick={() => handleAddToCart(product.id)}
+                    >
                       Add to cart
                     </button>
                   </div>

@@ -10,6 +10,7 @@ import { LoginPage } from "./pages/login/LoginPage";
 import { RegisterPage } from "./pages/register/RegisterPage";
 import { ProfilePage } from "./pages/profile/ProfilePage";
 import { ProductsSearchPage } from "./pages/products/ProductsSearchPage";
+import { ProductDetailPage } from "./pages/products/ProductDetailPage";
 import { SellPage } from "./pages/sell/SellPage";
 import { AdminPage } from "./pages/admin/AdminPage";
 import { CartProvider } from "./context/CartContext";
@@ -121,6 +122,7 @@ function App() {
         />
         <Route path="tracking" element={<TrackingPage />} />
         <Route path="products" element={<ProductsSearchPage />} />
+        <Route path="products/:productId" element={<ProductDetailPage />} />
         <Route path="sell" element={<SellPage />} />
         <Route path="admin" element={<AdminPage />} />
       </Routes>
