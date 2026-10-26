@@ -460,5 +460,16 @@ export const defaultProducts = [
     },
     "priceCents": 1899,
     "keywords": ["kitchen", "kitchen towels", "tissues"]
+  },
+  {
+    "id": "7d8d5f72-3dd8-4f6d-bf84-1da8f2ea9a11",
+    "image": "images/products/paw-paw-home-garden-product-color.jpg",
+    "name": "PAW PAW-Home-Garden - Color",
+    "rating": {
+      "stars": 4.5,
+      "count": 25
+    },
+    "priceCents": 1999,
+    "keywords": ["kitchen", "Kitchen food", "product"]
   }
 ];

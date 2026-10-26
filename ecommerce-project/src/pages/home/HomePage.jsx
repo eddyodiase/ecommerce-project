@@ -1,13 +1,11 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { Header } from "../../components/Header";
 import ProductsGrid from "./productsGrid";
 import "./HomePage.css";
 
 export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogout }) {
-  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addedProductId, setAddedProductId] = useState(null);
@@ -15,8 +13,6 @@ export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogo
 
   useEffect(() => {
     let isMounted = true;
-
-    setIsLoading(true);
 
     axios
       .get("/api/products")
