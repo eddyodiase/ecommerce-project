@@ -2,25 +2,16 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import axios from 'axios';
 
 import { RegisterPage } from './RegisterPage';
-
-vi.mock('axios');
 
 describe('RegisterPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('creates an account and calls onRegister with the user data', async () => {
+  it('creates an account and calls onRegister with locally generated auth data', async () => {
     const onRegister = vi.fn();
-    axios.post.mockResolvedValue({
-      data: {
-        token: 'new-token',
-        user: { id: 'u2', name: 'Jane Smith', email: 'jane@example.com' },
-      },
-    });
 
     render(
       <MemoryRouter>
@@ -34,19 +25,12 @@ describe('RegisterPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
-      expect(axios.post).toHaveBeenCalledWith('/api/register', {
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        password: 'password456',
-      });
-    });
-
-    await waitFor(() => {
       expect(onRegister).toHaveBeenCalledWith(
         expect.objectContaining({
+          name: 'Jane Smith',
           email: 'jane@example.com',
         }),
-        'new-token'
+        expect.stringMatching(/^local-/)
       );
     });
   });

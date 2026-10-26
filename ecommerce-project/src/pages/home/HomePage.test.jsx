@@ -24,7 +24,7 @@ describe('HomePage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem('authToken', 'test-token');
+    localStorage.removeItem('authToken');
   });
 
   it('renders the product list from the API', async () => {
@@ -57,8 +57,6 @@ describe('HomePage', () => {
       expect(axios.post).toHaveBeenCalledWith('/api/cart-items', {
         productId: 'p1',
         quantity: 1,
-      }, {
-        headers: { Authorization: 'Bearer test-token' },
       });
     });
   });
@@ -82,9 +80,9 @@ describe('HomePage', () => {
     expect(await screen.findByText('Black and Gray Athletic Cotton Socks - 6 Pairs')).toBeInTheDocument();
   });
 
-  it('stores guest items in localStorage without requiring login', async () => {
-    localStorage.removeItem('authToken');
+  it('adds to cart through backend API without requiring login', async () => {
     axios.get.mockResolvedValue({ data: products });
+    axios.post.mockResolvedValue({});
 
     render(
       <MemoryRouter>
@@ -96,10 +94,10 @@ describe('HomePage', () => {
     await userEvent.click(addButton);
 
     await waitFor(() => {
-      const guestCart = JSON.parse(localStorage.getItem('guestCart') || '{}');
-      expect(guestCart.p1.quantity).toBe(1);
+      expect(axios.post).toHaveBeenCalledWith('/api/cart-items', {
+        productId: 'p1',
+        quantity: 1,
+      });
     });
-
-    expect(axios.post).not.toHaveBeenCalled();
   });
 });

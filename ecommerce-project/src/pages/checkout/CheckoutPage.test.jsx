@@ -81,15 +81,11 @@ describe('CheckoutPage', () => {
     expect(screen.getByRole('button', { name: /place your order/i })).toBeInTheDocument();
   });
 
-  it('shows the guest cart item count in checkout header without a login', () => {
+  it('shows the cart item count in checkout header from payment summary', async () => {
     localStorage.removeItem('authToken');
-    localStorage.setItem('guestCart', JSON.stringify({
-      p1: { productId: 'p1', quantity: 2 },
-      p2: { productId: 'p2', quantity: 1 },
-    }));
 
     axios.get.mockResolvedValue({
-      data: { totalItems: 0 },
+      data: { totalItems: 3 },
     });
 
     render(
@@ -98,7 +94,7 @@ describe('CheckoutPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/3 items/i)).toBeInTheDocument();
+    expect(await screen.findByText(/3 items/i)).toBeInTheDocument();
   });
 
   it('uses the exact product name from the cart item when the record stores it under an alternate field', async () => {

@@ -1,12 +1,6 @@
 ﻿import axios from "axios";
 import { useEffect, useState } from "react";
 
-import {
-  getGuestCart,
-  updateGuestCart,
-  removeGuestCartItem,
-  normalizeCartProduct,
-} from "../../utils/cart";
 import { OrderSummary } from "./orderSummary";
 import { PaymentSummary } from "./paymentSummary";
 import "./CheckoutHeader.css";
@@ -49,36 +43,16 @@ export function CheckoutPage({ onCartChange }) {
     };
   };
 
-  const getGuestCartItemsForCheckout = () => {
-    return Object.values(getGuestCart()).map((item) => ({
-      ...item,
-      productId: item.productId || item.product?.id,
-      quantity: Number(item.quantity) || 1,
-      deliveryOptionId: item.deliveryOptionId || "1",
-      product: normalizeCartProduct(item.product || null),
-    }));
-  };
-
   const loadCheckoutData = async () => {
-    const token = localStorage.getItem("authToken");
-
     try {
-      const [deliveryOptionsResponse, paymentSummaryResponse] = await Promise.all([
+      const [deliveryOptionsResponse, paymentSummaryResponse, cartResponse] = await Promise.all([
         axios.get("/api/delivery-options?expand=estimatedDeliveryTime"),
         axios.get("/api/payment-summary"),
+        axios.get("/api/cart-items?expand=product"),
       ]);
 
       const nextDeliveryOptions = deliveryOptionsResponse.data || [];
-      let nextCartItems = [];
-
-      if (!token) {
-        nextCartItems = getGuestCartItemsForCheckout();
-      } else {
-        const cartResponse = await axios.get("/api/cart-items?expand=product", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        nextCartItems = cartResponse.data || [];
-      }
+      const nextCartItems = cartResponse.data || [];
 
       setCartItems(nextCartItems);
       setDeliveryOptions(nextDeliveryOptions);
@@ -99,12 +73,11 @@ export function CheckoutPage({ onCartChange }) {
     let isMounted = true;
 
     const fetchCheckoutData = async () => {
-      const token = localStorage.getItem("authToken");
-
       try {
-        const [deliveryOptionsResponse, paymentSummaryResponse] = await Promise.all([
+        const [deliveryOptionsResponse, paymentSummaryResponse, cartResponse] = await Promise.all([
           axios.get("/api/delivery-options?expand=estimatedDeliveryTime"),
           axios.get("/api/payment-summary"),
+          axios.get("/api/cart-items?expand=product"),
         ]);
 
         if (!isMounted) {
@@ -112,11 +85,7 @@ export function CheckoutPage({ onCartChange }) {
         }
 
         const nextDeliveryOptions = deliveryOptionsResponse.data || [];
-        const nextCartItems = token
-          ? (await axios.get("/api/cart-items?expand=product", {
-              headers: { Authorization: `Bearer ${token}` },
-            })).data || []
-          : getGuestCartItemsForCheckout();
+        const nextCartItems = cartResponse.data || [];
 
         setCartItems(nextCartItems);
         setDeliveryOptions(nextDeliveryOptions);
@@ -140,38 +109,9 @@ export function CheckoutPage({ onCartChange }) {
     };
   }, []);
 
-  const updateGuestCartItems = (updater) => {
-    updateGuestCart(updater);
-    const nextCartItems = getGuestCartItemsForCheckout();
-    setCartItems(nextCartItems);
-    setSummary(calculateSummary(nextCartItems, deliveryOptions));
-  };
-
   const onQuantityChange = async (productId, quantity) => {
-    const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      updateGuestCartItems((guestCart) => {
-        if (!guestCart[productId]) {
-          return guestCart;
-        }
-
-        return {
-          ...guestCart,
-          [productId]: {
-            ...guestCart[productId],
-            quantity,
-          },
-        };
-      });
-      onCartChange?.();
-      return;
-    }
-
     try {
-      await axios.put(`/api/cart-items/${productId}`, { quantity }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(`/api/cart-items/${productId}`, { quantity });
       await loadCheckoutData();
       onCartChange?.();
     } catch (error) {
@@ -180,21 +120,8 @@ export function CheckoutPage({ onCartChange }) {
   };
 
   const onRemoveItem = async (productId) => {
-    const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      removeGuestCartItem(productId);
-      const nextCartItems = getGuestCartItemsForCheckout();
-      setCartItems(nextCartItems);
-      setSummary(calculateSummary(nextCartItems, deliveryOptions));
-      onCartChange?.();
-      return;
-    }
-
     try {
-      await axios.delete(`/api/cart-items/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`/api/cart-items/${productId}`);
       await loadCheckoutData();
       onCartChange?.();
     } catch (error) {
@@ -203,30 +130,8 @@ export function CheckoutPage({ onCartChange }) {
   };
 
   const onDeliveryOptionChange = async (productId, deliveryOptionId) => {
-    const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      updateGuestCartItems((guestCart) => {
-        if (!guestCart[productId]) {
-          return guestCart;
-        }
-
-        return {
-          ...guestCart,
-          [productId]: {
-            ...guestCart[productId],
-            deliveryOptionId,
-          },
-        };
-      });
-      onCartChange?.();
-      return;
-    }
-
     try {
-      await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId });
       await loadCheckoutData();
       onCartChange?.();
     } catch (error) {

@@ -29,12 +29,8 @@ export function ProfilePage({ user, onLogout }) {
       return;
     }
 
-    const token = localStorage.getItem("authToken");
-
     axios
-      .get("/api/orders?expand=products", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get("/api/orders?expand=products")
       .then((response) => {
         setOrders(response.data || []);
       })
@@ -59,23 +55,15 @@ export function ProfilePage({ user, onLogout }) {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("authToken");
     setError("");
     setIsSaving(true);
 
     try {
-      const response = await axios.put(
-        "/api/profile",
-        {
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const updatedUser = response.data?.user || { ...currentUser, ...formData };
+      const updatedUser = {
+        ...currentUser,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+      };
       localStorage.setItem("authUser", JSON.stringify(updatedUser));
       setProfileUser(updatedUser);
       setFormData({
@@ -83,7 +71,7 @@ export function ProfilePage({ user, onLogout }) {
         email: updatedUser.email || "",
       });
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to update account.");
+      setError("Unable to update account.");
     } finally {
       setIsSaving(false);
     }

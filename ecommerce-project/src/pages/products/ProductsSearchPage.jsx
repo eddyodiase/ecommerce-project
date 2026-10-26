@@ -1,20 +1,82 @@
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
+import { useCart } from "../../context/CartContext";
 import "./ProductsSearchPage.css";
 
 const PAGE_SIZE = 48;
-const CATEGORY_LINKS = [
-  "All",
-  "Best Sellers",
-  "Gift Cards",
+export const PRODUCT_TAXONOMY = [
   "Home",
   "Electronics",
   "Fashion",
   "Beauty",
   "Office",
+  "Gift Cards",
 ];
+const CATEGORY_LINKS = [
+  "All",
+  "Best Sellers",
+  ...PRODUCT_TAXONOMY,
+];
+
+const BACKEND_CATEGORY_KEYWORDS = {
+  Home: ["home", "kitchen", "bath", "living"],
+  Electronics: ["electronics", "tech", "device"],
+  Fashion: ["fashion", "clothing", "apparel", "shoe"],
+  Beauty: ["beauty", "cosmetic", "care"],
+  Office: ["office", "work", "desk", "school"],
+  "Gift Cards": ["gift", "card"],
+};
+
+const inferCategoryFromKeywords = (keywords = []) => {
+  const normalizedKeywords = keywords.map((keyword) => String(keyword || "").toLowerCase());
+  for (const [category, terms] of Object.entries(BACKEND_CATEGORY_KEYWORDS)) {
+    if (terms.some((term) => normalizedKeywords.some((keyword) => keyword.includes(term)))) {
+      return category;
+    }
+  }
+
+  return "Home";
+};
+
+const normalizeBackendProduct = (product = {}) => {
+  const ratingValue = Number(product.rating?.stars || 0);
+  const category = inferCategoryFromKeywords(product.keywords || []);
+
+  return {
+    id: product.id,
+    title: product.name || "Product",
+    subtitle: (product.keywords || []).slice(0, 3).join(" • ") || "Featured item",
+    brand: "NorthPeak",
+    category,
+    seller: "NorthPeak Marketplace",
+    deliveryType: "Standard",
+    cardType: "Visa",
+    price: Number(product.priceCents || 0),
+    rating: ratingValue,
+    reviewCount: Number(product.rating?.count || 0),
+    image: product.image,
+    badge: ratingValue >= 4.5 ? "Best Seller" : "",
+  };
+};
+
+const normalizeCategoryKey = (value) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+
+export const matchesCategoryFilter = (category, product) => {
+  if (!category || category === "All") {
+    return true;
+  }
+
+  const normalizedCategory = normalizeCategoryKey(category);
+  const productCategory = normalizeCategoryKey(product.category);
+
+  if (category === "Best Sellers") {
+    return ["Best Seller", "Overall Pick"].includes(product.badge);
+  }
+
+  return productCategory === normalizedCategory;
+};
 
 const RAW_PRODUCTS = [
   {
@@ -59,7 +121,7 @@ const RAW_PRODUCTS = [
     price: 12250,
     rating: 4.7,
     reviewCount: 3320,
-    image: "/images/products/vanity-mirror-pink.jpg",
+    image: "/images/products/countertop-push-blender-black.jpg",
     badge: "New",
   },
   {
@@ -112,7 +174,7 @@ const RAW_PRODUCTS = [
     title: "Mira Glass Food Containers",
     subtitle: "3-piece airtight storage set",
     brand: "Nestline",
-    category: "Kitchen",
+    category: "Office",
     seller: "Nestline Home",
     deliveryType: "Free delivery",
     cardType: "Visa",
@@ -164,17 +226,66 @@ const RAW_PRODUCTS = [
     price: 9200,
     rating: 4.4,
     reviewCount: 1200,
-    image: "/images/products/luxury-towel-set.jpg",
+    image: "/images/products/blackout-curtain-set-beige.jpg",
     badge: "Best Seller",
   },
 ];
 
-const buildSampleProducts = () => {
+const ALL_PRODUCT_IMAGES = [
+  "/images/products/athletic-cotton-socks-6-pairs.jpg",
+  "/images/products/intermediate-composite-basketball.jpg",
+  "/images/products/adults-plain-cotton-tshirt-2-pack-teal.jpg",
+  "/images/products/2-slot-toaster-white.jpg",
+  "/images/products/elegant-white-dinner-plate-set.jpg",
+  "/images/products/3-piece-cooking-set.jpg",
+  "/images/products/women-plain-cotton-oversized-sweater-gray.jpg",
+  "/images/products/luxury-towel-set.jpg",
+  "/images/products/facial-tissue-2-ply-8-boxes.jpg",
+  "/images/products/women-striped-beach-dress.jpg",
+  "/images/products/women-sandal-heels-white-pink.jpg",
+  "/images/products/round-sunglasses-gold.jpg",
+  "/images/products/blackout-curtain-set-beige.jpg",
+  "/images/products/women-summer-jean-shorts.jpg",
+  "/images/products/electric-steel-hot-water-kettle-white.jpg",
+  "/images/products/knit-athletic-sneakers-gray.jpg",
+  "/images/products/straw-sunhat.jpg",
+  "/images/products/men-athletic-shoes-white.jpg",
+  "/images/products/men-stretch-wool-sweater-black.jpg",
+  "/images/products/bathroom-mat.jpg",
+  "/images/products/women-knit-ballet-flat-white.jpg",
+  "/images/products/men-golf-polo-t-shirt-gray.jpg",
+  "/images/products/laundry-detergent-tabs.jpg",
+  "/images/products/sky-leaf-branch-earrings.jpg",
+  "/images/products/duvet-cover-set-gray-queen.jpg",
+  "/images/products/women-knit-beanie-pom-pom-blue.jpg",
+  "/images/products/men-chino-pants-beige.jpg",
+  "/images/products/men-navigator-sunglasses-black.jpg",
+  "/images/products/men-brown-flat-sneakers.jpg",
+  "/images/products/non-stick-cooking-set-4-pieces.jpg",
+  "/images/products/vanity-mirror-pink.jpg",
+  "/images/products/women-relaxed-lounge-pants-pink.jpg",
+  "/images/products/crystal-zirconia-stud-earrings-pink.jpg",
+  "/images/products/glass-screw-lid-food-containers.jpg",
+  "/images/products/black-and-silver-espresso-maker.jpg",
+  "/images/products/blackout-curtains-set-teal.jpg",
+  "/images/products/bath-towel-set-gray-rosewood.jpg",
+  "/images/products/athletic-skateboard-shoes-gray.jpg",
+  "/images/products/countertop-push-blender-black.jpg",
+  "/images/products/men-cozy-fleece-hoodie-light-teal.jpg",
+  "/images/products/artistic-bowl-set-6-piece.jpg",
+  "/images/products/kitchen-paper-towels-8-pack.jpg",
+];
+
+export const buildSampleProducts = () => {
   const items = [];
+  const categoryCounts = {};
 
   for (let index = 0; index < 98; index += 1) {
     const base = RAW_PRODUCTS[index % RAW_PRODUCTS.length];
     const priceStep = (index % 9) * 650;
+    const categoryPosition = categoryCounts[base.category] ?? 0;
+    categoryCounts[base.category] = categoryPosition + 1;
+    const imageOffset = (categoryPosition * 13 + base.category.length) % ALL_PRODUCT_IMAGES.length;
 
     items.push({
       ...base,
@@ -185,10 +296,44 @@ const buildSampleProducts = () => {
       reviewCount: base.reviewCount + index * 23,
       badge: index % 4 === 0 ? "Overall Pick" : index % 3 === 0 ? "Best Seller" : "New",
       seller: `${base.seller} ${index % 2 === 0 ? "Co" : ""}`.trim(),
+      image: ALL_PRODUCT_IMAGES[imageOffset],
     });
   }
 
   return items;
+};
+
+const getSampleProductMatch = (product, query, category, brandFilters, deliveryFilters, cardFilters, sellerFilters, ratingFilters) => {
+    const normalizedQuery = query.toLowerCase().trim();
+    const matchesSearch =
+      !normalizedQuery ||
+      [product.title, product.subtitle, product.brand, product.category, product.seller]
+        .some((value) => value?.toLowerCase().includes(normalizedQuery));
+
+    const matchesCategory = matchesCategoryFilter(category, product);
+    const matchesBrand = brandFilters.length === 0 || brandFilters.includes(product.brand);
+    const matchesDelivery = deliveryFilters.length === 0 || deliveryFilters.includes(product.deliveryType);
+    const matchesCard = cardFilters.length === 0 || cardFilters.includes(product.cardType);
+    const matchesSeller = sellerFilters.length === 0 || sellerFilters.includes(product.seller);
+    const matchesRating = ratingFilters.length === 0 || ratingFilters.some((rating) => Number(product.rating) >= Number(rating));
+
+    return matchesSearch && matchesCategory && matchesBrand && matchesDelivery && matchesCard && matchesSeller && matchesRating;
+  };
+
+export const sortProducts = (items, sortBy) => {
+  const nextItems = [...items];
+
+  switch (sortBy) {
+    case "price-low":
+      return nextItems.sort((left, right) => Number(left.price) - Number(right.price));
+    case "price-high":
+      return nextItems.sort((left, right) => Number(right.price) - Number(left.price));
+    case "rating":
+      return nextItems.sort((left, right) => Number(right.rating) - Number(left.rating));
+    case "featured":
+    default:
+      return nextItems;
+  }
 };
 
 const formatNaira = (value) =>
@@ -218,8 +363,11 @@ export function ProductsSearchPage() {
   const [sortBy, setSortBy] = useState("featured");
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState(() => buildSampleProducts());
+  const [totalResults, setTotalResults] = useState(98);
+  const [totalPages, setTotalPages] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
-  const [cartCount, setCartCount] = useState(() => Number(localStorage.getItem("cartCount") || 0));
+  const navigate = useNavigate();
+  const { cartCount, addToCart } = useCart();
 
   const brandOptions = ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell"];
   const deliveryTypeOptions = ["Free delivery", "Next day", "Standard"];
@@ -228,12 +376,7 @@ export function ProductsSearchPage() {
 
   const loadProducts = useCallback(async () => {
     const params = {
-      q: searchTerm,
-      category: selectedCategory === "All" ? "" : selectedCategory,
-      brand: selectedBrands.join(",") || undefined,
-      rating: selectedRatings.length ? Math.min(...selectedRatings) : undefined,
-      sort: sortBy,
-      page,
+      search: searchTerm.trim() || undefined,
     };
 
     setIsLoading(true);
@@ -244,16 +387,49 @@ export function ProductsSearchPage() {
         timeout: 1500,
       });
 
-      const nextProducts = Array.isArray(response.data)
-        ? response.data
-        : response.data?.products || [];
+      const payload = response.data || {};
+      const backendProducts = Array.isArray(payload)
+        ? payload
+        : payload.products || [];
+      const normalizedProducts = backendProducts.map(normalizeBackendProduct);
 
-      if (nextProducts.length > 0) {
-        setProducts(nextProducts);
-      }
+      const fallbackSource = normalizedProducts.length > 0 ? normalizedProducts : buildSampleProducts();
+      const filteredProducts = fallbackSource.filter((product) => getSampleProductMatch(
+        product,
+        searchTerm,
+        selectedCategory,
+        selectedBrands,
+        selectedDeliveryTypes,
+        selectedCardTypes,
+        selectedSellers,
+        selectedRatings
+      ));
+
+      const sortedProducts = sortProducts(
+        filteredProducts,
+        sortBy
+      );
+
+      setProducts(sortedProducts);
+      setTotalResults(sortedProducts.length);
+      setTotalPages(Math.max(1, Math.ceil(sortedProducts.length / PAGE_SIZE)));
     } catch (error) {
-      console.error("Using sample product data fallback:", error);
-      setProducts(buildSampleProducts());
+      const fallbackProducts = sortProducts(
+        buildSampleProducts().filter((product) => getSampleProductMatch(
+          product,
+          searchTerm,
+          selectedCategory,
+          selectedBrands,
+          selectedDeliveryTypes,
+          selectedCardTypes,
+          selectedSellers,
+          selectedRatings
+        )),
+        sortBy
+      );
+      setProducts(fallbackProducts);
+      setTotalResults(fallbackProducts.length);
+      setTotalPages(Math.max(1, Math.ceil(fallbackProducts.length / PAGE_SIZE)));
     } finally {
       setIsLoading(false);
     }
@@ -263,59 +439,8 @@ export function ProductsSearchPage() {
     void loadProducts();
   }, [loadProducts]);
 
-  const filteredProducts = useMemo(() => {
-    const sourceProducts = products.length ? products : buildSampleProducts();
-
-    return [...sourceProducts]
-      .filter((product) => {
-        const query = searchTerm.toLowerCase().trim();
-        const matchesSearch =
-          !query ||
-          product.title.toLowerCase().includes(query) ||
-          product.subtitle.toLowerCase().includes(query) ||
-          product.brand.toLowerCase().includes(query) ||
-          product.category.toLowerCase().includes(query);
-
-        const matchesCategory =
-          selectedCategory === "All" || product.category === selectedCategory;
-
-        const matchesBrand =
-          selectedBrands.length === 0 || selectedBrands.includes(product.brand);
-
-        const matchesDelivery =
-          selectedDeliveryTypes.length === 0 || selectedDeliveryTypes.includes(product.deliveryType);
-
-        const matchesCard =
-          selectedCardTypes.length === 0 || selectedCardTypes.includes(product.cardType);
-
-        const matchesSeller =
-          selectedSellers.length === 0 || selectedSellers.includes(product.seller);
-
-        const matchesRating =
-          selectedRatings.length === 0 || selectedRatings.some((rating) => product.rating >= Number(rating));
-
-        return (
-          matchesSearch &&
-          matchesCategory &&
-          matchesBrand &&
-          matchesDelivery &&
-          matchesCard &&
-          matchesSeller &&
-          matchesRating
-        );
-      })
-      .sort((left, right) => {
-        if (sortBy === "price-low") return left.price - right.price;
-        if (sortBy === "price-high") return right.price - left.price;
-        if (sortBy === "rating") return right.rating - left.rating;
-        return (right.rating * 1000 + right.reviewCount) - (left.rating * 1000 + left.reviewCount);
-      });
-  }, [products, searchTerm, selectedCategory, selectedBrands, selectedDeliveryTypes, selectedCardTypes, selectedRatings, selectedSellers, sortBy]);
-
-  const totalResults = filteredProducts.length;
-  const totalPages = Math.max(1, Math.ceil(totalResults / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageProducts = filteredProducts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pageProducts = products.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   const resultStart = totalResults === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
   const resultEnd = Math.min(safePage * PAGE_SIZE, totalResults);
 
@@ -323,11 +448,12 @@ export function ProductsSearchPage() {
     setPage(1);
   }, [searchTerm, selectedCategory, selectedBrands.join(","), selectedDeliveryTypes.join(","), selectedCardTypes.join(","), selectedRatings.join(","), selectedSellers.join(",")]);
 
-  const handleAddToCart = (product) => {
-    const currentCount = Number(localStorage.getItem("cartCount") || 0);
-    const nextCount = currentCount + 1;
-    localStorage.setItem("cartCount", String(nextCount));
-    setCartCount(nextCount);
+  const handleAddToCart = async (productId) => {
+    try {
+      await addToCart(productId, 1);
+    } catch (error) {
+      console.error("Error adding product to cart:", error);
+    }
   };
 
   return (
@@ -370,6 +496,19 @@ export function ProductsSearchPage() {
           <nav className="utility-links" aria-label="Account and cart menu">
             <Link to="/login">Account</Link>
             <Link to="/orders">Orders</Link>
+            <Link to="/admin">Admin</Link>
+            <button
+              type="button"
+              className="sell-link-button"
+              onClick={() => {
+                setSelectedCategory("All");
+                setSearchTerm("");
+                setPage(1);
+                navigate("/sell");
+              }}
+            >
+              Sell
+            </button>
             <Link to="/checkout" className="cart-link">
               Cart <span>{cartCount}</span>
             </Link>
@@ -398,6 +537,7 @@ export function ProductsSearchPage() {
               <label key={option} className="check-row">
                 <input
                   type="checkbox"
+                  aria-label={option}
                   checked={selectedDeliveryTypes.includes(option)}
                   onChange={() => toggleSelection(option, selectedDeliveryTypes, setSelectedDeliveryTypes)}
                 />
@@ -412,6 +552,7 @@ export function ProductsSearchPage() {
               <label key={option} className="check-row">
                 <input
                   type="checkbox"
+                  aria-label={option}
                   checked={selectedBrands.includes(option)}
                   onChange={() => toggleSelection(option, selectedBrands, setSelectedBrands)}
                 />
@@ -426,6 +567,7 @@ export function ProductsSearchPage() {
               <label key={option} className="check-row">
                 <input
                   type="checkbox"
+                  aria-label={option}
                   checked={selectedCardTypes.includes(option)}
                   onChange={() => toggleSelection(option, selectedCardTypes, setSelectedCardTypes)}
                 />
@@ -440,6 +582,7 @@ export function ProductsSearchPage() {
               <label key={stars} className="check-row star-filter-row">
                 <input
                   type="checkbox"
+                  aria-label={`${stars} stars & up`}
                   checked={selectedRatings.includes(String(stars))}
                   onChange={() => toggleSelection(String(stars), selectedRatings, setSelectedRatings)}
                 />
@@ -459,6 +602,7 @@ export function ProductsSearchPage() {
               <label key={option} className="check-row">
                 <input
                   type="checkbox"
+                  aria-label={option}
                   checked={selectedSellers.includes(option)}
                   onChange={() => toggleSelection(option, selectedSellers, setSelectedSellers)}
                 />
@@ -516,7 +660,7 @@ export function ProductsSearchPage() {
                       <strong>{formatNaira(product.price)}</strong>
                     </div>
 
-                    <button type="button" className="add-to-cart-button" onClick={() => handleAddToCart(product)}>
+                    <button type="button" className="add-to-cart-button" onClick={() => handleAddToCart(product.id)}>
                       Add to cart
                     </button>
                   </div>

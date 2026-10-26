@@ -1,8 +1,6 @@
 
-
-import axios from "axios";
 import { Navigate, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { HomePage } from "./pages/home/HomePage";
 import { CheckoutPage } from "./pages/checkout/CheckoutPage";
 import { OrdersPage } from "./pages/orders/OrdersPage";
@@ -12,6 +10,9 @@ import { LoginPage } from "./pages/login/LoginPage";
 import { RegisterPage } from "./pages/register/RegisterPage";
 import { ProfilePage } from "./pages/profile/ProfilePage";
 import { ProductsSearchPage } from "./pages/products/ProductsSearchPage";
+import { SellPage } from "./pages/sell/SellPage";
+import { AdminPage } from "./pages/admin/AdminPage";
+import { CartProvider } from "./context/CartContext";
 import "./App.css";
 
 function getStoredAuth() {
@@ -39,30 +40,6 @@ function App() {
   const [cartRefreshKey, setCartRefreshKey] = useState(0);
   const [auth, setAuth] = useState(() => getStoredAuth());
 
-  useEffect(() => {
-    const { token, user } = getStoredAuth();
-
-    if (!token) {
-      return;
-    }
-
-    axios
-      .get("/api/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setAuth({
-          token,
-          user: response.data?.user || user,
-        });
-      })
-      .catch(() => {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("authUser");
-        setAuth({ token: null, user: null });
-      });
-  }, []);
-
   const refreshCart = () => {
     setCartRefreshKey((current) => current + 1);
   };
@@ -86,60 +63,68 @@ function App() {
   };
 
   return (
-    <Routes>
-      <Route
-        index
-        element={
-          <HomePage
-            quantityByProduct={quantityByProduct}
-            setQuantityByProduct={setQuantityByProduct}
-            user={auth.user}
-            onLogout={handleLogout}
-          />
-        }
-      />
-      <Route
-        path="login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />}
-      />
-      <Route
-        path="register"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage onRegister={handleRegister} />}
-      />
-      <Route
-        path="profile"
-        element={isAuthenticated ? <ProfilePage user={auth.user} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="checkout"
-        element={
-          <>
-            <CheckoutHeader cartRefreshKey={cartRefreshKey} user={auth.user} onLogout={handleLogout} />
-            <CheckoutPage
+    <CartProvider>
+      <Routes>
+        <Route
+          index
+          element={<ProductsSearchPage />}
+        />
+        <Route
+          path="home"
+          element={
+            <HomePage
               quantityByProduct={quantityByProduct}
-              onCartChange={refreshCart}
-            />
-          </>
-        }
-      />
-      <Route
-        path="orders"
-        element={
-          isAuthenticated ? (
-            <OrdersPage
-              quantityByProduct={quantityByProduct}
-              onCartChange={refreshCart}
+              setQuantityByProduct={setQuantityByProduct}
               user={auth.user}
               onLogout={handleLogout}
             />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route path="tracking" element={<TrackingPage />} />
-      <Route path="products" element={<ProductsSearchPage />} />
-    </Routes>
+          }
+        />
+        <Route
+          path="login"
+          element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />}
+        />
+        <Route
+          path="register"
+          element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage onRegister={handleRegister} />}
+        />
+        <Route
+          path="profile"
+          element={isAuthenticated ? <ProfilePage user={auth.user} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="checkout"
+          element={
+            <>
+              <CheckoutHeader cartRefreshKey={cartRefreshKey} user={auth.user} onLogout={handleLogout} />
+              <CheckoutPage
+                quantityByProduct={quantityByProduct}
+                onCartChange={refreshCart}
+              />
+            </>
+          }
+        />
+        <Route
+          path="orders"
+          element={
+            isAuthenticated ? (
+              <OrdersPage
+                quantityByProduct={quantityByProduct}
+                onCartChange={refreshCart}
+                user={auth.user}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route path="tracking" element={<TrackingPage />} />
+        <Route path="products" element={<ProductsSearchPage />} />
+        <Route path="sell" element={<SellPage />} />
+        <Route path="admin" element={<AdminPage />} />
+      </Routes>
+    </CartProvider>
   );
 }
 

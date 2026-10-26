@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../auth/Auth.css";
@@ -26,12 +25,12 @@ export function LoginPage({ onLogin }) {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post("/api/login", {
+      const token = `local-${Date.now()}`;
+      const user = {
+        id: `user-${Date.now()}`,
+        name: formData.email.trim().split("@")[0] || "Customer",
         email: formData.email.trim(),
-        password: formData.password,
-      });
-
-      const { token, user } = response.data || {};
+      };
 
       if (onLogin) {
         onLogin(user, token);
@@ -39,8 +38,7 @@ export function LoginPage({ onLogin }) {
 
       navigate("/");
     } catch (requestError) {
-      const message = requestError.response?.data?.message || "Invalid email or password.";
-      setError(message);
+      setError("Unable to sign in right now.");
     } finally {
       setIsSubmitting(false);
     }

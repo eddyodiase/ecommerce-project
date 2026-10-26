@@ -2,7 +2,6 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { getGuestCartItems, getGuestCartTotalQuantity } from "../utils/cart";
 import "./Header.css";
 
 export function Header({ cartRefreshKey = 0, user, onLogout }) {
@@ -13,15 +12,8 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
   const firstName = user?.name?.split(" ")?.[0] || "User";
 
   const loadCart = () => {
-    if (!authToken) {
-      setCartItems(getGuestCartItems());
-      return;
-    }
-
     axios
-      .get("/api/cart-items", {
-        headers: { Authorization: `Bearer ${authToken}` },
-      })
+      .get("/api/cart-items")
       .then((response) => {
         const nextCartItems = Array.isArray(response.data)
           ? response.data
@@ -32,11 +24,7 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
         setCartItems(nextCartItems);
       })
       .catch((error) => {
-        if (error.response?.status === 401) {
-          setCartItems([]);
-          return;
-        }
-
+        setCartItems([]);
         console.error("Error loading cart:", error);
       });
   };
@@ -46,15 +34,11 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
   }, [cartRefreshKey]);
 
   const totalQuantity = useMemo(() => {
-    if (!authToken) {
-      return getGuestCartTotalQuantity();
-    }
-
     return cartItems.reduce(
       (sum, cartItem) => sum + (Number(cartItem.quantity) || 0),
       0
     );
-  }, [authToken, cartItems]);
+  }, [cartItems]);
 
   return (
     <header className="header">

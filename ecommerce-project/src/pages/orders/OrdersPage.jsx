@@ -109,12 +109,8 @@ export function OrdersPage({ quantityByProduct, onCartRefresh, user, onLogout })
   const [orders, setOrders] = useState([]);
 
   const fetchOrders = async () => {
-    const token = localStorage.getItem("authToken");
-
     try {
-      const response = await axios.get("/api/orders?expand=products", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get("/api/orders?expand=products");
       setOrders(response.data || []);
     } catch (error) {
       console.error("Error fetching orders:", error);

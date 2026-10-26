@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../auth/Auth.css";
@@ -27,13 +26,12 @@ export function RegisterPage({ onRegister }) {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post("/api/register", {
+      const token = `local-${Date.now()}`;
+      const user = {
+        id: `user-${Date.now()}`,
         name: formData.name.trim(),
         email: formData.email.trim(),
-        password: formData.password,
-      });
-
-      const { token, user } = response.data || {};
+      };
 
       if (onRegister) {
         onRegister(user, token);
@@ -41,8 +39,7 @@ export function RegisterPage({ onRegister }) {
 
       navigate("/");
     } catch (requestError) {
-      const message = requestError.response?.data?.message || "Unable to create account.";
-      setError(message);
+      setError("Unable to create account.");
     } finally {
       setIsSubmitting(false);
     }

@@ -6,7 +6,7 @@ export default defineConfig({
   publicDir: '../public',
   plugins: [react()],
   build: {
-    outDir: '../ecommerce-backend/dist',
+    outDir: '../ecommerce-backend-ai-main/dist',
     emptyOutDir: true,
   },
   test: {

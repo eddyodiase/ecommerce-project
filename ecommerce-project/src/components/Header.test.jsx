@@ -28,9 +28,7 @@ describe('Header', () => {
     expect(screen.getByRole('button', { name: /orders/i })).toBeInTheDocument();
     expect(screen.getByText('Cart')).toBeInTheDocument();
     expect(await screen.findByText('3')).toBeInTheDocument();
-    expect(axios.get).toHaveBeenCalledWith('/api/cart-items', {
-      headers: { Authorization: 'Bearer test-token' },
-    });
+    expect(axios.get).toHaveBeenCalledWith('/api/cart-items');
     expect(axios.post).not.toHaveBeenCalled();
   });
 });

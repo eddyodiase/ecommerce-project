@@ -1,0 +1,140 @@
+.admin-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+  color: #111827;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.admin-page-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 2rem 4rem;
+}
+
+.admin-eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.admin-page-header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 3vw, 2.5rem);
+}
+
+.admin-page-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.admin-listings {
+  display: grid;
+  gap: 1rem;
+}
+
+.listing-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.listing-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.listing-status {
+  margin: 0 0 0.4rem;
+  color: #b45309;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.listing-card h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.listing-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.listing-meta,
+.listing-description,
+.listing-date {
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.listing-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.approve-button,
+.reject-button {
+  border: none;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+}
+
+.approve-button {
+  background: #16a34a;
+  color: #fff;
+}
+
+.reject-button {
+  background: #ef4444;
+  color: #fff;
+}
+
+.admin-empty,
+.admin-error {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  color: #374151;
+}
+
+.admin-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .admin-page-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .listing-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .listing-actions {
+    flex-direction: column;
+  }
+
+  .approve-button,
+  .reject-button {
+    width: 100%;
+  }
+}

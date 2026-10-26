@@ -11,7 +11,6 @@ vi.mock('axios');
 describe('ProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem('authToken', 'test-token');
     localStorage.setItem('authUser', JSON.stringify({
       id: 'u1',
       name: 'Jane Smith',
@@ -29,11 +28,6 @@ describe('ProfilePage', () => {
           products: [{ productId: 'p1', quantity: 1 }],
         },
       ],
-    });
-    axios.put.mockResolvedValue({
-      data: {
-        user: { id: 'u1', name: 'Jane Doe', email: 'jane@new.com' },
-      },
     });
 
     render(
@@ -59,16 +53,11 @@ describe('ProfilePage', () => {
     await userEvent.click(screen.getByRole('button', { name: /save changes/i }));
 
     await waitFor(() => {
-      expect(axios.put).toHaveBeenCalledWith(
-        '/api/profile',
-        {
-          name: 'Jane Doe',
-          email: 'jane@new.com',
-        },
-        {
-          headers: { Authorization: 'Bearer test-token' },
-        }
-      );
+      const savedUser = JSON.parse(localStorage.getItem('authUser') || '{}');
+      expect(savedUser).toEqual(expect.objectContaining({
+        name: 'Jane Doe',
+        email: 'jane@new.com',
+      }));
     });
   });
 });

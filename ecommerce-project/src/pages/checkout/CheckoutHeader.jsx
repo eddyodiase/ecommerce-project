@@ -2,34 +2,22 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { getGuestCartTotalQuantity } from "../../utils/cart";
 import "./CheckoutHeader.css";
 
 export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
   const navigate = useNavigate();
   const [totalItems, setTotalItems] = useState(0);
-  const authToken = localStorage.getItem("authToken");
-
-  const guestTotalItems = getGuestCartTotalQuantity();
 
   useEffect(() => {
-    if (!authToken) {
-      return;
-    }
-
     axios
-      .get("/api/payment-summary", {
-        headers: { Authorization: `Bearer ${authToken}` },
-      })
+      .get("/api/payment-summary")
       .then((response) => {
         setTotalItems(response.data?.totalItems || 0);
       })
       .catch((error) => {
         console.error("Error loading checkout summary:", error);
       });
-  }, [authToken, cartRefreshKey]);
-
-  const displayTotalItems = authToken ? totalItems : guestTotalItems;
+  }, [cartRefreshKey]);
 
   return (
     <div className="checkout-header">
@@ -43,7 +31,7 @@ export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
         <div className="checkout-header-middle-section">
           Checkout (
           <button type="button" className="return-to-home-link" onClick={() => navigate("/")}>
-            {displayTotalItems} items
+            {totalItems} items
           </button>
           )
         </div>

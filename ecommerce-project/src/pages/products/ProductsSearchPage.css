@@ -88,10 +88,20 @@
   gap: 18px;
 }
 
-.utility-links a {
+.utility-links a,
+.sell-link-button {
   color: #111827;
   text-decoration: none;
   font-weight: 600;
+  font: inherit;
+}
+
+.sell-link-button {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
 }
 
 .cart-link {
