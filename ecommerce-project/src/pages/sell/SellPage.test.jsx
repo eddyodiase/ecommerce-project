@@ -39,6 +39,44 @@ describe('Sell flow', () => {
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(PRODUCT_TAXONOMY);
   });
 
+  it('requires a product photo before publishing a listing', async () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByLabelText(/product images/i)).toBeRequired();
+    fireEvent.submit(document.querySelector('form'));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /upload at least one product photo/i
+    );
+    expect(localStorage.getItem('sellerListings')).toBeNull();
+  });
+
+  it('adds photos across selections, caps at 10, and lets sellers remove photos', async () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    const makeFiles = (start, count) => Array.from({ length: count }, (_, i) => (
+      new File(['image-data'], `photo-${start + i}.jpg`, { type: 'image/jpeg' })
+    ));
+
+    fireEvent.change(screen.getByLabelText(/product images/i), { target: { files: makeFiles(1, 6) } });
+    await waitFor(() => expect(screen.getByText(/uploaded: 6 photo\(s\)/i)).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText(/product images/i), { target: { files: makeFiles(7, 6) } });
+    await waitFor(() => expect(screen.getByText(/uploaded: 10 photo\(s\)/i)).toBeInTheDocument());
+    expect(screen.getByRole('alert')).toHaveTextContent(/up to 10 photos/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /remove photo 1$/i }));
+    await waitFor(() => expect(screen.getByText(/uploaded: 9 photo\(s\)/i)).toBeInTheDocument());
+  });
+
   it('stores a seller listing locally when published', async () => {
     render(
       <MemoryRouter>

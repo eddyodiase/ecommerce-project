@@ -139,6 +139,11 @@
   cursor: grab;
 }
 
+.remove-photo-button {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+
 .uploaded-preview-item.dragging {
   opacity: 0.55;
 }

@@ -66,29 +66,41 @@ export function SellPage() {
 
   const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files || []);
+    event.target.value = "";
     if (files.length === 0) {
-      setUploadedImages([]);
       return;
     }
 
-    setIsUploadingImages(true);
-
-    const selectedFiles = files.slice(0, MAX_PRODUCT_IMAGES);
-    if (files.length > MAX_PRODUCT_IMAGES) {
+    const remainingSlots = MAX_PRODUCT_IMAGES - uploadedImages.length;
+    const selectedFiles = files.slice(0, Math.max(remainingSlots, 0));
+    if (files.length > remainingSlots) {
       setSubmitError(`You can upload up to ${MAX_PRODUCT_IMAGES} photos per product.`);
     } else {
       setSubmitError("");
     }
 
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    setIsUploadingImages(true);
+
     try {
       const imageEntries = await Promise.all(selectedFiles.map((file) => readFileAsDataUrl(file)));
-      setUploadedImages(imageEntries.filter((entry) => entry.dataUrl));
+      setUploadedImages((current) => [
+        ...current,
+        ...imageEntries.filter((entry) => entry.dataUrl),
+      ].slice(0, MAX_PRODUCT_IMAGES));
     } catch (error) {
-      setUploadedImages([]);
       setSubmitError("We could not read one or more image files.");
     } finally {
       setIsUploadingImages(false);
     }
+  };
+
+  const handleRemoveImage = (index) => {
+    setUploadedImages((current) => current.filter((_, imageIndex) => imageIndex !== index));
+    setSubmitError("");
   };
 
   const handleSubmit = async (event) => {
@@ -96,6 +108,11 @@ export function SellPage() {
 
     if (isUploadingImages) {
       setSubmitError("Please wait for image upload to complete.");
+      return;
+    }
+
+    if (uploadedImages.length === 0) {
+      setSubmitError("Please upload at least one product photo before publishing your listing.");
       return;
     }
 
@@ -261,9 +278,12 @@ export function SellPage() {
                 type="file"
                 accept="image/*"
                 multiple
+                required={uploadedImages.length === 0}
+                disabled={uploadedImages.length >= MAX_PRODUCT_IMAGES}
                 onChange={handleImageUpload}
               />
             </label>
+            <p className="upload-note">At least one product photo is required to publish a listing.</p>
 
             {uploadedImages.length > 0 ? (
               <p className="upload-note">Uploaded: {uploadedImages.length} photo(s)</p>
@@ -291,6 +311,14 @@ export function SellPage() {
                       className="uploaded-preview"
                     />
                     <figcaption>{index === 0 ? `Primary • ${entry.name}` : entry.name}</figcaption>
+                    <button
+                      type="button"
+                      className="secondary-sell-button remove-photo-button"
+                      onClick={() => handleRemoveImage(index)}
+                      aria-label={`Remove photo ${index + 1}`}
+                    >
+                      Remove
+                    </button>
                   </figure>
                 ))}
               </div>
