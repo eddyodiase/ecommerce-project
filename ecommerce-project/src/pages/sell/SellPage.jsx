@@ -6,6 +6,7 @@ import "./SellPage.css";
 
 const CATEGORIES = PRODUCT_TAXONOMY;
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
+const MAX_PRODUCT_IMAGES = 10;
 
 const readSellerListings = () => {
   try {
@@ -24,9 +25,19 @@ export function SellPage() {
     price: "",
     description: "",
     sellerName: "",
+    originLocation: "",
+    phoneBrand: "",
+    ramOptionsGb: "",
+    storageOptionsGb: "",
+    os: "",
+    batteryMah: "",
+    cameraMp: "",
   });
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [draggedImageIndex, setDraggedImageIndex] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
   const handleChange = (event) => {
@@ -34,13 +45,67 @@ export function SellPage() {
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
+  const isSmartPhoneCategory = formData.category === "Smart Phones";
+
+  const toNumericOptionList = (value) => String(value || "")
+    .split(",")
+    .map((entry) => Number(entry.trim()))
+    .filter((entry) => Number.isFinite(entry) && entry > 0);
+
+  const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      resolve({
+        dataUrl: typeof reader.result === "string" ? reader.result : "",
+        name: file.name,
+      });
+    };
+    reader.onerror = () => reject(new Error("file-read-failed"));
+    reader.readAsDataURL(file);
+  });
+
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) {
+      setUploadedImages([]);
+      return;
+    }
+
+    setIsUploadingImages(true);
+
+    const selectedFiles = files.slice(0, MAX_PRODUCT_IMAGES);
+    if (files.length > MAX_PRODUCT_IMAGES) {
+      setSubmitError(`You can upload up to ${MAX_PRODUCT_IMAGES} photos per product.`);
+    } else {
+      setSubmitError("");
+    }
+
+    try {
+      const imageEntries = await Promise.all(selectedFiles.map((file) => readFileAsDataUrl(file)));
+      setUploadedImages(imageEntries.filter((entry) => entry.dataUrl));
+    } catch (error) {
+      setUploadedImages([]);
+      setSubmitError("We could not read one or more image files.");
+    } finally {
+      setIsUploadingImages(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (isUploadingImages) {
+      setSubmitError("Please wait for image upload to complete.");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError("");
 
     try {
       const existingListings = readSellerListings();
+      const ramOptions = toNumericOptionList(formData.ramOptionsGb);
+      const storageOptions = toNumericOptionList(formData.storageOptionsGb);
       const nextListing = {
         id: `listing-${Date.now()}`,
         productName: formData.productName.trim(),
@@ -48,6 +113,21 @@ export function SellPage() {
         price: Number(formData.price),
         description: formData.description.trim(),
         sellerName: formData.sellerName.trim(),
+        originLocation: formData.originLocation.trim(),
+        imageDataUrls: uploadedImages.map((entry) => entry.dataUrl),
+        imageNames: uploadedImages.map((entry) => entry.name),
+        imageDataUrl: uploadedImages[0]?.dataUrl || "",
+        imageName: uploadedImages[0]?.name || "",
+        phoneSpecs: isSmartPhoneCategory
+          ? {
+            brand: formData.phoneBrand.trim(),
+            ramOptionsGb: ramOptions,
+            storageOptionsGb: storageOptions,
+            os: formData.os.trim(),
+            batteryMah: Number(formData.batteryMah) || undefined,
+            cameraMp: Number(formData.cameraMp) || undefined,
+          }
+          : undefined,
         status: "pending",
         createdAt: new Date().toISOString(),
       };
@@ -67,6 +147,26 @@ export function SellPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImageDragStart = (index) => {
+    setDraggedImageIndex(index);
+  };
+
+  const handleImageDrop = (targetIndex) => {
+    if (draggedImageIndex === null || draggedImageIndex === targetIndex) {
+      setDraggedImageIndex(null);
+      return;
+    }
+
+    setUploadedImages((currentImages) => {
+      const nextImages = [...currentImages];
+      const [draggedImage] = nextImages.splice(draggedImageIndex, 1);
+      nextImages.splice(targetIndex, 0, draggedImage);
+      return nextImages;
+    });
+
+    setDraggedImageIndex(null);
   };
 
   return (
@@ -143,6 +243,144 @@ export function SellPage() {
             </label>
 
             <label>
+              Origin location
+              <input
+                name="originLocation"
+                type="text"
+                value={formData.originLocation}
+                onChange={handleChange}
+                placeholder="Example: Ikeja, Lagos"
+                required
+              />
+            </label>
+
+            <label>
+              Product images (up to 10)
+              <input
+                name="imageFile"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+              />
+            </label>
+
+            {uploadedImages.length > 0 ? (
+              <p className="upload-note">Uploaded: {uploadedImages.length} photo(s)</p>
+            ) : null}
+
+            {uploadedImages.length > 1 ? (
+              <p className="upload-note">Drag and drop photos to reorder. The first photo becomes the primary storefront image.</p>
+            ) : null}
+
+            {uploadedImages.length > 0 ? (
+              <div className="uploaded-preview-grid">
+                {uploadedImages.map((entry, index) => (
+                  <figure
+                    key={`${entry.name}-${index}`}
+                    className={draggedImageIndex === index ? "uploaded-preview-item dragging" : "uploaded-preview-item"}
+                    draggable
+                    onDragStart={() => handleImageDragStart(index)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => handleImageDrop(index)}
+                    onDragEnd={() => setDraggedImageIndex(null)}
+                  >
+                    <img
+                      src={entry.dataUrl}
+                      alt={`Uploaded listing preview ${index + 1}`}
+                      className="uploaded-preview"
+                    />
+                    <figcaption>{index === 0 ? `Primary • ${entry.name}` : entry.name}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            ) : null}
+
+            {isSmartPhoneCategory ? (
+              <div className="phone-specs-card">
+                <h3>Smart phone specifications</h3>
+                <p className="phone-specs-hint">Add full specs shoppers expect before buying.</p>
+
+                <div className="field-row">
+                  <label>
+                    Brand
+                    <input
+                      name="phoneBrand"
+                      type="text"
+                      value={formData.phoneBrand}
+                      onChange={handleChange}
+                      placeholder="Example: vivo"
+                      required={isSmartPhoneCategory}
+                    />
+                  </label>
+
+                  <label>
+                    Operating system
+                    <input
+                      name="os"
+                      type="text"
+                      value={formData.os}
+                      onChange={handleChange}
+                      placeholder="Example: Android 15"
+                    />
+                  </label>
+                </div>
+
+                <div className="field-row">
+                  <label>
+                    RAM options (GB, comma-separated)
+                    <input
+                      name="ramOptionsGb"
+                      type="text"
+                      value={formData.ramOptionsGb}
+                      onChange={handleChange}
+                      placeholder="4, 8, 12"
+                      required={isSmartPhoneCategory}
+                    />
+                  </label>
+
+                  <label>
+                    Storage options (GB, comma-separated)
+                    <input
+                      name="storageOptionsGb"
+                      type="text"
+                      value={formData.storageOptionsGb}
+                      onChange={handleChange}
+                      placeholder="64, 128, 256"
+                      required={isSmartPhoneCategory}
+                    />
+                  </label>
+                </div>
+
+                <div className="field-row">
+                  <label>
+                    Battery (mAh)
+                    <input
+                      name="batteryMah"
+                      type="number"
+                      min="1"
+                      value={formData.batteryMah}
+                      onChange={handleChange}
+                      placeholder="5000"
+                    />
+                  </label>
+
+                  <label>
+                    Main camera (MP)
+                    <input
+                      name="cameraMp"
+                      type="number"
+                      min="1"
+                      value={formData.cameraMp}
+                      onChange={handleChange}
+                      placeholder="50"
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : null}
+
+            <label>
               Description
               <textarea
                 name="description"
@@ -155,8 +393,8 @@ export function SellPage() {
             </label>
 
             <div className="form-actions">
-              <button type="submit" className="primary-sell-button" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Publish listing"}
+              <button type="submit" className="primary-sell-button" disabled={isSubmitting || isUploadingImages}>
+                {isUploadingImages ? "Uploading photos..." : isSubmitting ? "Saving..." : "Publish listing"}
               </button>
               <button type="button" className="secondary-sell-button" onClick={() => navigate("/products")}>
                 Cancel

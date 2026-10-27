@@ -493,5 +493,38 @@ export const defaultProducts = [
     },
     "priceCents": 2299,
     "keywords": ["plantain", "fruit", "home", "garden"]
+  },
+  {
+    "id": "8f8df7cf-e419-4f5a-86ac-833c8f613e35",
+    "image": "images/products/Itel P23 Pro.jpg",
+    "name": "Itel P23 Pro",
+    "rating": {
+      "stars": 4.4,
+      "count": 94
+    },
+    "priceCents": 179900,
+    "keywords": ["smartphone", "mobile", "android", "phone"]
+  },
+  {
+    "id": "9a4ca557-f2db-4c08-8aa4-ec52bf4736b4",
+    "image": "images/products/Savo A05.jpg",
+    "name": "Savo A05",
+    "rating": {
+      "stars": 4.2,
+      "count": 71
+    },
+    "priceCents": 149900,
+    "keywords": ["smartphone", "mobile", "android", "budget phone"]
+  },
+  {
+    "id": "c1439ed8-3b89-4661-ae62-bdcf4be27d51",
+    "image": "images/products/vivo B2 Pro.jpg",
+    "name": "vivo B2 Pro",
+    "rating": {
+      "stars": 4.6,
+      "count": 113
+    },
+    "priceCents": 214900,
+    "keywords": ["smartphone", "5g", "android", "phone"]
   }
 ];

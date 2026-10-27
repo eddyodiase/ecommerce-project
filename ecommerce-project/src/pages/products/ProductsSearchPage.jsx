@@ -6,6 +6,7 @@ import { useCart } from "../../context/CartContext";
 import "./ProductsSearchPage.css";
 
 const PAGE_SIZE = 48;
+const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
 export const PRODUCT_TAXONOMY = [
   "Home",
   "Electronics",
@@ -22,10 +23,10 @@ const CATEGORY_LINKS = [
 ];
 
 const BACKEND_CATEGORY_KEYWORDS = {
-  Home: ["home", "kitchen", "bath", "living"],
+  Home: ["home", "kitchen", "bathroom", "living"],
   Electronics: ["electronics", "tech", "device"],
   "Smart Phones": ["smart phone", "smartphone", "phone", "mobile", "cell phone", "android", "iphone"],
-  Fashion: ["fashion", "clothing", "apparel", "shoe"],
+  Fashion: ["fashion", "clothing", "apparel", "shoe", "dress", "swim", "accessories", "sunglass", "shade"],
   Beauty: ["beauty", "cosmetic", "care"],
   Office: ["office", "work", "desk", "school"],
   "Gift Cards": ["gift", "card"],
@@ -54,7 +55,7 @@ const CATEGORY_BRANDS = {
   "Best Sellers": ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell", "Nexa", "Luma", "Zenith", "Nova"],
 };
 
-const inferCategoryFromKeywords = (keywords = []) => {
+export const inferCategoryFromKeywords = (keywords = []) => {
   const normalizedKeywords = keywords.map((keyword) => String(keyword || "").toLowerCase());
   for (const [category, terms] of Object.entries(BACKEND_CATEGORY_KEYWORDS)) {
     if (terms.some((term) => normalizedKeywords.some((keyword) => keyword.includes(term)))) {
@@ -65,9 +66,18 @@ const inferCategoryFromKeywords = (keywords = []) => {
   return "Home";
 };
 
+const normalizeBackendImagePath = (image) => {
+  if (!image || typeof image !== "string") {
+    return image;
+  }
+
+  const absolutePath = image.startsWith("/") ? image : `/${image.replace(/^\.?\//, "")}`;
+  return encodeURI(absolutePath);
+};
+
 const normalizeBackendProduct = (product = {}) => {
   const ratingValue = Number(product.rating?.stars || 0);
-  const category = inferCategoryFromKeywords(product.keywords || []);
+  const category = inferCategoryFromKeywords([product.name, ...(product.keywords || [])]);
 
   return {
     id: product.id,
@@ -81,9 +91,73 @@ const normalizeBackendProduct = (product = {}) => {
     price: Number(product.priceCents || 0),
     rating: ratingValue,
     reviewCount: Number(product.rating?.count || 0),
-    image: product.image,
+    image: normalizeBackendImagePath(product.image),
     badge: ratingValue >= 4.5 ? "Best Seller" : "",
+    phoneSpecs: product.phoneSpecs,
+    originLocation: product.originLocation || "Warehouse - NG",
   };
+};
+
+const normalizeSellerListingImagePath = (image) => {
+  if (!image || typeof image !== "string") {
+    return "/images/products/Itel%20P23%20Pro.jpg";
+  }
+
+  if (image.startsWith("data:") || image.startsWith("blob:")) {
+    return image;
+  }
+
+  return normalizeBackendImagePath(image);
+};
+
+const readApprovedSellerListings = () => {
+  try {
+    const listings = JSON.parse(localStorage.getItem(SELLER_LISTINGS_STORAGE_KEY) || "[]");
+    if (!Array.isArray(listings)) {
+      return [];
+    }
+
+    return listings
+      .filter((listing) => listing?.status === "approved")
+      .map((listing) => {
+        const isSmartPhone = normalizeCategoryKey(listing.category) === "smart phones";
+        const phoneSpecs = listing.phoneSpecs || {};
+        const listingImages = Array.isArray(listing.imageDataUrls)
+          ? listing.imageDataUrls
+          : [listing.imageDataUrl || listing.imageUrl].filter(Boolean);
+        const normalizedListingImages = listingImages.map((image) => normalizeSellerListingImagePath(image)).filter(Boolean);
+
+        return {
+          id: listing.id,
+          title: listing.productName || "Seller listing",
+          subtitle: listing.description || "Seller listed product",
+          brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
+          category: listing.category || "Home",
+          seller: listing.sellerName || "Marketplace Seller",
+          originLocation: listing.originLocation || "Not specified",
+          deliveryType: "Standard",
+          cardType: "Visa",
+          price: Number(listing.price || 0),
+          rating: 4.5,
+          reviewCount: 0,
+          image: normalizedListingImages[0] || normalizeSellerListingImagePath(listing.imageDataUrl || listing.imageUrl),
+          galleryImages: normalizedListingImages,
+          badge: "Seller Pick",
+          phoneSpecs: isSmartPhone
+            ? {
+              brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
+              ramOptionsGb: Array.isArray(phoneSpecs.ramOptionsGb) ? phoneSpecs.ramOptionsGb : [],
+              storageOptionsGb: Array.isArray(phoneSpecs.storageOptionsGb) ? phoneSpecs.storageOptionsGb : [],
+              os: phoneSpecs.os || "",
+              batteryMah: Number(phoneSpecs.batteryMah) || undefined,
+              cameraMp: Number(phoneSpecs.cameraMp) || undefined,
+            }
+            : undefined,
+        };
+      });
+  } catch (error) {
+    return [];
+  }
 };
 
 const normalizeCategoryKey = (value) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
@@ -116,7 +190,7 @@ const RAW_PRODUCTS = [
     price: 429000,
     rating: 4.9,
     reviewCount: 6840,
-    image: "/images/products/men-athletic-shoes-white.jpg",
+    image: "/images/products/Itel P23 Pro.jpg",
     badge: "Top Rated",
   },
   {
@@ -131,7 +205,7 @@ const RAW_PRODUCTS = [
     price: 348000,
     rating: 4.7,
     reviewCount: 5210,
-    image: "/images/products/countertop-push-blender-black.jpg",
+    image: "/images/products/Savo A05.jpg",
     badge: "Best Seller",
   },
   {
@@ -146,7 +220,7 @@ const RAW_PRODUCTS = [
     price: 289000,
     rating: 4.6,
     reviewCount: 4360,
-    image: "/images/products/blackout-curtains-set-teal.jpg",
+    image: "/images/products/vivo B2 Pro.jpg",
     badge: "Overall Pick",
   },
   {
@@ -487,8 +561,11 @@ export function ProductsSearchPage() {
         ? payload
         : payload.products || [];
       const normalizedProducts = backendProducts.map(normalizeBackendProduct);
+      const approvedSellerProducts = readApprovedSellerListings();
 
-      const fallbackSource = normalizedProducts.length > 0 ? normalizedProducts : buildSampleProducts();
+      const fallbackSource = normalizedProducts.length > 0
+        ? [...approvedSellerProducts, ...normalizedProducts]
+        : [...approvedSellerProducts, ...buildSampleProducts()];
       const filteredProducts = fallbackSource.filter((product) => getSampleProductMatch(
         product,
         searchTerm,
@@ -509,8 +586,9 @@ export function ProductsSearchPage() {
       setTotalResults(sortedProducts.length);
       setTotalPages(Math.max(1, Math.ceil(sortedProducts.length / PAGE_SIZE)));
     } catch (error) {
+      const approvedSellerProducts = readApprovedSellerListings();
       const fallbackProducts = sortProducts(
-        buildSampleProducts().filter((product) => getSampleProductMatch(
+        [...approvedSellerProducts, ...buildSampleProducts()].filter((product) => getSampleProductMatch(
           product,
           searchTerm,
           selectedCategory,
@@ -755,6 +833,7 @@ export function ProductsSearchPage() {
                       </Link>
                     </h4>
                     <p className="product-subtitle">{product.subtitle}</p>
+                    <p className="product-subtitle">Origin: {product.originLocation || "Not specified"}</p>
 
                     <div className="product-rating-row" aria-label={`${product.rating} out of 5 stars`}>
                       <span className="product-stars">

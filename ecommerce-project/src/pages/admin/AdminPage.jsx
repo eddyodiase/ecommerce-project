@@ -88,6 +88,9 @@ export function AdminPage() {
                 <p className="listing-meta">
                   {listing.category} · {listing.sellerName}
                 </p>
+                <p className="listing-meta">
+                  Origin: {listing.originLocation || "Not specified"}
+                </p>
                 <p className="listing-description">{listing.description}</p>
                 <p className="listing-date">
                   Submitted {new Date(listing.createdAt).toLocaleString()}

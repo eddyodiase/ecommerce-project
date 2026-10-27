@@ -16,6 +16,7 @@ describe('AdminPage', () => {
         category: 'Home',
         price: 25000,
         description: 'Handcrafted ceramic lamp',
+        originLocation: 'Ikeja, Lagos',
       },
     ]));
   });
@@ -29,6 +30,7 @@ describe('AdminPage', () => {
 
     expect(await screen.findByRole('heading', { name: /pending seller listings/i })).toBeInTheDocument();
     expect(screen.getByText(/coastal ceramic lamp/i)).toBeInTheDocument();
+    expect(screen.getByText(/origin: ikeja, lagos/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /approve/i }));
 

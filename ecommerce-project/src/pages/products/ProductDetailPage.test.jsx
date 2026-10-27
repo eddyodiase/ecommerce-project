@@ -59,4 +59,49 @@ describe('ProductDetailPage', () => {
     expect(await screen.findByRole('heading', { name: /black and gray athletic cotton socks - 6 pairs/i })).toBeInTheDocument();
     spy.mockRestore();
   });
+
+  it('hides Storage size for non-phone backend products', async () => {
+    const product = {
+      id: 'home-product-1',
+      name: '2 Slot Toaster - White',
+      keywords: ['toaster', 'kitchen', 'appliances'],
+      image: '/images/products/2-slot-toaster-white.jpg',
+      priceCents: 1899,
+      rating: { stars: 5, count: 2197 },
+      brand: 'NorthPeak',
+      category: 'Home',
+      seller: 'NorthPeak Marketplace',
+      deliveryType: 'Standard',
+      cardType: 'Visa',
+    };
+
+    const { default: axios } = await import('axios');
+    const spy = vi.spyOn(axios, 'get').mockResolvedValue({ data: [product] });
+
+    render(
+      <MemoryRouter initialEntries={['/products/home-product-1']}>
+        <Routes>
+          <Route path="/products/:productId" element={<ProductDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByRole('heading', { name: /2 slot toaster - white/i });
+    expect(screen.queryByText(/storage size/i)).not.toBeInTheDocument();
+    spy.mockRestore();
+  });
+
+  it('shows Storage size for Smart Phones products', () => {
+    render(
+      <MemoryRouter initialEntries={['/products/nexa-phone-1']}>
+        <Routes>
+          <Route path="/products/:productId" element={<ProductDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/storage size/i)).toBeInTheDocument();
+    expect(screen.getByText(/ram/i)).toBeInTheDocument();
+    expect(screen.getByText(/phone specifications/i)).toBeInTheDocument();
+  });
 });

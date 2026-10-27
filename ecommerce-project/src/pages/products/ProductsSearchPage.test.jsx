@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildSampleProducts, matchesCategoryFilter, sortProducts } from "./ProductsSearchPage";
+import { buildSampleProducts, inferCategoryFromKeywords, matchesCategoryFilter, sortProducts } from "./ProductsSearchPage";
 
 describe("ProductsSearchPage sample data", () => {
   it("uses distinct images within each category so category cards do not repeat the same photo", () => {
@@ -39,5 +39,25 @@ describe("ProductsSearchPage sample data", () => {
     expect(matchesCategoryFilter("Home", products[1])).toBe(false);
     expect(matchesCategoryFilter("Fashion", products[1])).toBe(true);
     expect(matchesCategoryFilter("Beauty", products[2])).toBe(true);
+  });
+
+  it("maps striped beach dress and round sunglasses to Fashion for backend products", () => {
+    const stripedBeachDressCategory = inferCategoryFromKeywords([
+      "Women's Striped Beach Dress",
+      "robe",
+      "swimsuit",
+      "swimming",
+      "bathing",
+      "apparel",
+    ]);
+
+    const roundSunglassesCategory = inferCategoryFromKeywords([
+      "Round Sunglasses",
+      "accessories",
+      "shades",
+    ]);
+
+    expect(stripedBeachDressCategory).toBe("Fashion");
+    expect(roundSunglassesCategory).toBe("Fashion");
   });
 });

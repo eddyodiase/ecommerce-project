@@ -5,6 +5,8 @@ import { Link, useParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { buildSampleProducts } from "./ProductsSearchPage";
 
+const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
+
 const formatNaira = (value) =>
   new Intl.NumberFormat("en-NG", {
     style: "currency",
@@ -20,6 +22,7 @@ const colorOptions = [
   { name: "Rose Gold", value: "#d97706" },
 ];
 const sizeOptions = ["64GB", "128GB", "256GB", "512GB"];
+const defaultRamOptions = [4, 8, 12];
 
 const slugify = (value) =>
   String(value || "")
@@ -35,12 +38,14 @@ const normalizeImagePath = (image) => {
     return image;
   }
 
-  if (image.startsWith("/") || image.startsWith("http")) {
+  if (image.startsWith("/") || image.startsWith("http") || image.startsWith("data:") || image.startsWith("blob:")) {
     return image;
   }
 
   return `/${image.replace(/^\.?\//, "")}`;
 };
+
+const normalizeCategoryKey = (value) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 
 const normalizeProduct = (product = {}) => {
   const ratingValue = Number(product.rating?.stars || 0);
@@ -59,8 +64,52 @@ const normalizeProduct = (product = {}) => {
     rating: ratingValue,
     reviewCount: Number(product.rating?.count || 0),
     image: normalizeImagePath(product.image),
+    galleryImages: Array.isArray(product.galleryImages)
+      ? product.galleryImages.map((image) => normalizeImagePath(image)).filter(Boolean)
+      : [],
     badge: ratingValue >= 4.5 ? "Best Seller" : "",
+    phoneSpecs: product.phoneSpecs,
+    originLocation: product.originLocation || "Warehouse - NG",
   };
+};
+
+const readApprovedSellerListings = () => {
+  try {
+    const listings = JSON.parse(localStorage.getItem(SELLER_LISTINGS_STORAGE_KEY) || "[]");
+    if (!Array.isArray(listings)) {
+      return [];
+    }
+
+    return listings
+      .filter((listing) => listing?.status === "approved")
+      .map((listing) => {
+        const listingImages = Array.isArray(listing.imageDataUrls)
+          ? listing.imageDataUrls
+          : [listing.imageDataUrl || listing.imageUrl].filter(Boolean);
+        const normalizedListingImages = listingImages.map((image) => normalizeImagePath(image)).filter(Boolean);
+
+        return {
+          id: listing.id,
+          title: listing.productName || "Seller listing",
+          subtitle: listing.description || "Seller listed product",
+          brand: listing.phoneSpecs?.brand || listing.sellerName || "Marketplace Seller",
+          category: listing.category || "Home",
+          seller: listing.sellerName || "Marketplace Seller",
+          originLocation: listing.originLocation || "Not specified",
+          deliveryType: "Standard",
+          cardType: "Visa",
+          price: Number(listing.price || 0),
+          rating: 4.5,
+          reviewCount: 0,
+          image: normalizedListingImages[0] || "/images/products/Itel%20P23%20Pro.jpg",
+          galleryImages: normalizedListingImages,
+          badge: "Seller Pick",
+          phoneSpecs: listing.phoneSpecs,
+        };
+      });
+  } catch (error) {
+    return [];
+  }
 };
 
 const resolveProduct = (allProducts, requestedId) => {
@@ -94,7 +143,7 @@ const resolveProduct = (allProducts, requestedId) => {
 
 export function ProductDetailPage() {
   const { productId } = useParams();
-  const fallbackProducts = buildSampleProducts();
+  const fallbackProducts = [...readApprovedSellerListings(), ...buildSampleProducts()];
   const [catalog, setCatalog] = useState(fallbackProducts);
   const [resolvedProduct, setResolvedProduct] = useState(() => resolveProduct(fallbackProducts, productId));
   const [isResolvingProduct, setIsResolvingProduct] = useState(true);
@@ -104,6 +153,7 @@ export function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(colorOptions[0].name);
   const [selectedSize, setSelectedSize] = useState(sizeOptions[1]);
+  const [selectedRam, setSelectedRam] = useState(defaultRamOptions[1]);
   const [selectedImage, setSelectedImage] = useState(product?.image || "");
   const [showAddedToast, setShowAddedToast] = useState(false);
 
@@ -129,7 +179,10 @@ export function ProductDetailPage() {
 
         const payload = Array.isArray(response.data) ? response.data : response.data?.products || [];
         const normalizedProducts = payload.map(normalizeProduct);
-        const nextCatalog = normalizedProducts.length > 0 ? normalizedProducts : fallbackProducts;
+        const approvedSellerProducts = readApprovedSellerListings();
+        const nextCatalog = normalizedProducts.length > 0
+          ? [...approvedSellerProducts, ...normalizedProducts]
+          : fallbackProducts;
         setCatalog(nextCatalog);
         setResolvedProduct(resolveProduct(nextCatalog, productId) || resolveProduct(fallbackProducts, productId));
       } catch (error) {
@@ -150,7 +203,15 @@ export function ProductDetailPage() {
 
   useEffect(() => {
     setSelectedImage(product?.image || "");
-    setSelectedSize(sizeOptions[1]);
+    const storageChoices = Array.isArray(product?.phoneSpecs?.storageOptionsGb) && product.phoneSpecs.storageOptionsGb.length > 0
+      ? product.phoneSpecs.storageOptionsGb
+      : sizeOptions.map((option) => Number(String(option).replace(/[^0-9]/g, ""))).filter((value) => Number.isFinite(value));
+    const ramChoices = Array.isArray(product?.phoneSpecs?.ramOptionsGb) && product.phoneSpecs.ramOptionsGb.length > 0
+      ? product.phoneSpecs.ramOptionsGb
+      : defaultRamOptions;
+
+    setSelectedSize(`${storageChoices[0] || 128}GB`);
+    setSelectedRam(Number(ramChoices[0] || 8));
   }, [product?.id]);
 
   useEffect(() => {
@@ -199,6 +260,7 @@ export function ProductDetailPage() {
   const galleryImages = Array.from(
     new Set([
       product.image,
+      ...(Array.isArray(product.galleryImages) ? product.galleryImages : []),
       ...(relatedProducts.slice(0, 3).map((item) => item.image)),
       product.image,
     ].filter(Boolean))
@@ -226,6 +288,7 @@ export function ProductDetailPage() {
         <p><strong>Brand:</strong> {product.brand}</p>
         <p><strong>Seller:</strong> {product.seller}</p>
         <p><strong>Category:</strong> {product.category}</p>
+        <p><strong>Origin:</strong> {product.originLocation || "Not specified"}</p>
         <p><strong>Delivery:</strong> {product.deliveryType}</p>
         <p><strong>Payment:</strong> {product.cardType}</p>
       </div>
@@ -261,6 +324,18 @@ export function ProductDetailPage() {
       </div>
     ),
   };
+
+  const isSmartPhoneProduct = normalizeCategoryKey(product.category) === "smart phones";
+  const phoneStorageOptions = isSmartPhoneProduct
+    ? (Array.isArray(product.phoneSpecs?.storageOptionsGb) && product.phoneSpecs.storageOptionsGb.length > 0
+      ? product.phoneSpecs.storageOptionsGb
+      : sizeOptions.map((option) => Number(String(option).replace(/[^0-9]/g, ""))).filter((value) => Number.isFinite(value)))
+    : [];
+  const phoneRamOptions = isSmartPhoneProduct
+    ? (Array.isArray(product.phoneSpecs?.ramOptionsGb) && product.phoneSpecs.ramOptionsGb.length > 0
+      ? product.phoneSpecs.ramOptionsGb
+      : defaultRamOptions)
+    : [];
 
   return (
     <main style={{ maxWidth: "1280px", margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
@@ -344,32 +419,77 @@ export function ProductDetailPage() {
             </div>
           </div>
 
-          <div style={{ marginBottom: "1.25rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
-              <strong>Storage size</strong>
-              <span style={{ color: "#6b7280" }}>{selectedSize}</span>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
-              {sizeOptions.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setSelectedSize(size)}
-                  style={{
-                    padding: "0.65rem 0.9rem",
-                    borderRadius: "10px",
-                    border: selectedSize === size ? "1px solid #111827" : "1px solid #d1d5db",
-                    background: selectedSize === size ? "#111827" : "#fff",
-                    color: selectedSize === size ? "#fff" : "#111827",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
+          {isSmartPhoneProduct ? (
+            <>
+              <div style={{ marginBottom: "1.25rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+                  <strong>Storage size</strong>
+                  <span style={{ color: "#6b7280" }}>{selectedSize}</span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+                  {phoneStorageOptions.map((sizeValue) => {
+                    const label = `${sizeValue}GB`;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => setSelectedSize(label)}
+                        style={{
+                          padding: "0.65rem 0.9rem",
+                          borderRadius: "10px",
+                          border: selectedSize === label ? "1px solid #111827" : "1px solid #d1d5db",
+                          background: selectedSize === label ? "#111827" : "#fff",
+                          color: selectedSize === label ? "#fff" : "#111827",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "1.25rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+                  <strong>RAM</strong>
+                  <span style={{ color: "#6b7280" }}>{selectedRam}GB</span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+                  {phoneRamOptions.map((ramValue) => (
+                    <button
+                      key={`${ramValue}-gb`}
+                      type="button"
+                      onClick={() => setSelectedRam(Number(ramValue))}
+                      style={{
+                        padding: "0.65rem 0.9rem",
+                        borderRadius: "10px",
+                        border: selectedRam === Number(ramValue) ? "1px solid #111827" : "1px solid #d1d5db",
+                        background: selectedRam === Number(ramValue) ? "#111827" : "#fff",
+                        color: selectedRam === Number(ramValue) ? "#fff" : "#111827",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {ramValue}GB
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "1.25rem", border: "1px solid #e5e7eb", borderRadius: "12px", background: "#f8fafc", padding: "0.85rem 1rem" }}>
+                <div style={{ fontWeight: 800, marginBottom: "0.45rem" }}>Phone specifications</div>
+                <div style={{ display: "grid", gap: "0.35rem", color: "#374151" }}>
+                  <div><strong>Name:</strong> {product.title}</div>
+                  <div><strong>Brand:</strong> {product.phoneSpecs?.brand || product.brand}</div>
+                  <div><strong>OS:</strong> {product.phoneSpecs?.os || "Android"}</div>
+                  {product.phoneSpecs?.batteryMah ? <div><strong>Battery:</strong> {product.phoneSpecs.batteryMah}mAh</div> : null}
+                  {product.phoneSpecs?.cameraMp ? <div><strong>Camera:</strong> {product.phoneSpecs.cameraMp}MP</div> : null}
+                </div>
+              </div>
+            </>
+          ) : null}
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
             <span style={{ fontWeight: 600 }}>Quantity</span>
