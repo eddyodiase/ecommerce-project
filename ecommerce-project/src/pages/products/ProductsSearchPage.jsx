@@ -15,8 +15,23 @@ export const PRODUCT_TAXONOMY = [
   "Fashion",
   "Beauty",
   "Office",
+  "Building Materials",
   "Gift Cards",
 ];
+export const BUILDING_MATERIALS_SUBCATEGORIES = [
+  "Doors",
+  "Windows",
+  "Floor Tiles",
+  "Ceiling Paints",
+  "Cement",
+  "Nails",
+  "Keys",
+  "Electrical Fittings",
+  "Electrical Wires",
+];
+export const SUBCATEGORIES_BY_CATEGORY = {
+  "Building Materials": BUILDING_MATERIALS_SUBCATEGORIES,
+};
 const CATEGORY_LINKS = [
   "All",
   "Best Sellers",
@@ -24,6 +39,7 @@ const CATEGORY_LINKS = [
 ];
 
 const BACKEND_CATEGORY_KEYWORDS = {
+  "Building Materials": ["building materials"],
   Home: ["home", "kitchen", "bathroom", "living"],
   Electronics: ["electronics", "tech", "device"],
   "Smart Phones": ["smart phone", "smartphone", "phone", "mobile", "cell phone", "android", "iphone"],
@@ -53,7 +69,14 @@ const CATEGORY_BRANDS = {
   Beauty: ["Aurelia", "NorthPeak"],
   Office: ["Nestline", "Peak & Co", "HomeStyle"],
   "Gift Cards": ["NorthPeak", "Peak & Co"],
+  "Building Materials": ["NorthPeak"],
   "Best Sellers": ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell", "Nexa", "Luma", "Zenith", "Nova"],
+};
+
+export const inferSubcategoryFromKeywords = (category, keywords = []) => {
+  const options = SUBCATEGORIES_BY_CATEGORY[category] || [];
+  const normalizedKeywords = keywords.map((keyword) => String(keyword || "").toLowerCase());
+  return options.find((option) => normalizedKeywords.includes(option.toLowerCase())) || "";
 };
 
 export const inferCategoryFromKeywords = (keywords = []) => {
@@ -86,7 +109,7 @@ const normalizeBackendProduct = (product = {}) => {
     subtitle: (product.keywords || []).slice(0, 3).join(" • ") || "Featured item",
     brand: "NorthPeak",
     category,
-    seller: "NorthPeak Marketplace",
+    subcategory: inferSubcategoryFromKeywords(category, product.keywords),
     deliveryType: "Standard",
     cardType: "Visa",
     price: Number(product.priceCents || 0),
@@ -134,6 +157,7 @@ const readApprovedSellerListings = () => {
           subtitle: listing.description || "Seller listed product",
           brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
           category: listing.category || "Home",
+          subcategory: listing.subcategory || "",
           seller: listing.sellerName || "Marketplace Seller",
           originLocation: listing.originLocation || "Not specified",
           deliveryType: "Standard",
@@ -463,14 +487,15 @@ export const buildSampleProducts = () => {
   return items;
 };
 
-const getSampleProductMatch = (product, query, category, brandFilters, deliveryFilters, cardFilters, sellerFilters, ratingFilters) => {
+const getSampleProductMatch = (product, query, category, brandFilters, deliveryFilters, cardFilters, sellerFilters, ratingFilters, subcategory = "") => {
     const normalizedQuery = query.toLowerCase().trim();
     const matchesSearch =
       !normalizedQuery ||
-      [product.title, product.subtitle, product.brand, product.category, product.seller]
+      [product.title, product.subtitle, product.brand, product.category, product.subcategory, product.seller]
         .some((value) => value?.toLowerCase().includes(normalizedQuery));
 
-    const matchesCategory = matchesCategoryFilter(category, product);
+    const matchesCategory = matchesCategoryFilter(category, product)
+      && (!subcategory || product.subcategory === subcategory);
     const matchesBrand = brandFilters.length === 0 || brandFilters.includes(product.brand);
     const matchesDelivery = deliveryFilters.length === 0 || deliveryFilters.includes(product.deliveryType);
     const matchesCard = cardFilters.length === 0 || cardFilters.includes(product.cardType);
@@ -515,6 +540,7 @@ const toggleSelection = (value, selectedValues, setSelectedValues) => {
 export function ProductsSearchPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedDeliveryTypes, setSelectedDeliveryTypes] = useState([]);
   const [selectedCardTypes, setSelectedCardTypes] = useState([]);
@@ -580,7 +606,8 @@ export function ProductsSearchPage() {
         selectedDeliveryTypes,
         selectedCardTypes,
         selectedSellers,
-        selectedRatings
+        selectedRatings,
+        selectedSubcategory
       ));
 
       const sortedProducts = sortProducts(
@@ -602,7 +629,8 @@ export function ProductsSearchPage() {
           selectedDeliveryTypes,
           selectedCardTypes,
           selectedSellers,
-          selectedRatings
+          selectedRatings,
+          selectedSubcategory
         )),
         sortBy
       );
@@ -612,7 +640,7 @@ export function ProductsSearchPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, searchTerm, selectedBrands, selectedCardTypes, selectedCategory, selectedDeliveryTypes, selectedRatings, selectedSellers, sortBy]);
+  }, [page, searchTerm, selectedBrands, selectedCardTypes, selectedCategory, selectedDeliveryTypes, selectedRatings, selectedSellers, selectedSubcategory, sortBy]);
 
   useEffect(() => {
     void loadProducts();
@@ -625,7 +653,7 @@ export function ProductsSearchPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedCategory, selectedBrands.join(","), selectedDeliveryTypes.join(","), selectedCardTypes.join(","), selectedRatings.join(","), selectedSellers.join(",")]);
+  }, [searchTerm, selectedCategory, selectedSubcategory, selectedBrands.join(","), selectedDeliveryTypes.join(","), selectedCardTypes.join(","), selectedRatings.join(","), selectedSellers.join(",")]);
 
   const handleOpenProduct = (productId) => {
     navigate(`/products/${productId}`);
@@ -652,7 +680,7 @@ export function ProductsSearchPage() {
 
           <div className="header-search-wrap">
             <label className="search-category">
-              <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)}>
+              <select value={selectedCategory} onChange={(event) => { setSelectedCategory(event.target.value); setSelectedSubcategory(""); }}>
                 {CATEGORY_LINKS.map((category) => (
                   <option key={category} value={category}>
                     {category}
@@ -706,12 +734,32 @@ export function ProductsSearchPage() {
               key={category}
               type="button"
               className={selectedCategory === category ? "secondary-link active" : "secondary-link"}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => {
+                setSelectedCategory(category);
+                setSelectedSubcategory("");
+              }}
             >
               {category}
             </button>
           ))}
         </div>
+        {(SUBCATEGORIES_BY_CATEGORY[selectedCategory] || []).length > 0 ? (
+          <div className="secondary-nav subcategory-nav">
+            {["All", ...SUBCATEGORIES_BY_CATEGORY[selectedCategory]].map((subcategory) => {
+              const value = subcategory === "All" ? "" : subcategory;
+              return (
+                <button
+                  key={subcategory}
+                  type="button"
+                  className={selectedSubcategory === value ? "secondary-link active" : "secondary-link"}
+                  onClick={() => setSelectedSubcategory(value)}
+                >
+                  {subcategory}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </header>
 
       <main className="results-shell">

@@ -37,7 +37,7 @@ const publishProduct = async (row) => {
     return;
   }
 
-  const keywords = [data.category, data.sellerName, ...String(data.productName || '').split(/\s+/)]
+  const keywords = [data.category, data.subcategory, data.sellerName, ...String(data.productName || '').split(/\s+/)]
     .map((word) => String(word || '').trim().toLowerCase().replace(/,/g, ''))
     .filter(Boolean);
 
@@ -87,6 +87,14 @@ router.patch('/:id', async (req, res) => {
   }
 
   res.json(toListing(row));
+});
+
+router.delete('/:id', async (req, res) => {
+  const deleted = await Listing.destroy({ where: { id: req.params.id } });
+  if (!deleted) {
+    return res.status(404).json({ error: 'Listing not found' });
+  }
+  res.status(204).send();
 });
 
 export default router;

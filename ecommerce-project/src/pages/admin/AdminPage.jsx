@@ -78,7 +78,7 @@ export function AdminPage() {
                 </div>
 
                 <p className="listing-meta">
-                  {listing.category} · {listing.sellerName}
+                  {listing.category}{listing.subcategory ? ` › ${listing.subcategory}` : ""} · {listing.sellerName}
                 </p>
                 <p className="listing-meta">
                   Origin: {listing.originLocation || "Not specified"}

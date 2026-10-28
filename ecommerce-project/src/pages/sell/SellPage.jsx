@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { PRODUCT_TAXONOMY } from "../products/ProductsSearchPage";
+import { PRODUCT_TAXONOMY, SUBCATEGORIES_BY_CATEGORY } from "../products/ProductsSearchPage";
 import { submitSellerListing } from "../../utils/sellerListings";
 import "./SellPage.css";
 
@@ -13,6 +13,7 @@ export function SellPage() {
   const [formData, setFormData] = useState({
     productName: "",
     category: "Home",
+    subcategory: "",
     price: "",
     description: "",
     sellerName: "",
@@ -33,7 +34,11 @@ export function SellPage() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData((current) => ({ ...current, [name]: value }));
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+      ...(name === "category" ? { subcategory: "" } : {}),
+    }));
   };
 
   const isSmartPhoneCategory = formData.category === "Smart Phones";
@@ -117,6 +122,7 @@ export function SellPage() {
         id: `listing-${Date.now()}`,
         productName: formData.productName.trim(),
         category: formData.category,
+        subcategory: SUBCATEGORIES_BY_CATEGORY[formData.category] ? formData.subcategory : "",
         price: Number(formData.price),
         description: formData.description.trim(),
         sellerName: formData.sellerName.trim(),
@@ -218,6 +224,20 @@ export function SellPage() {
                   ))}
                 </select>
               </label>
+
+              {SUBCATEGORIES_BY_CATEGORY[formData.category] ? (
+                <label>
+                  Subcategory
+                  <select name="subcategory" value={formData.subcategory} onChange={handleChange} required>
+                    <option value="" disabled>Select a subcategory</option>
+                    {SUBCATEGORIES_BY_CATEGORY[formData.category].map((subcategory) => (
+                      <option key={subcategory} value={subcategory}>
+                        {subcategory}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
 
               <label>
                 Price
