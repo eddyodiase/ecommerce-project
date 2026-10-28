@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { syncSellerListings, updateSellerListingStatus } from "../../utils/sellerListings";
 import "./AdminPage.css";
 
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
@@ -13,10 +14,6 @@ const readSellerListings = () => {
   }
 };
 
-const saveSellerListings = (listings) => {
-  localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify(listings));
-};
-
 export function AdminPage() {
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +22,7 @@ export function AdminPage() {
   const loadListings = async () => {
     try {
       setError("");
+      await syncSellerListings();
       const allListings = readSellerListings();
       const pendingListings = Array.isArray(allListings)
         ? allListings.filter((listing) => listing.status === "pending")
@@ -44,13 +42,7 @@ export function AdminPage() {
 
   const handleDecision = async (listingId, status) => {
     try {
-      const currentListings = readSellerListings();
-      const nextListings = currentListings.map((listing) => (
-        listing.id === listingId
-          ? { ...listing, status }
-          : listing
-      ));
-      saveSellerListings(nextListings);
+      await updateSellerListingStatus(listingId, status);
       await loadListings();
     } catch (updateError) {
       setError("We could not update that listing.");

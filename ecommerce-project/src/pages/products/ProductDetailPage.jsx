@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
+import { syncSellerListings } from "../../utils/sellerListings";
 import { buildSampleProducts } from "./ProductsSearchPage";
 
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
@@ -171,6 +172,7 @@ export function ProductDetailPage() {
     const controller = new AbortController();
 
     const loadProduct = async () => {
+      await syncSellerListings();
       try {
         const response = await axios.get("/api/products", {
           timeout: 1500,

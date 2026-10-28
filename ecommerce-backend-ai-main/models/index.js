@@ -26,6 +26,7 @@ if (isUsingRDS) {
   sequelize = new Sequelize({
     dialect: 'sqlite',
     dialectModule: sqlJsAsSqlite3,
+    storage: 'database.sqlite',
     logging: false
   });
 

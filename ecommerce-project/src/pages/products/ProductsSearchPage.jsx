@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
+import { syncSellerListings } from "../../utils/sellerListings";
 import "./ProductsSearchPage.css";
 
 const PAGE_SIZE = 48;
@@ -549,6 +550,8 @@ export function ProductsSearchPage() {
     };
 
     setIsLoading(true);
+
+    await syncSellerListings();
 
     try {
       const response = await axios.get("/api/products", {

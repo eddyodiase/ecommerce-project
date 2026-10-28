@@ -2,20 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PRODUCT_TAXONOMY } from "../products/ProductsSearchPage";
+import { submitSellerListing } from "../../utils/sellerListings";
 import "./SellPage.css";
 
 const CATEGORIES = PRODUCT_TAXONOMY;
-const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
 const MAX_PRODUCT_IMAGES = 10;
-
-const readSellerListings = () => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(SELLER_LISTINGS_STORAGE_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    return [];
-  }
-};
 
 export function SellPage() {
   const navigate = useNavigate();
@@ -120,7 +111,6 @@ export function SellPage() {
     setSubmitError("");
 
     try {
-      const existingListings = readSellerListings();
       const ramOptions = toNumericOptionList(formData.ramOptionsGb);
       const storageOptions = toNumericOptionList(formData.storageOptionsGb);
       const nextListing = {
@@ -149,10 +139,7 @@ export function SellPage() {
         createdAt: new Date().toISOString(),
       };
 
-      localStorage.setItem(
-        SELLER_LISTINGS_STORAGE_KEY,
-        JSON.stringify([nextListing, ...existingListings])
-      );
+      await submitSellerListing(nextListing);
 
       setIsSubmitted(true);
       window.setTimeout(() => {

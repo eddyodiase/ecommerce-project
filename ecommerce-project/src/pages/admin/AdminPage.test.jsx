@@ -29,7 +29,7 @@ describe('AdminPage', () => {
     );
 
     expect(await screen.findByRole('heading', { name: /pending seller listings/i })).toBeInTheDocument();
-    expect(screen.getByText(/coastal ceramic lamp/i)).toBeInTheDocument();
+    expect(await screen.findByText(/coastal ceramic lamp/i)).toBeInTheDocument();
     expect(screen.getByText(/origin: ikeja, lagos/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /approve/i }));
