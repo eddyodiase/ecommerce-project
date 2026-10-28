@@ -563,8 +563,11 @@ export function ProductsSearchPage() {
       const backendProducts = Array.isArray(payload)
         ? payload
         : payload.products || [];
-      const normalizedProducts = backendProducts.map(normalizeBackendProduct);
       const approvedSellerProducts = readApprovedSellerListings();
+      const approvedIds = new Set(approvedSellerProducts.map((product) => product.id));
+      const normalizedProducts = backendProducts
+        .filter((product) => !approvedIds.has(product.id))
+        .map(normalizeBackendProduct);
 
       const fallbackSource = normalizedProducts.length > 0
         ? [...approvedSellerProducts, ...normalizedProducts]

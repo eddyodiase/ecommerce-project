@@ -180,8 +180,9 @@ export function ProductDetailPage() {
         });
 
         const payload = Array.isArray(response.data) ? response.data : response.data?.products || [];
-        const normalizedProducts = payload.map(normalizeProduct);
         const approvedSellerProducts = readApprovedSellerListings();
+        const approvedIds = new Set(approvedSellerProducts.map((item) => item.id));
+        const normalizedProducts = payload.filter((item) => !approvedIds.has(item.id)).map(normalizeProduct);
         const nextCatalog = normalizedProducts.length > 0
           ? [...approvedSellerProducts, ...normalizedProducts]
           : fallbackProducts;
