@@ -1,10 +1,10 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
 import { syncSellerListings } from "../../utils/sellerListings";
-import { buildSampleProducts } from "./ProductsSearchPage";
+import { buildSampleProducts } from "./productCatalog";
 
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
 
@@ -108,7 +108,7 @@ const readApprovedSellerListings = () => {
           phoneSpecs: listing.phoneSpecs,
         };
       });
-  } catch (error) {
+  } catch {
     return [];
   }
 };
@@ -144,11 +144,13 @@ const resolveProduct = (allProducts, requestedId) => {
 
 export function ProductDetailPage() {
   const { productId } = useParams();
-  const fallbackProducts = [...readApprovedSellerListings(), ...buildSampleProducts()];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fallbackProducts = useMemo(() => [...readApprovedSellerListings(), ...buildSampleProducts()], [productId]);
   const [catalog, setCatalog] = useState(fallbackProducts);
   const [resolvedProduct, setResolvedProduct] = useState(() => resolveProduct(fallbackProducts, productId));
-  const [isResolvingProduct, setIsResolvingProduct] = useState(true);
+  const [loadedProductId, setLoadedProductId] = useState(null);
   const product = resolvedProduct;
+  const isResolvingProduct = !product && loadedProductId !== productId;
   const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState("Description");
   const [quantity, setQuantity] = useState(1);
@@ -157,16 +159,6 @@ export function ProductDetailPage() {
   const [selectedRam, setSelectedRam] = useState(defaultRamOptions[1]);
   const [selectedImage, setSelectedImage] = useState(product?.image || "");
   const [showAddedToast, setShowAddedToast] = useState(false);
-
-  useEffect(() => {
-    setIsResolvingProduct(true);
-  }, [productId]);
-
-  useEffect(() => {
-    if (product) {
-      setIsResolvingProduct(false);
-    }
-  }, [product]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -196,7 +188,7 @@ export function ProductDetailPage() {
         setCatalog(fallbackProducts);
         setResolvedProduct(resolveProduct(fallbackProducts, productId));
       } finally {
-        setIsResolvingProduct(false);
+        setLoadedProductId(productId);
       }
     };
 
@@ -204,7 +196,9 @@ export function ProductDetailPage() {
     return () => controller.abort();
   }, [fallbackProducts, productId]);
 
-  useEffect(() => {
+  const [selectionProductId, setSelectionProductId] = useState(product?.id);
+  if (selectionProductId !== product?.id) {
+    setSelectionProductId(product?.id);
     setSelectedImage(product?.image || "");
     const storageChoices = Array.isArray(product?.phoneSpecs?.storageOptionsGb) && product.phoneSpecs.storageOptionsGb.length > 0
       ? product.phoneSpecs.storageOptionsGb
@@ -215,7 +209,7 @@ export function ProductDetailPage() {
 
     setSelectedSize(`${storageChoices[0] || 128}GB`);
     setSelectedRam(Number(ramChoices[0] || 8));
-  }, [product?.id]);
+  }
 
   useEffect(() => {
     if (!showAddedToast) {

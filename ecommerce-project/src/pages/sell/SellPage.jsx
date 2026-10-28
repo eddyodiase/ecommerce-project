@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { PRODUCT_TAXONOMY, SUBCATEGORIES_BY_CATEGORY } from "../products/ProductsSearchPage";
+import { PRODUCT_TAXONOMY, SUBCATEGORIES_BY_CATEGORY } from "../../utils/categories";
 import { submitSellerListing } from "../../utils/sellerListings";
 import "./SellPage.css";
 
@@ -87,7 +87,7 @@ export function SellPage() {
         ...current,
         ...imageEntries.filter((entry) => entry.dataUrl),
       ].slice(0, MAX_PRODUCT_IMAGES));
-    } catch (error) {
+    } catch {
       setSubmitError("We could not read one or more image files.");
     } finally {
       setIsUploadingImages(false);
@@ -151,7 +151,7 @@ export function SellPage() {
       window.setTimeout(() => {
         navigate("/products");
       }, 800);
-    } catch (error) {
+    } catch {
       setIsSubmitted(false);
       setSubmitError("We could not save your listing right now.");
     } finally {

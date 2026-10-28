@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildSampleProducts, inferCategoryFromKeywords, matchesCategoryFilter, sortProducts } from "./ProductsSearchPage";
+import { buildSampleProducts, inferCategoryFromKeywords, matchesCategoryFilter, sortProducts } from "./productCatalog";
 
 describe("ProductsSearchPage sample data", () => {
   it("uses distinct images within each category so category cards do not repeat the same photo", () => {

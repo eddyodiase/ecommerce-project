@@ -8,7 +8,7 @@ const readLocal = () => {
   try {
     const parsed = JSON.parse(localStorage.getItem(SELLER_LISTINGS_STORAGE_KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
+  } catch {
     return [];
   }
 };
@@ -28,7 +28,7 @@ export async function syncSellerListings() {
     await Promise.allSettled(localOnly.map((listing) => axios.post("/api/listings", listing)));
 
     localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify([...localOnly, ...remote]));
-  } catch (error) {
+  } catch {
     // Backend unavailable: keep using the cached listings.
   }
 }
@@ -36,7 +36,7 @@ export async function syncSellerListings() {
 export async function submitSellerListing(listing) {
   try {
     await axios.post("/api/listings", listing);
-  } catch (error) {
+  } catch {
     // Cached locally below; it is pushed to the backend on the next sync.
   }
   localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify([listing, ...readLocal()]));
@@ -46,7 +46,7 @@ export async function updateSellerListingStatus(listingId, status) {
   await syncSellerListings();
   try {
     await axios.patch(`/api/listings/${encodeURIComponent(listingId)}`, { status });
-  } catch (error) {
+  } catch {
     // Fall through: the local cache is still updated.
   }
   localStorage.setItem(
