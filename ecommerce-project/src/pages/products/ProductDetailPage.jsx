@@ -57,7 +57,7 @@ const normalizeProduct = (product = {}) => {
     title: product.name || "Product",
     subtitle: keywordList.slice(0, 3).join(" • ") || "Featured item",
     brand: product.brand || "NorthPeak",
-    category: product.category || "Home",
+    category: product.category || "Vehicles",
     seller: product.seller || "NorthPeak Marketplace",
     deliveryType: product.deliveryType || "Standard",
     cardType: product.cardType || "Visa",
@@ -94,7 +94,7 @@ const readApprovedSellerListings = () => {
           title: listing.productName || "Seller listing",
           subtitle: listing.description || "Seller listed product",
           brand: listing.phoneSpecs?.brand || listing.sellerName || "Marketplace Seller",
-          category: listing.category || "Home",
+          category: listing.category || "Vehicles",
           seller: listing.sellerName || "Marketplace Seller",
           originLocation: listing.originLocation || "Not specified",
           deliveryType: "Standard",
@@ -258,8 +258,6 @@ export function ProductDetailPage() {
     new Set([
       product.image,
       ...(Array.isArray(product.galleryImages) ? product.galleryImages : []),
-      ...(relatedProducts.slice(0, 3).map((item) => item.image)),
-      product.image,
     ].filter(Boolean))
   ).slice(0, 4);
 

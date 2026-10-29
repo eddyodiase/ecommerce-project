@@ -1,9 +1,13 @@
+import {
+  NESTED_SUBCATEGORIES_BY_CATEGORY,
+  PRODUCT_TAXONOMY,
+  SUBCATEGORIES_BY_CATEGORY,
+} from "../../utils/categories";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
-import { PRODUCT_TAXONOMY, SUBCATEGORIES_BY_CATEGORY } from "../../utils/categories";
 import { syncSellerListings } from "../../utils/sellerListings";
 import {
   buildSampleProducts,
@@ -35,14 +39,15 @@ const CATEGORY_BRANDS = {
     "Zenith",
     "Nova",
   ],
-  "Home": ["NorthPeak", "HomeStyle", "Nestline"],
+  Vehicles: ["NorthPeak"],
   "Electronics": ["Peak & Co", "Nexa", "Luma", "Zenith", "Nova"],
   "Smart Phones": ["Nexa", "Luma", "Zenith", "Nova"],
   Fashion: ["NorthPeak", "Edgewell"],
   Beauty: ["Aurelia", "NorthPeak"],
-  Office: ["Nestline", "Peak & Co", "HomeStyle"],
+  Food: ["Nestline", "Peak & Co", "HomeStyle"],
   "Gift Cards": ["NorthPeak", "Peak & Co"],
   "Building Materials": ["NorthPeak"],
+  Tools: ["NorthPeak"],
   Furniture: ["NorthPeak", "HomeStyle", "Nestline"],
   "Best Sellers": ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell", "Nexa", "Luma", "Zenith", "Nova"],
 };
@@ -120,7 +125,7 @@ const readApprovedSellerListings = () => {
           title: listing.productName || "Seller listing",
           subtitle: listing.description || "Seller listed product",
           brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
-          category: listing.category || "Home",
+          category: listing.category || "Vehicles",
           subcategory: listing.subcategory || "",
           seller: listing.sellerName || "Marketplace Seller",
           originLocation: listing.originLocation || "Not specified",
@@ -187,6 +192,8 @@ export function ProductsSearchPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [openSubcategoryMenu, setOpenSubcategoryMenu] = useState(null);
+  const [openNestedSubcategory, setOpenNestedSubcategory] = useState(null);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedDeliveryTypes, setSelectedDeliveryTypes] = useState([]);
   const [selectedCardTypes, setSelectedCardTypes] = useState([]);
@@ -379,38 +386,91 @@ export function ProductsSearchPage() {
           </nav>
         </div>
 
-        <div className="secondary-nav">
-          {CATEGORY_LINKS.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className={selectedCategory === category ? "secondary-link active" : "secondary-link"}
-              onClick={() => {
-                setSelectedCategory(category);
-                setSelectedSubcategory("");
-              }}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-        {(SUBCATEGORIES_BY_CATEGORY[selectedCategory] || []).length > 0 ? (
-          <div className="secondary-nav subcategory-nav">
-            {["All", ...SUBCATEGORIES_BY_CATEGORY[selectedCategory]].map((subcategory) => {
-              const value = subcategory === "All" ? "" : subcategory;
-              return (
+        <nav className="secondary-nav" aria-label="Product categories">
+          {CATEGORY_LINKS.map((category) => {
+            const subcategories = SUBCATEGORIES_BY_CATEGORY[category] || [];
+            const nestedSubcategories = NESTED_SUBCATEGORIES_BY_CATEGORY[category] || {};
+
+            return (
+              <div key={category} className="category-menu-item">
                 <button
-                  key={subcategory}
                   type="button"
-                  className={selectedSubcategory === value ? "secondary-link active" : "secondary-link"}
-                  onClick={() => setSelectedSubcategory(value)}
+                  className={selectedCategory === category ? "secondary-link active" : "secondary-link"}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setSelectedSubcategory("");
+                    setOpenNestedSubcategory(null);
+                    setOpenSubcategoryMenu(category);
+                  }}
                 >
-                  {subcategory}
+                  {category}
                 </button>
-              );
-            })}
-          </div>
-        ) : null}
+                {openSubcategoryMenu === category && subcategories.length > 0 ? (
+                  <div className="secondary-nav subcategory-nav">
+                    {["All", ...subcategories].map((subcategory) => {
+                      const value = subcategory === "All" ? "" : subcategory;
+                      const nestedOptions = nestedSubcategories[subcategory] || [];
+
+                      if (nestedOptions.length > 0) {
+                        return (
+                          <div key={subcategory} className="nested-category-option">
+                            <button
+                              type="button"
+                              className="secondary-link"
+                              aria-haspopup="true"
+                              aria-expanded={openNestedSubcategory === subcategory}
+                              onClick={() => setOpenNestedSubcategory(
+                                openNestedSubcategory === subcategory ? null : subcategory
+                              )}
+                            >
+                              {subcategory}
+                            </button>
+                            {openNestedSubcategory === subcategory ? (
+                              <div className="secondary-nav nested-subcategory-nav">
+                                {nestedOptions.map((nestedOption) => {
+                                  const nestedValue = `${subcategory} - ${nestedOption}`;
+
+                                  return (
+                                    <button
+                                      key={nestedOption}
+                                      type="button"
+                                      className={selectedSubcategory === nestedValue ? "secondary-link active" : "secondary-link"}
+                                      onClick={() => {
+                                        setSelectedSubcategory(nestedValue);
+                                        setOpenNestedSubcategory(null);
+                                        setOpenSubcategoryMenu(null);
+                                      }}
+                                    >
+                                      {nestedOption}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={subcategory}
+                          type="button"
+                          className={selectedSubcategory === value ? "secondary-link active" : "secondary-link"}
+                          onClick={() => {
+                            setSelectedSubcategory(value);
+                            setOpenSubcategoryMenu(null);
+                          }}
+                        >
+                          {subcategory}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </nav>
       </header>
 
       <main className="results-shell">

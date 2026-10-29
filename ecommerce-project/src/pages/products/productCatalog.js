@@ -1,19 +1,25 @@
 const BACKEND_CATEGORY_KEYWORDS = {
+  Vehicles: ["vehicle", "sedan", "suv", "truck", "bus", "pickup", "van", "automobile", "car"],
   "Building Materials": ["building materials"],
+  Tools: ["tool box", "toolbox", "farm tool", "builder tool", "weld", "tools"],
   Furniture: ["furniture"],
   Home: ["home", "kitchen", "bathroom", "living"],
   Electronics: ["electronics", "tech", "device"],
   "Smart Phones": ["smart phone", "smartphone", "phone", "mobile", "cell phone", "android", "iphone"],
   Fashion: ["fashion", "clothing", "apparel", "shoe", "dress", "swim", "accessories", "sunglass", "shade"],
   Beauty: ["beauty", "cosmetic", "care"],
-  Office: ["office", "work", "desk", "school"],
+  Food: ["food", "oil", "fresh", "grocer", "nfpd"],
   "Gift Cards": ["gift", "card"],
 };
 
 export const inferCategoryFromKeywords = (keywords = []) => {
   const normalizedKeywords = keywords.map((keyword) => String(keyword || "").toLowerCase());
   for (const [category, terms] of Object.entries(BACKEND_CATEGORY_KEYWORDS)) {
-    if (terms.some((term) => normalizedKeywords.some((keyword) => keyword.includes(term)))) {
+    const matchesCategory = category === "Vehicles"
+      ? normalizedKeywords.some((keyword) => /\b(vehicle|sedan|suv|truck|bus|pickup|van|automobile|car)\b/.test(keyword))
+      : terms.some((term) => normalizedKeywords.some((keyword) => keyword.includes(term)));
+
+    if (matchesCategory) {
       return category;
     }
   }
@@ -194,7 +200,7 @@ const RAW_PRODUCTS = [
     title: "Mira Glass Food Containers",
     subtitle: "3-piece airtight storage set",
     brand: "Nestline",
-    category: "Office",
+    category: "Food",
     seller: "Nestline Home",
     deliveryType: "Free delivery",
     cardType: "Visa",
@@ -209,7 +215,7 @@ const RAW_PRODUCTS = [
     title: "Revel Travel Mug",
     subtitle: "Double-wall insulated stainless steel",
     brand: "Peak & Co",
-    category: "Office",
+    category: "Food",
     seller: "Peak & Co",
     deliveryType: "Next day",
     cardType: "PayPal",

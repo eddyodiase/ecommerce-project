@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { PRODUCT_TAXONOMY, SUBCATEGORIES_BY_CATEGORY } from "../../utils/categories";
+import {
+  NESTED_SUBCATEGORIES_BY_CATEGORY,
+  PRODUCT_TAXONOMY,
+  SUBCATEGORIES_BY_CATEGORY,
+} from "../../utils/categories";
 import { submitSellerListing } from "../../utils/sellerListings";
 import "./SellPage.css";
 
@@ -12,8 +16,10 @@ export function SellPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     productName: "",
-    category: "Home",
+    category: "Vehicles",
     subcategory: "",
+    nestedSubcategory: "",
+    nafdacNo: "",
     price: "",
     description: "",
     sellerName: "",
@@ -37,11 +43,15 @@ export function SellPage() {
     setFormData((current) => ({
       ...current,
       [name]: value,
-      ...(name === "category" ? { subcategory: "" } : {}),
+      ...(name === "category" ? { subcategory: "", nestedSubcategory: "", nafdacNo: "" } : {}),
+      ...(name === "subcategory" ? { nestedSubcategory: "" } : {}),
     }));
   };
 
   const isSmartPhoneCategory = formData.category === "Smart Phones";
+  const requiresNafdacNo = ["Food", "Beauty"].includes(formData.category);
+  const nestedSubcategoryOptions =
+    NESTED_SUBCATEGORIES_BY_CATEGORY[formData.category]?.[formData.subcategory] || [];
 
   const toNumericOptionList = (value) => String(value || "")
     .split(",")
@@ -102,6 +112,11 @@ export function SellPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (requiresNafdacNo && !formData.nafdacNo.trim()) {
+      setSubmitError("Please enter the NAFDAC No before publishing this listing.");
+      return;
+    }
+
     if (isUploadingImages) {
       setSubmitError("Please wait for image upload to complete.");
       return;
@@ -122,7 +137,12 @@ export function SellPage() {
         id: `listing-${Date.now()}`,
         productName: formData.productName.trim(),
         category: formData.category,
-        subcategory: SUBCATEGORIES_BY_CATEGORY[formData.category] ? formData.subcategory : "",
+        nafdacNo: requiresNafdacNo ? formData.nafdacNo.trim() : undefined,
+        subcategory: nestedSubcategoryOptions.length
+          ? `${formData.subcategory} - ${formData.nestedSubcategory}`
+          : SUBCATEGORIES_BY_CATEGORY[formData.category]
+            ? formData.subcategory
+            : "",
         price: Number(formData.price),
         description: formData.description.trim(),
         sellerName: formData.sellerName.trim(),
@@ -239,6 +259,25 @@ export function SellPage() {
                 </label>
               ) : null}
 
+              {nestedSubcategoryOptions.length > 0 ? (
+                <label>
+                  Accoutrements audience
+                  <select
+                    name="nestedSubcategory"
+                    value={formData.nestedSubcategory}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="" disabled>Select an audience</option>
+                    {nestedSubcategoryOptions.map((subcategory) => (
+                      <option key={subcategory} value={subcategory}>
+                        {subcategory}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+
               <label>
                 Price
                 <input
@@ -253,6 +292,20 @@ export function SellPage() {
                 />
               </label>
             </div>
+
+            {requiresNafdacNo ? (
+              <label>
+                NAFDAC No
+                <input
+                  name="nafdacNo"
+                  type="text"
+                  value={formData.nafdacNo}
+                  onChange={handleChange}
+                  placeholder="NAFDAC No:"
+                  required
+                />
+              </label>
+            ) : null}
 
             <label>
               Seller name

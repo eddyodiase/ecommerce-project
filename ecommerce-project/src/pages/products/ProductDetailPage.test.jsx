@@ -60,6 +60,46 @@ describe('ProductDetailPage', () => {
     spy.mockRestore();
   });
 
+  it('keeps other products out of the selected product image gallery', async () => {
+    const products = [
+      {
+        id: 'selected-socks',
+        name: 'Selected Cotton Socks',
+        keywords: ['socks', 'apparel'],
+        image: '/images/products/selected-socks.jpg',
+        priceCents: 1090,
+        rating: { stars: 4.5, count: 87 },
+        category: 'Fashion',
+      },
+      {
+        id: 'other-socks',
+        name: 'Other Cotton Socks',
+        keywords: ['socks', 'apparel'],
+        image: '/images/products/other-socks.jpg',
+        priceCents: 1290,
+        rating: { stars: 4.2, count: 42 },
+        category: 'Fashion',
+      },
+    ];
+
+    const { default: axios } = await import('axios');
+    const spy = vi.spyOn(axios, 'get').mockResolvedValue({ data: products });
+
+    render(
+      <MemoryRouter initialEntries={['/products/selected-socks']}>
+        <Routes>
+          <Route path="/products/:productId" element={<ProductDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /selected cotton socks/i })).toBeInTheDocument();
+    expect(screen.getAllByAltText(/selected cotton socks preview/i)).toHaveLength(1);
+    expect(screen.queryByAltText(/other cotton socks preview/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /related items/i })).toBeInTheDocument();
+    spy.mockRestore();
+  });
+
   it('hides Storage size for non-phone backend products', async () => {
     const product = {
       id: 'home-product-1',

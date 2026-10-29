@@ -1,6 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { vi } from 'vitest';
 
 import { PRODUCT_TAXONOMY } from '../../utils/categories';
 import { SellPage } from './SellPage';
@@ -36,7 +35,43 @@ describe('Sell flow', () => {
 
     expect(screen.getByRole('heading', { name: /start selling on northpeak/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/product name/i)).toBeInTheDocument();
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(PRODUCT_TAXONOMY);
+    const categorySelect = screen.getByLabelText(/^category$/i);
+    expect(Array.from(categorySelect.options).map((option) => option.textContent)).toEqual(PRODUCT_TAXONOMY);
+  });
+
+  it('shows Men and Women choices for Fashion Accoutrements', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^category$/i), {
+      target: { value: 'Fashion' },
+    });
+    fireEvent.change(screen.getByLabelText(/^subcategory$/i), {
+      target: { value: 'Accoutrements' },
+    });
+
+    expect(screen.getByLabelText(/accoutrements audience/i).options).toHaveLength(3);
+  });
+
+  it('requires a NAFDAC No for Food and Beauty listings only', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    const categorySelect = screen.getByLabelText(/^category$/i);
+    fireEvent.change(categorySelect, { target: { value: 'Food' } });
+    expect(screen.getByPlaceholderText('NAFDAC No:')).toBeRequired();
+
+    fireEvent.change(categorySelect, { target: { value: 'Beauty' } });
+    expect(screen.getByPlaceholderText('NAFDAC No:')).toBeRequired();
+
+    fireEvent.change(categorySelect, { target: { value: 'Furniture' } });
+    expect(screen.queryByPlaceholderText('NAFDAC No:')).not.toBeInTheDocument();
   });
 
   it('requires a product photo before publishing a listing', async () => {
@@ -84,6 +119,12 @@ describe('Sell flow', () => {
       </MemoryRouter>
     );
 
+    fireEvent.change(screen.getByLabelText(/^category$/i), {
+      target: { value: 'Furniture' },
+    });
+    fireEvent.change(screen.getByLabelText(/subcategory/i), {
+      target: { value: 'Home Furniture' },
+    });
     fireEvent.change(screen.getByLabelText(/product name/i), {
       target: { value: 'Coastal ceramic lamp' },
     });
@@ -113,7 +154,8 @@ describe('Sell flow', () => {
       const listings = JSON.parse(localStorage.getItem('sellerListings') || '[]');
       expect(listings[0]).toEqual(expect.objectContaining({
         productName: 'Coastal ceramic lamp',
-        category: 'Home',
+        category: 'Furniture',
+        subcategory: 'Home Furniture',
         price: 25000,
         description: 'A handcrafted ceramic lamp for cozy spaces.',
         sellerName: 'NorthPeak Studio',
@@ -126,6 +168,42 @@ describe('Sell flow', () => {
     });
   });
 
+  it('saves the required NAFDAC No with a Food listing', async () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^category$/i), { target: { value: 'Food' } });
+    fireEvent.change(screen.getByLabelText(/^subcategory$/i), { target: { value: 'Oils' } });
+    fireEvent.change(screen.getByPlaceholderText('NAFDAC No:'), { target: { value: 'A1-1234' } });
+    fireEvent.change(screen.getByLabelText(/product name/i), { target: { value: 'Cooking oil' } });
+    fireEvent.change(screen.getByLabelText(/price/i), { target: { value: '25000' } });
+    fireEvent.change(screen.getByLabelText(/seller name/i), { target: { value: 'NorthPeak Foods' } });
+    fireEvent.change(screen.getByLabelText(/origin location/i), { target: { value: 'Ikeja, Lagos' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Pure cooking oil.' } });
+    fireEvent.change(screen.getByLabelText(/product image/i), {
+      target: { files: [new File(['image-data'], 'oil.jpg', { type: 'image/jpeg' })] },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/uploaded: 1 photo\(s\)/i)).toBeInTheDocument();
+    });
+
+    fireEvent.submit(document.querySelector('form'));
+
+    await waitFor(() => {
+      const listings = JSON.parse(localStorage.getItem('sellerListings') || '[]');
+      expect(listings[0]).toEqual(expect.objectContaining({
+        productName: 'Cooking oil',
+        category: 'Food',
+        subcategory: 'Oils',
+        nafdacNo: 'A1-1234',
+      }));
+    });
+  });
+
   it('shows Smart Phones spec fields and saves RAM/storage options for phone listings', async () => {
     render(
       <MemoryRouter>
@@ -133,7 +211,7 @@ describe('Sell flow', () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByLabelText(/category/i), {
+    fireEvent.change(screen.getByLabelText(/^category$/i), {
       target: { value: 'Smart Phones' },
     });
 
