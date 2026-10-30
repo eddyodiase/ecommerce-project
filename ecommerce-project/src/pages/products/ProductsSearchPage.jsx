@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
-import { syncSellerListings } from "../../utils/sellerListings";
+import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import {
   buildSampleProducts,
   inferCategoryFromKeywords,
@@ -40,13 +40,13 @@ const CATEGORY_BRANDS = {
     "Nova",
   ],
   Vehicles: ["NorthPeak"],
-  "Electronics": ["Peak & Co", "Nexa", "Luma", "Zenith", "Nova"],
+  Appliances: ["Peak & Co", "Nexa", "Luma", "Zenith", "Nova"],
   "Smart Phones": ["Nexa", "Luma", "Zenith", "Nova"],
   Fashion: ["NorthPeak", "Edgewell"],
   Beauty: ["Aurelia", "NorthPeak"],
   Food: ["Nestline", "Peak & Co", "HomeStyle"],
   "Gift Cards": ["NorthPeak", "Peak & Co"],
-  "Building Materials": ["NorthPeak"],
+  "Const. Materials": ["NorthPeak"],
   Tools: ["NorthPeak"],
   Furniture: ["NorthPeak", "HomeStyle", "Nestline"],
   "Best Sellers": ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell", "Nexa", "Luma", "Zenith", "Nova"],
@@ -79,6 +79,7 @@ const normalizeBackendProduct = (product = {}) => {
     category,
     subcategory: inferSubcategoryFromKeywords(category, product.keywords),
     seller: "NorthPeak Marketplace",
+    ownerEmail: product.ownerEmail || "",
     deliveryType: "Standard",
     cardType: "Visa",
     price: Number(product.priceCents || 0),
@@ -128,6 +129,7 @@ const readApprovedSellerListings = () => {
           category: listing.category || "Vehicles",
           subcategory: listing.subcategory || "",
           seller: listing.sellerName || "Marketplace Seller",
+          ownerEmail: listing.ownerEmail || "",
           originLocation: listing.originLocation || "Not specified",
           deliveryType: "Standard",
           cardType: "Visa",
@@ -176,7 +178,8 @@ const formatNaira = (value) =>
   new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(Number(value || 0));
 
 const toggleSelection = (value, selectedValues, setSelectedValues) => {
@@ -315,6 +318,19 @@ export function ProductsSearchPage() {
 
   const handleOpenProduct = (productId) => {
     navigate(`/products/${productId}`);
+  };
+
+  const handleDeleteListing = async (product) => {
+    if (!window.confirm(`Delete "${product.title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await deleteSellerListing(product.id, product.ownerEmail);
+      await loadProducts();
+    } catch {
+      window.alert("We could not delete this listing. Please make sure you are logged in as its seller.");
+    }
   };
 
   const handleAddToCart = async (productId) => {
@@ -622,6 +638,15 @@ export function ProductsSearchPage() {
                     >
                       Add to cart
                     </button>
+                    {canDeleteListing(product.ownerEmail) ? (
+                      <button
+                        type="button"
+                        className="add-to-cart-button delete-listing-button"
+                        onClick={() => handleDeleteListing(product)}
+                      >
+                        Delete listing
+                      </button>
+                    ) : null}
                   </div>
                 </article>
               ))}

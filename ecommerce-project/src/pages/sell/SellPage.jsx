@@ -6,7 +6,7 @@ import {
   PRODUCT_TAXONOMY,
   SUBCATEGORIES_BY_CATEGORY,
 } from "../../utils/categories";
-import { submitSellerListing } from "../../utils/sellerListings";
+import { getLoggedInSellerEmail, submitSellerListing } from "../../utils/sellerListings";
 import "./SellPage.css";
 
 const CATEGORIES = PRODUCT_TAXONOMY;
@@ -146,6 +146,7 @@ export function SellPage() {
         price: Number(formData.price),
         description: formData.description.trim(),
         sellerName: formData.sellerName.trim(),
+        ownerEmail: getLoggedInSellerEmail() || undefined,
         originLocation: formData.originLocation.trim(),
         imageDataUrls: uploadedImages.map((entry) => entry.dataUrl),
         imageNames: uploadedImages.map((entry) => entry.name),

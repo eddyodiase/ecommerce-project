@@ -20,6 +20,7 @@ import { defaultDeliveryOptions } from './defaultData/defaultDeliveryOptions.js'
 import { defaultCart } from './defaultData/defaultCart.js';
 import { defaultOrders } from './defaultData/defaultOrders.js';
 import fs from 'fs';
+import { DataTypes } from 'sequelize';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,6 +66,13 @@ app.use((err, req, res, next) => {
 
 // Sync database and load default data if none exist
 await sequelize.sync();
+
+// sync() does not add columns to existing tables, so add ownerEmail to older databases.
+const productColumns = await sequelize.getQueryInterface().describeTable('Products');
+if (!productColumns.ownerEmail) {
+  await sequelize.getQueryInterface().addColumn('Products', 'ownerEmail', { type: DataTypes.STRING, allowNull: true });
+}
+
 if (typeof saveDatabaseToFile === 'function' && !process.env.RDS_HOSTNAME) {
   await saveDatabaseToFile();
 }

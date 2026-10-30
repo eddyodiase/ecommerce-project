@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Listing } from '../models/Listing.js';
 import { Product } from '../models/Product.js';
+import { CartItem } from '../models/CartItem.js';
 
 const router = express.Router();
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
@@ -47,6 +48,7 @@ const publishProduct = async (row) => {
     name: data.productName || 'Seller listing',
     rating: { stars: 0, count: 0 },
     priceCents: Math.round(Number(data.price || 0) * 100),
+    ownerEmail: data.ownerEmail || null,
     keywords
   });
 };
@@ -89,10 +91,35 @@ router.patch('/:id', async (req, res) => {
   res.json(toListing(row));
 });
 
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+
+// Removes the image files written by saveImage for a listing.
+const removeImages = (listingId) => {
+  const safeId = listingId.replace(/[^a-zA-Z0-9-_]/g, '');
+  Object.values(EXTENSIONS).forEach((extension) => {
+    fs.rmSync(path.join(IMAGE_DIR, `${safeId}.${extension}`), { force: true });
+  });
+};
+
+// Only the logged-in seller who created a listing may delete it.
 router.delete('/:id', async (req, res) => {
-  const deleted = await Listing.destroy({ where: { id: req.params.id } });
-  if (!deleted) {
+  const row = await Listing.findByPk(req.params.id);
+  // Catalogue products without a listing record (e.g. default products) carry their own owner.
+  const product = await Product.findByPk(req.params.id);
+  if (!row && !product) {
     return res.status(404).json({ error: 'Listing not found' });
+  }
+
+  const owner = normalizeEmail(row ? row.data?.ownerEmail : product.ownerEmail);
+  if (!owner || owner !== normalizeEmail(req.get('x-seller-email'))) {
+    return res.status(403).json({ error: 'Only the seller who listed this product can delete it' });
+  }
+
+  await CartItem.destroy({ where: { productId: req.params.id } });
+  await Product.destroy({ where: { id: req.params.id } });
+  if (row) {
+    await row.destroy();
+    removeImages(row.id);
   }
   res.status(204).send();
 });

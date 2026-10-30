@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
-import { syncSellerListings } from "../../utils/sellerListings";
+import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import { buildSampleProducts } from "./productCatalog";
 
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
@@ -12,7 +12,8 @@ const formatNaira = (value) =>
   new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(Number(value || 0));
 
 const tabs = ["Description", "Manufacturer", "Reviews"];
@@ -59,6 +60,7 @@ const normalizeProduct = (product = {}) => {
     brand: product.brand || "NorthPeak",
     category: product.category || "Vehicles",
     seller: product.seller || "NorthPeak Marketplace",
+    ownerEmail: product.ownerEmail || "",
     deliveryType: product.deliveryType || "Standard",
     cardType: product.cardType || "Visa",
     price: Number(product.priceCents || product.price || 0),
@@ -96,6 +98,7 @@ const readApprovedSellerListings = () => {
           brand: listing.phoneSpecs?.brand || listing.sellerName || "Marketplace Seller",
           category: listing.category || "Vehicles",
           seller: listing.sellerName || "Marketplace Seller",
+          ownerEmail: listing.ownerEmail || "",
           originLocation: listing.originLocation || "Not specified",
           deliveryType: "Standard",
           cardType: "Visa",
@@ -144,6 +147,7 @@ const resolveProduct = (allProducts, requestedId) => {
 
 export function ProductDetailPage() {
   const { productId } = useParams();
+  const navigate = useNavigate();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fallbackProducts = useMemo(() => [...readApprovedSellerListings(), ...buildSampleProducts()], [productId]);
   const [catalog, setCatalog] = useState(fallbackProducts);
@@ -230,6 +234,19 @@ export function ProductDetailPage() {
 
     await addToCart(product.id, quantity);
     setShowAddedToast(true);
+  };
+
+  const handleDeleteListing = async () => {
+    if (!product || !window.confirm(`Delete "${product.title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await deleteSellerListing(product.id, product.ownerEmail);
+      navigate("/products");
+    } catch {
+      window.alert("We could not delete this listing. Please make sure you are logged in as its seller.");
+    }
   };
 
   if (!product && isResolvingProduct) {
@@ -506,6 +523,15 @@ export function ProductDetailPage() {
             <button type="button" style={{ background: "#f3f4f6", color: "#111827", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", fontWeight: 700, cursor: "pointer" }}>
               Buy now
             </button>
+            {canDeleteListing(product.ownerEmail) ? (
+              <button
+                type="button"
+                onClick={handleDeleteListing}
+                style={{ gridColumn: "1 / -1", background: "#b91c1c", color: "#fff", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", fontWeight: 700, cursor: "pointer" }}
+              >
+                Delete listing
+              </button>
+            ) : null}
           </div>
 
           <div style={{ marginTop: "1.2rem", padding: "0.9rem 1rem", borderRadius: "12px", background: "#f8fafc", border: "1px solid #e5e7eb" }}>

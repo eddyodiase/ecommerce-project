@@ -42,6 +42,49 @@ export async function submitSellerListing(listing) {
   localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify([listing, ...readLocal()]));
 }
 
+// Returns the logged-in seller's email, or "" when nobody is logged in.
+export function getLoggedInSellerEmail() {
+  try {
+    if (!localStorage.getItem("authToken")) {
+      return "";
+    }
+    const user = JSON.parse(localStorage.getItem("authUser") || "null");
+    return String(user?.email || "").trim().toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+export const canDeleteListing = (ownerEmail) => {
+  const sellerEmail = getLoggedInSellerEmail();
+  return Boolean(sellerEmail) && sellerEmail === String(ownerEmail || "").trim().toLowerCase();
+};
+
+// Deletes a product the logged-in seller owns. Throws when not allowed or the backend refuses.
+export async function deleteSellerListing(listingId, ownerEmail) {
+  const sellerEmail = getLoggedInSellerEmail();
+  const cached = readLocal().find((listing) => listing.id === listingId);
+  if (!sellerEmail || !canDeleteListing(ownerEmail ?? cached?.ownerEmail)) {
+    throw new Error("not-allowed");
+  }
+
+  try {
+    await axios.delete(`/api/listings/${encodeURIComponent(listingId)}`, {
+      headers: { "x-seller-email": sellerEmail },
+    });
+  } catch (error) {
+    // A 404 means the backend never had it (local-only listing), so local removal is still correct.
+    if (error.response?.status !== 404) {
+      throw error;
+    }
+  }
+
+  localStorage.setItem(
+    SELLER_LISTINGS_STORAGE_KEY,
+    JSON.stringify(readLocal().filter((listing) => listing.id !== listingId))
+  );
+}
+
 export async function updateSellerListingStatus(listingId, status) {
   await syncSellerListings();
   try {

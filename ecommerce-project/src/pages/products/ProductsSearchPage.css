@@ -406,6 +406,15 @@
   background: #1f2937;
 }
 
+.delete-listing-button {
+  margin-top: 8px;
+  background: #b91c1c;
+}
+
+.delete-listing-button:hover {
+  background: #991b1b;
+}
+
 .pagination-row {
   display: flex;
   align-items: center;

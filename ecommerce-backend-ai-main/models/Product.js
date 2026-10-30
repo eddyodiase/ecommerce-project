@@ -33,6 +33,10 @@ export const Product = sequelize.define('Product', {
       this.setDataValue('keywords', val.join(','));
     }
   },
+  ownerEmail: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   createdAt: {
     type: DataTypes.DATE(3)
   },

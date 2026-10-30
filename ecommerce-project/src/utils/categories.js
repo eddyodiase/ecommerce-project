@@ -1,11 +1,11 @@
 export const PRODUCT_TAXONOMY = [
   "Vehicles",
-  "Electronics",
+  "Appliances",
   "Smart Phones",
   "Fashion",
   "Beauty",
   "Food",
-  "Building Materials",
+  "Const. Materials",
   "Tools",
   "Furniture",
   "Gift Cards",
@@ -13,16 +13,16 @@ export const PRODUCT_TAXONOMY = [
 
 export const SUBCATEGORIES_BY_CATEGORY = {
   Vehicles: ["Cars", "Suv", "Trucks", "Buses", "Pickups"],
-  "Building Materials": [
+  Appliances: ["Kitchen", "Office", "Home", "Electromics", "Computers"],
+  "Const. Materials": [
     "Doors",
     "Windows",
     "Floor Tiles",
     "Ceiling Paints",
-    "Cement",
-    "Nails",
     "Keys",
     "Electrical Fittings",
     "Electrical Wires",
+    "Others",
   ],
   Tools: ["Tool Boxes", "Farm Tools", "Builders Tools", "Welding Supplies"],
   Furniture: ["Home Furniture", "Office Furniture"],

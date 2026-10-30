@@ -54,9 +54,29 @@ describe("ProductsSearchPage sample data", () => {
     expect(inferCategoryFromKeywords(["Fresh groceries"])).toBe("Food");
   });
 
+  it("replaces Electronics with Appliances and provides its subcategories", () => {
+    expect(PRODUCT_TAXONOMY).toContain("Appliances");
+    expect(PRODUCT_TAXONOMY).not.toContain("Electronics");
+    expect(SUBCATEGORIES_BY_CATEGORY.Appliances).toEqual([
+      "Kitchen",
+      "Office",
+      "Home",
+      "Electromics",
+      "Computers",
+    ]);
+    expect(inferCategoryFromKeywords(["electronic device"])).toBe("Appliances");
+  });
+
+  it("renames Building Materials to Const. Materials and includes Others", () => {
+    expect(PRODUCT_TAXONOMY).toContain("Const. Materials");
+    expect(PRODUCT_TAXONOMY).not.toContain("Building Materials");
+    expect(SUBCATEGORIES_BY_CATEGORY["Const. Materials"]).toContain("Others");
+    expect(inferCategoryFromKeywords(["Building Materials"])).toBe("Const. Materials");
+  });
+
   it("uses distinct images within each category so category cards do not repeat the same photo", () => {
     const products = buildSampleProducts();
-    const categories = ["Home", "Electronics", "Fashion", "Beauty", "Food"];
+    const categories = ["Home", "Appliances", "Fashion", "Beauty", "Food"];
 
     categories.forEach((category) => {
       const categoryProducts = products.filter((product) => product.category === category);
