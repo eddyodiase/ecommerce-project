@@ -52,14 +52,19 @@ const normalizeCategoryKey = (value) => String(value || "").trim().toLowerCase()
 const normalizeProduct = (product = {}) => {
   const ratingValue = Number(product.rating?.stars || 0);
   const keywordList = Array.isArray(product.keywords) ? product.keywords : [product.keywords].filter(Boolean);
+  const details = product.details || {};
+  const detailImages = Array.isArray(details.galleryImages) ? details.galleryImages : [];
 
   return {
     id: product.id,
     title: product.name || "Product",
-    subtitle: keywordList.slice(0, 3).join(" • ") || "Featured item",
-    brand: product.brand || "NorthPeak",
-    category: product.category || "Vehicles",
-    seller: product.seller || "NorthPeak Marketplace",
+    subtitle: details.description || keywordList.slice(0, 3).join(" • ") || "Featured item",
+    brand: details.phoneSpecs?.brand || details.sellerName || product.brand || "NorthPeak",
+    category: details.category || product.category || "Vehicles",
+    subcategory: details.subcategory || "",
+    condition: details.condition || "",
+    nafdacNo: details.nafdacNo || "",
+    seller: details.sellerName || product.seller || "NorthPeak Marketplace",
     ownerEmail: product.ownerEmail || "",
     deliveryType: product.deliveryType || "Standard",
     cardType: product.cardType || "Visa",
@@ -69,10 +74,10 @@ const normalizeProduct = (product = {}) => {
     image: normalizeImagePath(product.image),
     galleryImages: Array.isArray(product.galleryImages)
       ? product.galleryImages.map((image) => normalizeImagePath(image)).filter(Boolean)
-      : [],
+      : detailImages.map((image) => normalizeImagePath(image)).filter(Boolean),
     badge: ratingValue >= 4.5 ? "Best Seller" : "",
-    phoneSpecs: product.phoneSpecs,
-    originLocation: product.originLocation || "Warehouse - NG",
+    phoneSpecs: product.phoneSpecs || details.phoneSpecs || undefined,
+    originLocation: details.originLocation || product.originLocation || "Warehouse - NG",
   };
 };
 
@@ -97,9 +102,12 @@ const readApprovedSellerListings = () => {
           subtitle: listing.description || "Seller listed product",
           brand: listing.phoneSpecs?.brand || listing.sellerName || "Marketplace Seller",
           category: listing.category || "Vehicles",
+          subcategory: listing.subcategory || "",
+          nafdacNo: listing.nafdacNo || "",
           seller: listing.sellerName || "Marketplace Seller",
           ownerEmail: listing.ownerEmail || "",
           originLocation: listing.originLocation || "Not specified",
+          condition: listing.condition || "",
           deliveryType: "Standard",
           cardType: "Visa",
           price: Number(listing.price || 0),
@@ -301,6 +309,7 @@ export function ProductDetailPage() {
         <p><strong>Seller:</strong> {product.seller}</p>
         <p><strong>Category:</strong> {product.category}</p>
         <p><strong>Origin:</strong> {product.originLocation || "Not specified"}</p>
+        {product.condition ? <p><strong>Condition:</strong> {product.condition}</p> : null}
         <p><strong>Delivery:</strong> {product.deliveryType}</p>
         <p><strong>Payment:</strong> {product.cardType}</p>
       </div>
@@ -524,13 +533,22 @@ export function ProductDetailPage() {
               Buy now
             </button>
             {canDeleteListing(product.ownerEmail) ? (
-              <button
-                type="button"
-                onClick={handleDeleteListing}
-                style={{ gridColumn: "1 / -1", background: "#b91c1c", color: "#fff", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", fontWeight: 700, cursor: "pointer" }}
-              >
-                Delete listing
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/sell/${encodeURIComponent(product.id)}/edit`)}
+                  style={{ background: "#1d4ed8", color: "#fff", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Edit listing
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteListing}
+                  style={{ background: "#b91c1c", color: "#fff", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Delete listing
+                </button>
+              </>
             ) : null}
           </div>
 

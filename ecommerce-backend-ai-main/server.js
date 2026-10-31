@@ -72,6 +72,9 @@ const productColumns = await sequelize.getQueryInterface().describeTable('Produc
 if (!productColumns.ownerEmail) {
   await sequelize.getQueryInterface().addColumn('Products', 'ownerEmail', { type: DataTypes.STRING, allowNull: true });
 }
+if (!productColumns.details) {
+  await sequelize.getQueryInterface().addColumn('Products', 'details', { type: DataTypes.JSON, allowNull: true });
+}
 
 if (typeof saveDatabaseToFile === 'function' && !process.env.RDS_HOSTNAME) {
   await saveDatabaseToFile();

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { canDeleteListing, deleteSellerListing } from "./sellerListings";
+import { canDeleteListing, deleteSellerListing, updateSellerListing } from "./sellerListings";
 
 vi.mock("axios");
 
@@ -58,5 +58,25 @@ describe("seller listing deletion", () => {
 
     await expect(deleteSellerListing("listing-1")).rejects.toBeTruthy();
     expect(JSON.parse(localStorage.getItem("sellerListings"))).toHaveLength(1);
+  });
+
+  it("lets the owner edit a listing without changing owner or status", async () => {
+    logIn("seller@example.com");
+    axios.put.mockResolvedValue({ data: {} });
+
+    await updateSellerListing("listing-1", { productName: "Big Lamp", ownerEmail: "evil@example.com", status: "pending" });
+
+    expect(axios.put).toHaveBeenCalledWith(
+      "/api/listings/listing-1",
+      expect.objectContaining({ productName: "Big Lamp", ownerEmail: "seller@example.com",       status: "pending" }),
+      { headers: { "x-seller-email": "seller@example.com" } },
+    );
+    expect(JSON.parse(localStorage.getItem("sellerListings"))[0].productName).toBe("Big Lamp");
+  });
+
+  it("refuses to edit a listing the user does not own", async () => {
+    logIn("other@example.com");
+    await expect(updateSellerListing("listing-1", { productName: "X" })).rejects.toThrow("not-allowed");
+    expect(axios.put).not.toHaveBeenCalled();
   });
 });

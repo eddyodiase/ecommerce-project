@@ -85,6 +85,36 @@ export async function deleteSellerListing(listingId, ownerEmail) {
   );
 }
 
+export const getCachedListing = (listingId) => readLocal().find((listing) => listing.id === listingId);
+
+// Updates a listing the logged-in seller owns. Throws when not allowed or the backend refuses.
+export async function updateSellerListing(listingId, updates) {
+  const sellerEmail = getLoggedInSellerEmail();
+  const cached = getCachedListing(listingId);
+  if (!sellerEmail || !cached || !canDeleteListing(cached.ownerEmail)) {
+    throw new Error("not-allowed");
+  }
+
+  const next = { ...cached, ...updates, id: listingId, ownerEmail: cached.ownerEmail, status: "pending" };
+
+  try {
+    await axios.put(`/api/listings/${encodeURIComponent(listingId)}`, next, {
+      headers: { "x-seller-email": sellerEmail },
+    });
+  } catch (error) {
+    // A 404 means the backend never had it (local-only listing), so the local update is still correct.
+    if (error.response?.status !== 404) {
+      throw error;
+    }
+  }
+
+  localStorage.setItem(
+    SELLER_LISTINGS_STORAGE_KEY,
+    JSON.stringify(readLocal().map((listing) => (listing.id === listingId ? next : listing)))
+  );
+  return next;
+}
+
 export async function updateSellerListingStatus(listingId, status) {
   await syncSellerListings();
   try {

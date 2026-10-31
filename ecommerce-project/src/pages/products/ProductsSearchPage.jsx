@@ -69,16 +69,22 @@ const normalizeBackendImagePath = (image) => {
 
 const normalizeBackendProduct = (product = {}) => {
   const ratingValue = Number(product.rating?.stars || 0);
-  const category = inferCategoryFromKeywords([product.name, ...(product.keywords || [])]);
+  const details = product.details || {};
+  const category = details.category || inferCategoryFromKeywords([product.name, ...(product.keywords || [])]);
+  const galleryImages = Array.isArray(details.galleryImages)
+    ? details.galleryImages.map((image) => normalizeBackendImagePath(image)).filter(Boolean)
+    : [];
 
   return {
     id: product.id,
     title: product.name || "Product",
-    subtitle: (product.keywords || []).slice(0, 3).join(" • ") || "Featured item",
-    brand: "NorthPeak",
+    subtitle: details.description || (product.keywords || []).slice(0, 3).join(" • ") || "Featured item",
+    brand: details.phoneSpecs?.brand || details.sellerName || "NorthPeak",
     category,
-    subcategory: inferSubcategoryFromKeywords(category, product.keywords),
-    seller: "NorthPeak Marketplace",
+    subcategory: details.subcategory || inferSubcategoryFromKeywords(category, product.keywords),
+    condition: details.condition || "",
+    nafdacNo: details.nafdacNo || "",
+    seller: details.sellerName || "NorthPeak Marketplace",
     ownerEmail: product.ownerEmail || "",
     deliveryType: "Standard",
     cardType: "Visa",
@@ -86,9 +92,10 @@ const normalizeBackendProduct = (product = {}) => {
     rating: ratingValue,
     reviewCount: Number(product.rating?.count || 0),
     image: normalizeBackendImagePath(product.image),
+    galleryImages,
     badge: ratingValue >= 4.5 ? "Best Seller" : "",
-    phoneSpecs: product.phoneSpecs,
-    originLocation: product.originLocation || "Warehouse - NG",
+    phoneSpecs: details.phoneSpecs || product.phoneSpecs || undefined,
+    originLocation: details.originLocation || product.originLocation || "Warehouse - NG",
   };
 };
 
@@ -128,6 +135,8 @@ const readApprovedSellerListings = () => {
           brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
           category: listing.category || "Vehicles",
           subcategory: listing.subcategory || "",
+          condition: listing.condition || "",
+          nafdacNo: listing.nafdacNo || "",
           seller: listing.sellerName || "Marketplace Seller",
           ownerEmail: listing.ownerEmail || "",
           originLocation: listing.originLocation || "Not specified",
@@ -362,12 +371,30 @@ export function ProductsSearchPage() {
                 ))}
               </select>
             </label>
-            <input
-              type="text"
-              value={searchTerm}
-              placeholder="Search for products, brands, and more"
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
+            <div className="search-input-wrap">
+              <input
+                type="text"
+                value={searchTerm}
+                placeholder="Search for products, brands, and more"
+                onChange={(event) => setSearchTerm(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    setPage(1);
+                    void loadProducts();
+                  }
+                }}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="search-clear-button"
+                  aria-label="Clear search"
+                  onClick={() => setSearchTerm("")}
+                >
+                  ×
+                </button>
+              )}
+            </div>
             <button
               type="button"
               className="primary-search-button"

@@ -37,6 +37,11 @@ export const Product = sequelize.define('Product', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  // Seller-provided listing details (category, condition, description, seller, phone specs, ...).
+  details: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   createdAt: {
     type: DataTypes.DATE(3)
   },

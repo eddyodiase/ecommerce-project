@@ -124,6 +124,7 @@ function App() {
         <Route path="products" element={<ProductsSearchPage />} />
         <Route path="products/:productId" element={<ProductDetailPage />} />
         <Route path="sell" element={<SellPage />} />
+        <Route path="sell/:listingId/edit" element={<SellPage />} />
         <Route path="admin" element={<AdminPage />} />
       </Routes>
     </CartProvider>

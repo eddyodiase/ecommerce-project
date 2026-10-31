@@ -1,11 +1,23 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { Header } from "../../components/Header";
+import { SUBCATEGORIES_BY_CATEGORY } from "../../utils/categories";
+import {
+  buildCategoryCounts,
+  filterHomeProducts,
+  withClassification,
+} from "../../utils/homeCatalog";
 import ProductsGrid from "./productsGrid";
 import "./HomePage.css";
 
 export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogout }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const category = searchParams.get("category") || "";
+  const subcategory = searchParams.get("sub") || "";
+
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addedProductId, setAddedProductId] = useState(null);
@@ -43,6 +55,31 @@ export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogo
     };
   }, []);
 
+  const classifiedProducts = useMemo(() => withClassification(products), [products]);
+  const categoryCounts = useMemo(() => buildCategoryCounts(classifiedProducts), [classifiedProducts]);
+  const visibleProducts = useMemo(
+    () => filterHomeProducts(classifiedProducts, { query, category, subcategory }),
+    [classifiedProducts, query, category, subcategory],
+  );
+
+  const updateFilters = (next) => {
+    const params = new URLSearchParams(searchParams);
+    Object.entries(next).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
+    setSearchParams(params);
+  };
+
+  const subcategoryOptions = category
+    ? [
+        ...(SUBCATEGORIES_BY_CATEGORY[category] || []),
+      ].filter((name) => categoryCounts[category]?.subcategories[name])
+    : [];
+
   const handleQuantityChange = (productId, value) => {
     setQuantityByProduct((prev) => ({
       ...prev,
@@ -78,14 +115,59 @@ export function HomePage({ quantityByProduct, setQuantityByProduct, user, onLogo
             Loading products...
           </div>
         ) : (
+          <>
+          <nav className="home-filters" aria-label="Product categories">
+            <div className="home-filter-row">
+              <button
+                type="button"
+                className={`home-chip ${!category ? "active" : ""}`}
+                onClick={() => updateFilters({ category: "", sub: "" })}
+              >
+                All ({classifiedProducts.length})
+              </button>
+              {Object.entries(categoryCounts).map(([name, info]) => (
+                <button
+                  key={name}
+                  type="button"
+                  className={`home-chip ${category === name ? "active" : ""}`}
+                  onClick={() => updateFilters({ category: name, sub: "" })}
+                >
+                  {name} ({info.total})
+                </button>
+              ))}
+            </div>
+            {subcategoryOptions.length > 0 && (
+              <div className="home-filter-row">
+                {subcategoryOptions.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    className={`home-chip home-chip-sub ${subcategory === name ? "active" : ""}`}
+                    onClick={() => updateFilters({ sub: subcategory === name ? "" : name })}
+                  >
+                    {name} ({categoryCounts[category].subcategories[name]})
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="home-results-summary" aria-live="polite">
+              {visibleProducts.length} product{visibleProducts.length === 1 ? "" : "s"}
+              {query ? ` for "${query}"` : ""}
+            </div>
+          </nav>
+          {visibleProducts.length === 0 ? (
+            <div className="home-page-loading">No products match your search.</div>
+          ) : (
           <ProductsGrid
-            products={products}
+            products={visibleProducts}
             quantityByProduct={quantityByProduct}
             setQuantityByProduct={setQuantityByProduct}
             addedProductId={addedProductId}
             handleAddToCart={handleAddToCart}
             handleQuantityChange={handleQuantityChange}
           />
+          )}
+          </>
         )}
       </main>
    </>

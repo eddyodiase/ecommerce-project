@@ -1,11 +1,13 @@
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import "./Header.css";
 
 export function Header({ cartRefreshKey = 0, user, onLogout }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchTerm, setSearchTerm] = useState(() => new URLSearchParams(location.search).get("q") || "");
   const [cartItems, setCartItems] = useState([]);
   const authToken = localStorage.getItem("authToken");
   const isLoggedIn = Boolean(user || authToken);
@@ -49,13 +51,44 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
         </Link>
       </div>
 
-      <div className="middle-section">
-        <input className="search-bar" type="text" placeholder="Search" />
+      <form
+        className="middle-section"
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const term = searchTerm.trim();
+          navigate(term ? `/?q=${encodeURIComponent(term)}` : "/");
+        }}
+      >
+        <div className="search-input-wrapper">
+          <input
+            className="search-bar"
+            type="text"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              className="search-clear-button"
+              aria-label="Clear search"
+              onClick={() => {
+                setSearchTerm("");
+                if (new URLSearchParams(location.search).get("q")) {
+                  navigate("/");
+                }
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
 
-        <button className="search-button" type="button">
+        <button className="search-button" type="submit">
           <img className="search-icon" src="/images/icons/search-icon.png" alt="search" />
         </button>
-      </div>
+      </form>
 
       <div className="right-section">
         {isLoggedIn ? (

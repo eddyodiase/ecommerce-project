@@ -1,25 +1,62 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   NESTED_SUBCATEGORIES_BY_CATEGORY,
   PRODUCT_TAXONOMY,
   SUBCATEGORIES_BY_CATEGORY,
 } from "../../utils/categories";
-import { getLoggedInSellerEmail, submitSellerListing } from "../../utils/sellerListings";
+import {
+  canDeleteListing,
+  getCachedListing,
+  getLoggedInSellerEmail,
+  submitSellerListing,
+  syncSellerListings,
+  updateSellerListing,
+} from "../../utils/sellerListings";
 import "./SellPage.css";
 
 const CATEGORIES = PRODUCT_TAXONOMY;
 const MAX_PRODUCT_IMAGES = 10;
+const CONDITIONS = ["New", "Used", "Refurbished"];
+
+const listingToFormData = (listing) => {
+  const nestedOptions = NESTED_SUBCATEGORIES_BY_CATEGORY[listing.category] || {};
+  const [baseSubcategory, nested = ""] = String(listing.subcategory || "").split(" - ");
+  const hasNested = Boolean(nestedOptions[baseSubcategory]);
+  const specs = listing.phoneSpecs || {};
+
+  return {
+    productName: listing.productName || "",
+    category: listing.category || "Vehicles",
+    subcategory: hasNested ? baseSubcategory : listing.subcategory || "",
+    nestedSubcategory: hasNested ? nested : "",
+    nafdacNo: listing.nafdacNo || "",
+    condition: CONDITIONS.includes(listing.condition) ? listing.condition : "",
+    description: listing.description || "",
+    sellerName: listing.sellerName || "",
+    originLocation: listing.originLocation || "",
+    phoneBrand: specs.brand || "",
+    ramOptionsGb: (specs.ramOptionsGb || []).join(", "),
+    storageOptionsGb: (specs.storageOptionsGb || []).join(", "),
+    os: specs.os || "",
+    batteryMah: specs.batteryMah ? String(specs.batteryMah) : "",
+    cameraMp: specs.cameraMp ? String(specs.cameraMp) : "",
+  };
+};
 
 export function SellPage() {
   const navigate = useNavigate();
+  const { listingId } = useParams();
+  const isEditing = Boolean(listingId);
+  const [isLoadingListing, setIsLoadingListing] = useState(isEditing);
   const [formData, setFormData] = useState({
     productName: "",
     category: "Vehicles",
     subcategory: "",
     nestedSubcategory: "",
     nafdacNo: "",
+    condition: "",
     price: "",
     description: "",
     sellerName: "",
@@ -37,6 +74,39 @@ export function SellPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (!listingId) {
+      return undefined;
+    }
+
+    let isMounted = true;
+    (async () => {
+      await syncSellerListings();
+      if (!isMounted) {
+        return;
+      }
+
+      const listing = getCachedListing(listingId);
+      if (!listing || !canDeleteListing(listing.ownerEmail)) {
+        setSubmitError("You can only edit listings that you created while logged in.");
+        setIsLoadingListing(false);
+        return;
+      }
+
+      setFormData(listingToFormData(listing));
+      const images = Array.isArray(listing.imageDataUrls) && listing.imageDataUrls.length
+        ? listing.imageDataUrls
+        : [listing.imageDataUrl].filter(Boolean);
+      const names = listing.imageNames || [];
+      setUploadedImages(images.map((dataUrl, index) => ({ dataUrl, name: names[index] || `Photo ${index + 1}` })));
+      setIsLoadingListing(false);
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [listingId]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -134,10 +204,11 @@ export function SellPage() {
       const ramOptions = toNumericOptionList(formData.ramOptionsGb);
       const storageOptions = toNumericOptionList(formData.storageOptionsGb);
       const nextListing = {
-        id: `listing-${Date.now()}`,
+        id: listingId || `listing-${Date.now()}`,
         productName: formData.productName.trim(),
         category: formData.category,
         nafdacNo: requiresNafdacNo ? formData.nafdacNo.trim() : undefined,
+        condition: formData.condition,
         subcategory: nestedSubcategoryOptions.length
           ? `${formData.subcategory} - ${formData.nestedSubcategory}`
           : SUBCATEGORIES_BY_CATEGORY[formData.category]
@@ -166,7 +237,12 @@ export function SellPage() {
         createdAt: new Date().toISOString(),
       };
 
-      await submitSellerListing(nextListing);
+      if (isEditing) {
+        const { id, status, createdAt, ownerEmail, ...changes } = nextListing;
+        await updateSellerListing(listingId, changes);
+      } else {
+        await submitSellerListing(nextListing);
+      }
 
       setIsSubmitted(true);
       window.setTimeout(() => {
@@ -208,7 +284,7 @@ export function SellPage() {
         </button>
         <div>
           <p className="eyebrow">NorthPeak marketplace</p>
-          <h1>Start selling on NorthPeak</h1>
+          <h1>{isEditing ? "Edit your listing" : "Start selling on NorthPeak"}</h1>
         </div>
       </header>
 
@@ -222,6 +298,7 @@ export function SellPage() {
           </div>
 
           <form className="sell-form" onSubmit={handleSubmit}>
+            <fieldset disabled={isLoadingListing} style={{ border: 0, padding: 0, margin: 0, display: "contents" }}>
             <label>
               Product name
               <input
@@ -293,6 +370,18 @@ export function SellPage() {
                 />
               </label>
             </div>
+
+            <label>
+              Condition
+              <select name="condition" value={formData.condition} onChange={handleChange} required>
+                <option value="" disabled>Select the product condition</option>
+                {CONDITIONS.map((condition) => (
+                  <option key={condition} value={condition}>
+                    {condition}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             {requiresNafdacNo ? (
               <label>
@@ -483,7 +572,7 @@ export function SellPage() {
 
             <div className="form-actions">
               <button type="submit" className="primary-sell-button" disabled={isSubmitting || isUploadingImages}>
-                {isUploadingImages ? "Uploading photos..." : isSubmitting ? "Saving..." : "Publish listing"}
+                {isUploadingImages ? "Uploading photos..." : isSubmitting ? "Saving..." : isEditing ? "Save changes" : "Publish listing"}
               </button>
               <button type="button" className="secondary-sell-button" onClick={() => navigate("/products")}>
                 Cancel
@@ -498,9 +587,12 @@ export function SellPage() {
 
             {isSubmitted ? (
               <div className="success-banner" role="status">
-                Your listing has been submitted for approval and will appear on the storefront after the review delay.
+                {isEditing
+                  ? "Your changes have been saved and sent for approval. The listing will reappear on the storefront once approved."
+                  : "Your listing has been submitted for approval and will appear on the storefront after the review delay."}
               </div>
             ) : null}
+            </fieldset>
           </form>
         </section>
       </main>
