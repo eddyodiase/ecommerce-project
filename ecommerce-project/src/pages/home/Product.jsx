@@ -1,6 +1,6 @@
 
 
-import { formatMoney } from "../../utils/money";
+import { toCurrency } from "../../utils/money";
 
 
 export function Product({
@@ -48,7 +48,7 @@ export function Product({
       </div>
 
 
-      <div className="product-price">{formatMoney(product.priceCents)}</div>
+      <div className="product-price">{toCurrency(product.priceCents)}</div>
 
 
       <div className="product-quantity-container">

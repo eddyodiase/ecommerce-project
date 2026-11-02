@@ -39,6 +39,73 @@ describe('Sell flow', () => {
     expect(Array.from(categorySelect.options).map((option) => option.textContent)).toEqual(PRODUCT_TAXONOMY);
   });
 
+  it('requires a vehicle subcategory to complete a vehicle listing', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    const subcategorySelect = screen.getByLabelText(/^subcategory$/i);
+    expect(subcategorySelect).toBeRequired();
+    expect(Array.from(subcategorySelect.options).map((option) => option.textContent)).toEqual([
+      'Select a subcategory',
+      'Cars',
+      'Suv',
+      'Trucks',
+      'Buses',
+      'Pickups',
+    ]);
+  });
+
+  it('offers Local Used and Foreign Used instead of Used as conditions', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    const options = Array.from(screen.getByLabelText(/^condition$/i).options).map((option) => option.textContent);
+    expect(options).toEqual([
+      'Select the product condition',
+      'New',
+      'Local Used',
+      'Foreign Used',
+      'Refurbished',
+    ]);
+  });
+
+  it('accepts prices with kobo decimals', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    const price = screen.getByLabelText(/^price$/i);
+    fireEvent.change(price, { target: { value: '6671.75' } });
+    expect(price).toBeValid();
+  });
+
+  it('requires a Beauty subcategory with the new Beauty options', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^category$/i), { target: { value: 'Beauty' } });
+    const subcategorySelect = screen.getByLabelText(/^subcategory$/i);
+    expect(subcategorySelect).toBeRequired();
+    expect(Array.from(subcategorySelect.options).map((option) => option.textContent)).toEqual([
+      'Select a subcategory',
+      'Fixtures & Accessories',
+      'Cleaning & Maintenance',
+      'Hygiene & Grooming',
+      'Bathroom Textiles',
+    ]);
+  });
+
   it('shows Men and Women choices for Fashion Accoutrements', () => {
     render(
       <MemoryRouter>

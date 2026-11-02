@@ -3,18 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
+import { formatMoney } from "../../utils/money";
 import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import { buildSampleProducts } from "./productCatalog";
 
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
 
-const formatNaira = (value) =>
-  new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(value || 0));
+const formatNaira = (value) => formatMoney(value);
 
 const tabs = ["Description", "Manufacturer", "Reviews"];
 const colorOptions = [
@@ -68,7 +63,7 @@ const normalizeProduct = (product = {}) => {
     ownerEmail: product.ownerEmail || "",
     deliveryType: product.deliveryType || "Standard",
     cardType: product.cardType || "Visa",
-    price: Number(product.priceCents || product.price || 0),
+    price: product.priceCents != null ? Number(product.priceCents) / 100 : Number(product.price || 0),
     rating: ratingValue,
     reviewCount: Number(product.rating?.count || 0),
     image: normalizeImagePath(product.image),
@@ -89,7 +84,12 @@ const readApprovedSellerListings = () => {
     }
 
     return listings
-      .filter((listing) => listing?.status === "approved")
+      // Cached listings can lose their photos (browser storage limit); the backend product has them.
+      .filter((listing) => listing?.status === "approved" && (
+        (Array.isArray(listing.imageDataUrls) && listing.imageDataUrls.length > 0)
+        || listing.imageDataUrl
+        || listing.imageUrl
+      ))
       .map((listing) => {
         const listingImages = Array.isArray(listing.imageDataUrls)
           ? listing.imageDataUrls

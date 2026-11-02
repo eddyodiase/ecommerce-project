@@ -27,6 +27,12 @@ export const SUBCATEGORIES_BY_CATEGORY = {
   Tools: ["Tool Boxes", "Farm Tools", "Builders Tools", "Welding Supplies"],
   Furniture: ["Home Furniture", "Office Furniture"],
   Food: ["Oils", "Fresh", "Groceries", "NFPD"],
+  Beauty: [
+    "Fixtures & Accessories",
+    "Cleaning & Maintenance",
+    "Hygiene & Grooming",
+    "Bathroom Textiles",
+  ],
   Fashion: [
     "Mens Clothing",
     "Women Clothing",

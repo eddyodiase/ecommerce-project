@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/Header";
-import { formatMoney } from "../../utils/money";
+import { toCurrency } from "../../utils/money";
 import "./OrdersPage.css";
 
 function OrderRow({ order, product, quantity, estimatedDeliveryTimeMs, onCartRefresh }) {
@@ -74,7 +74,7 @@ function OrderCard({ order, onCartRefresh }) {
           </div>
           <div className="order-total">
             <div className="order-header-label">Total:</div>
-            <div>{formatMoney(order.totalCostCents || 0)}</div>
+            <div>{toCurrency(order.totalCostCents || 0)}</div>
           </div>
         </div>
 

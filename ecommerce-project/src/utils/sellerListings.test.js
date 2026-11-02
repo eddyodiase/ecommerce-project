@@ -1,9 +1,36 @@
 import axios from "axios";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { canDeleteListing, deleteSellerListing, updateSellerListing } from "./sellerListings";
+import { canDeleteListing, deleteSellerListing, submitSellerListing, updateSellerListing } from "./sellerListings";
 
 vi.mock("axios");
+
+describe("submitting a listing when the browser cache is full", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.resetAllMocks();
+    axios.post.mockResolvedValue({ status: 201 });
+  });
+
+  it("does not fail and caches the listing without its photos", async () => {
+    const bigImage = `data:image/jpeg;base64,${"a".repeat(2000)}`;
+    const original = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(function setItem(key, value) {
+      if (value.length > 1000) {
+        throw new DOMException("quota", "QuotaExceededError");
+      }
+      return original.call(this, key, value);
+    });
+
+    await expect(
+      submitSellerListing({ id: "listing-2", productName: "Car", status: "pending", imageDataUrl: bigImage, imageDataUrls: [bigImage] })
+    ).resolves.toBeUndefined();
+
+    const cached = JSON.parse(localStorage.getItem("sellerListings"));
+    expect(cached).toEqual([{ id: "listing-2", productName: "Car", status: "pending" }]);
+    vi.restoreAllMocks();
+  });
+});
 
 const listing = { id: "listing-1", productName: "Lamp", status: "approved", ownerEmail: "seller@example.com" };
 

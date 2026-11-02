@@ -13,6 +13,27 @@ const readLocal = () => {
   }
 };
 
+const stripImages = (listing) => {
+  const rest = { ...listing };
+  delete rest.imageDataUrls;
+  delete rest.imageDataUrl;
+  return rest;
+};
+
+// Photos are base64 and quickly exceed the localStorage quota, so the cache falls back to
+// metadata only. The backend keeps the photos and sync restores them.
+const writeLocal = (listings) => {
+  try {
+    localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify(listings));
+  } catch {
+    try {
+      localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify(listings.map(stripImages)));
+    } catch {
+      // Cache unavailable; the backend remains the source of truth.
+    }
+  }
+};
+
 // The backend is the source of truth; localStorage is only a cache for sync readers.
 export async function syncSellerListings() {
   try {
@@ -27,7 +48,7 @@ export async function syncSellerListings() {
 
     await Promise.allSettled(localOnly.map((listing) => axios.post("/api/listings", listing)));
 
-    localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify([...localOnly, ...remote]));
+    writeLocal([...localOnly, ...remote]);
   } catch {
     // Backend unavailable: keep using the cached listings.
   }
@@ -39,7 +60,7 @@ export async function submitSellerListing(listing) {
   } catch {
     // Cached locally below; it is pushed to the backend on the next sync.
   }
-  localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify([listing, ...readLocal()]));
+  writeLocal([listing, ...readLocal()]);
 }
 
 // Returns the logged-in seller's email, or "" when nobody is logged in.
@@ -79,10 +100,7 @@ export async function deleteSellerListing(listingId, ownerEmail) {
     }
   }
 
-  localStorage.setItem(
-    SELLER_LISTINGS_STORAGE_KEY,
-    JSON.stringify(readLocal().filter((listing) => listing.id !== listingId))
-  );
+  writeLocal(readLocal().filter((listing) => listing.id !== listingId));
 }
 
 export const getCachedListing = (listingId) => readLocal().find((listing) => listing.id === listingId);
@@ -108,10 +126,7 @@ export async function updateSellerListing(listingId, updates) {
     }
   }
 
-  localStorage.setItem(
-    SELLER_LISTINGS_STORAGE_KEY,
-    JSON.stringify(readLocal().map((listing) => (listing.id === listingId ? next : listing)))
-  );
+  writeLocal(readLocal().map((listing) => (listing.id === listingId ? next : listing)));
   return next;
 }
 
@@ -122,8 +137,5 @@ export async function updateSellerListingStatus(listingId, status) {
   } catch {
     // Fall through: the local cache is still updated.
   }
-  localStorage.setItem(
-    SELLER_LISTINGS_STORAGE_KEY,
-    JSON.stringify(readLocal().map((listing) => (listing.id === listingId ? { ...listing, status } : listing)))
-  );
+  writeLocal(readLocal().map((listing) => (listing.id === listingId ? { ...listing, status } : listing)));
 }

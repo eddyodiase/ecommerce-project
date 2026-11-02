@@ -18,7 +18,7 @@ import "./SellPage.css";
 
 const CATEGORIES = PRODUCT_TAXONOMY;
 const MAX_PRODUCT_IMAGES = 10;
-const CONDITIONS = ["New", "Used", "Refurbished"];
+const CONDITIONS = ["New", "Local Used", "Foreign Used", "Refurbished"];
 
 const listingToFormData = (listing) => {
   const nestedOptions = NESTED_SUBCATEGORIES_BY_CATEGORY[listing.category] || {};
@@ -362,7 +362,7 @@ export function SellPage() {
                   name="price"
                   type="number"
                   min="1"
-                  step="100"
+                  step="0.01"
                   value={formData.price}
                   onChange={handleChange}
                   placeholder="25000"

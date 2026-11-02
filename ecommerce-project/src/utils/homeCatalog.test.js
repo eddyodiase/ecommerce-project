@@ -13,9 +13,16 @@ describe("homeCatalog", () => {
     const products = withClassification([
       { id: 1, name: "2 Slot Toaster - White", keywords: ["kitchen"] },
       { id: 2, name: "Men Athletic Shoes", keywords: [] },
+      {
+        id: 3,
+        name: "Marketplace Backpack",
+        keywords: ["bag"],
+        details: { category: "Fashion", subcategory: "Accoutrements" },
+      },
     ]);
     expect(filterHomeProducts(products, { query: "toaster" })).toHaveLength(1);
     expect(filterHomeProducts(products, { category: "Fashion", subcategory: "Men Shoes" })).toHaveLength(1);
     expect(filterHomeProducts(products, { category: "Appliances", subcategory: "Home" })).toHaveLength(0);
+    expect(filterHomeProducts(products, { query: "Accoutrements" })).toHaveLength(1);
   });
 });

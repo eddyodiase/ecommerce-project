@@ -24,6 +24,17 @@ const normalize = (value) => String(value ?? "").toLowerCase();
 
 export const classifyHomeProduct = (product = {}) => {
   const keywords = Array.isArray(product.keywords) ? product.keywords : [];
+  const details = product.details && typeof product.details === "object" ? product.details : {};
+  const explicitCategory = product.category || details.category;
+  const explicitSubcategory = product.subcategory || details.subcategory;
+
+  if (explicitCategory || explicitSubcategory) {
+    return {
+      category: explicitCategory || UNCATEGORIZED,
+      subcategory: explicitSubcategory || "",
+    };
+  }
+
   // Name is checked first so keyword noise can't override an explicit title match.
   const sources = [normalize(product.name), normalize(keywords.join(" "))];
 

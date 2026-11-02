@@ -19,7 +19,7 @@ describe('Product', () => {
     render(<Product product={product} />);
 
     expect(screen.getByText(product.name)).toBeInTheDocument();
-    expect(screen.getByText('$10.90')).toBeInTheDocument();
+    expect(screen.getByText('₦10.90')).toBeInTheDocument();
     expect(screen.getByAltText(`${product.rating.stars} star rating`)).toBeInTheDocument();
     expect(screen.getByText(String(product.rating.count))).toBeInTheDocument();
     expect(screen.getByTestId('product-image')).toHaveAttribute('src', product.image);

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
+import { formatMoney } from "../../utils/money";
 import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import {
   buildSampleProducts,
@@ -88,7 +89,7 @@ const normalizeBackendProduct = (product = {}) => {
     ownerEmail: product.ownerEmail || "",
     deliveryType: "Standard",
     cardType: "Visa",
-    price: Number(product.priceCents || 0),
+    price: Number(product.priceCents || 0) / 100,
     rating: ratingValue,
     reviewCount: Number(product.rating?.count || 0),
     image: normalizeBackendImagePath(product.image),
@@ -111,6 +112,11 @@ const normalizeSellerListingImagePath = (image) => {
   return normalizeBackendImagePath(image);
 };
 
+const hasListingImages = (listing) => (
+  (Array.isArray(listing.imageDataUrls) && listing.imageDataUrls.length > 0)
+  || Boolean(listing.imageDataUrl || listing.imageUrl)
+);
+
 const readApprovedSellerListings = () => {
   try {
     const listings = JSON.parse(localStorage.getItem(SELLER_LISTINGS_STORAGE_KEY) || "[]");
@@ -119,7 +125,8 @@ const readApprovedSellerListings = () => {
     }
 
     return listings
-      .filter((listing) => listing?.status === "approved")
+      // Cached listings can lose their photos (browser storage limit); the backend product has them.
+      .filter((listing) => listing?.status === "approved" && hasListingImages(listing))
       .map((listing) => {
         const isSmartPhone = normalizeCategoryKey(listing.category) === "smart phones";
         const phoneSpecs = listing.phoneSpecs || {};
@@ -183,13 +190,7 @@ const getSampleProductMatch = (product, query, category, brandFilters, deliveryF
     return matchesSearch && matchesCategory && matchesBrand && matchesDelivery && matchesCard && matchesSeller && matchesRating;
   };
 
-const formatNaira = (value) =>
-  new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(value || 0));
+const formatNaira = (value) => formatMoney(value);
 
 const toggleSelection = (value, selectedValues, setSelectedValues) => {
   if (selectedValues.includes(value)) {
