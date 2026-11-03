@@ -7,6 +7,8 @@ describe("homeCatalog", () => {
     expect(classifyHomeProduct({ name: "Women's Summer Jean Shorts" })).toEqual({ category: "Fashion", subcategory: "Women Clothing" });
     expect(classifyHomeProduct({ name: "2 Slot Toaster - White" })).toEqual({ category: "Appliances", subcategory: "Kitchen" });
     expect(classifyHomeProduct({ name: "Intermediate Composite Basketball" }).category).toBe("Other");
+    expect(classifyHomeProduct({ name: "PVC Pipe 2 inch" })).toEqual({ category: "Const. Materials", subcategory: "Plumb. Mat. & Fittings" });
+    expect(classifyHomeProduct({ name: "Brass Faucet", category: "Const. Materials" })).toEqual({ category: "Const. Materials", subcategory: "Plumb. Mat. & Fittings" });
   });
 
   it("filters by search text, category and subcategory", () => {

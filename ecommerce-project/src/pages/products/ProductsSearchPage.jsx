@@ -105,6 +105,7 @@ const normalizeBackendProduct = (product = {}) => {
       || inferredTaxonomy?.subcategory
       || inferSubcategoryFromKeywords(category, product.keywords),
     nestedSubcategory: details.nestedSubcategory || "",
+    keywords: [...(product.keywords || [])],
     condition: details.condition || "",
     nafdacNo: details.nafdacNo || "",
     seller: details.sellerName || "NorthPeak Marketplace",
@@ -165,6 +166,7 @@ const readApprovedSellerListings = () => {
           category: listing.category || "Vehicles",
           subcategory: listing.subcategory || "",
           nestedSubcategory: listing.nestedSubcategory || "",
+          keywords: String(listing.productName || "").split(/\s+/).filter(Boolean),
           condition: listing.condition || "",
           nafdacNo: listing.nafdacNo || "",
           seller: listing.sellerName || "Marketplace Seller",
@@ -196,19 +198,21 @@ const readApprovedSellerListings = () => {
 };
 
 const getSampleProductMatch = (product, query, category, brandFilters, deliveryFilters, cardFilters, sellerFilters, ratingFilters, subcategory = "") => {
-    const normalizedQuery = query.toLowerCase().trim();
-    const matchesSearch =
-      !normalizedQuery ||
-      [product.title, product.subtitle, product.brand, product.category, product.subcategory, product.seller]
-        .some((value) => value?.toLowerCase().includes(normalizedQuery));
+    const searchTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const haystack = [
+      product.title, product.subtitle, product.brand, product.category, product.subcategory,
+      product.nestedSubcategory, product.seller, ...(product.keywords || []),
+    ].map((value) => String(value || "").toLowerCase()).join(" ");
+    const matchesSearch = searchTerms.every((term) => haystack.includes(term));
 
     const [subcategoryName, nestedSubcategoryName] = subcategory.split(" - ");
+    const sameName = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
     const matchesSelectedSubcategory = !subcategory
       || (
-        product.subcategory === subcategoryName
+        sameName(product.subcategory, subcategoryName)
         && (!nestedSubcategoryName
           || !product.nestedSubcategory
-          || product.nestedSubcategory === nestedSubcategoryName)
+          || sameName(product.nestedSubcategory, nestedSubcategoryName))
       );
     const matchesCategory = matchesCategoryFilter(category, product) && matchesSelectedSubcategory;
     const matchesBrand = brandFilters.length === 0 || brandFilters.includes(product.brand);
@@ -270,9 +274,8 @@ export function ProductsSearchPage() {
   );
 
   const loadProducts = useCallback(async () => {
-    const params = {
-      search: searchTerm.trim() || undefined,
-    };
+    // Search is applied client-side so it can also match category, subcategory and keywords.
+    const params = {};
 
     setIsLoading(true);
 

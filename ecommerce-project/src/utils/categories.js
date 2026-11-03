@@ -22,6 +22,7 @@ export const SUBCATEGORIES_BY_CATEGORY = {
     "Keys",
     "Electrical Fittings",
     "Electrical Wires",
+    "Plumb. Mat. & Fittings",
     "Others",
   ],
   Tools: ["Tool Boxes", "Farm Tools", "Builders Tools", "Welding Supplies"],
