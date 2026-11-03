@@ -97,7 +97,7 @@ const normalizeBackendProduct = (product = {}) => {
   return {
     id: product.id,
     title: product.name || "Product",
-    subtitle: details.description || (product.keywords || []).slice(0, 3).join(" • ") || "Featured item",
+    subtitle: details.description || "",
     brand: details.phoneSpecs?.brand || details.sellerName || "NorthPeak",
     category,
     subcategory: details.subcategory
@@ -206,13 +206,14 @@ const getSampleProductMatch = (product, query, category, brandFilters, deliveryF
     const matchesSearch = searchTerms.every((term) => haystack.includes(term));
 
     const [subcategoryName, nestedSubcategoryName] = subcategory.split(" - ");
+    const [productSubcategory, productNested = product.nestedSubcategory] = String(product.subcategory || "").split(" - ");
     const sameName = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
     const matchesSelectedSubcategory = !subcategory
       || (
-        sameName(product.subcategory, subcategoryName)
+        sameName(productSubcategory, subcategoryName)
         && (!nestedSubcategoryName
-          || !product.nestedSubcategory
-          || sameName(product.nestedSubcategory, nestedSubcategoryName))
+          || !productNested
+          || sameName(productNested, nestedSubcategoryName))
       );
     const matchesCategory = matchesCategoryFilter(category, product) && matchesSelectedSubcategory;
     const matchesBrand = brandFilters.length === 0 || brandFilters.includes(product.brand);

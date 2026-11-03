@@ -9,7 +9,7 @@ import cartItemRoutes from './routes/cartItems.js';
 import orderRoutes from './routes/orders.js';
 import resetRoutes from './routes/reset.js';
 import paymentSummaryRoutes from './routes/paymentSummary.js';
-import listingRoutes from './routes/listings.js';
+import listingRoutes, { republishApprovedListings } from './routes/listings.js';
 import './models/Listing.js';
 import { Product } from './models/Product.js';
 import { DeliveryOption } from './models/DeliveryOption.js';
@@ -114,6 +114,14 @@ if (productCount === 0) {
   await Order.bulkCreate(ordersWithTimestamps);
 
   console.log('Default data added to the database.');
+}
+
+const republished = await republishApprovedListings();
+if (republished > 0) {
+  console.log(`Republished ${republished} approved listing(s) missing from the catalogue.`);
+  if (typeof saveDatabaseToFile === 'function' && !process.env.RDS_HOSTNAME) {
+    await saveDatabaseToFile();
+  }
 }
 
 // Start server

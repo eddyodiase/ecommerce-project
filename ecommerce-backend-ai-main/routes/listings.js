@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { Listing } from '../models/Listing.js';
 import { Product } from '../models/Product.js';
 import { CartItem } from '../models/CartItem.js';
+import { defaultProducts } from '../defaultData/defaultProducts.js';
 
 const router = express.Router();
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
@@ -37,7 +38,15 @@ const publishProduct = async (row) => {
   const dataUrls = Array.isArray(data.imageDataUrls) && data.imageDataUrls.length
     ? data.imageDataUrls
     : [data.imageDataUrl].filter(Boolean);
-  const galleryImages = dataUrls.map((url, index) => saveImage(row.id, url, index)).filter(Boolean);
+  const savedImages = dataUrls.map((url, index) => saveImage(row.id, url, index)).filter(Boolean);
+  // Edits without new photos reuse the images the product already had, or the original default product's.
+  const defaultProduct = defaultProducts.find((product) => product.id === row.id);
+  const defaultImages = defaultProduct
+    ? [defaultProduct.image, ...(defaultProduct.details?.galleryImages || [])].filter(Boolean)
+    : [];
+  const galleryImages = savedImages.length
+    ? savedImages
+    : (Array.isArray(data.existingImages) && data.existingImages.length ? data.existingImages : defaultImages);
   const image = galleryImages[0];
   if (!image || await Product.findByPk(row.id)) {
     return;
@@ -182,6 +191,21 @@ router.put('/:id', async (req, res) => {
     return res.status(400).json({ error: 'Product name and a valid price are required' });
   }
 
+  const hasNewImages = (Array.isArray(nextData.imageDataUrls) && nextData.imageDataUrls.length > 0)
+    || Boolean(nextData.imageDataUrl);
+  const published = await Product.findByPk(row.id);
+  if (!hasNewImages) {
+    // Keep the live product's photos so re-approval can republish without re-uploading them.
+    const liveImages = published
+      ? (published.details?.galleryImages?.length ? published.details.galleryImages : [published.image])
+      : [];
+    nextData.existingImages = liveImages.filter(Boolean).length
+      ? liveImages.filter(Boolean)
+      : (row.data.existingImages || []);
+  } else {
+    delete nextData.existingImages;
+  }
+
   row.data = nextData;
   row.status = 'pending';
   await row.save();
@@ -189,7 +213,9 @@ router.put('/:id', async (req, res) => {
   // Edited listings leave the storefront until re-approved; approval republishes them with the new details.
   await CartItem.destroy({ where: { productId: row.id } });
   await Product.destroy({ where: { id: row.id } });
-  removeImages(row.id);
+  if (hasNewImages) {
+    removeImages(row.id);
+  }
 
   res.json(toListing(row));
 });
@@ -220,5 +246,26 @@ router.delete('/:id', async (req, res) => {
   }
   res.status(204).send();
 });
+
+// Republishes approved listings that have no live product (e.g. after an edit), skipping names already live.
+export const republishApprovedListings = async () => {
+  const rows = await Listing.findAll({ where: { status: 'approved' }, order: [['createdAt', 'ASC']] });
+  const liveNames = new Set((await Product.findAll()).map((product) => String(product.name || '').trim().toLowerCase()));
+  let published = 0;
+
+  for (const row of rows) {
+    const name = String(row.data?.productName || '').trim().toLowerCase();
+    if (await Product.findByPk(row.id) || liveNames.has(name)) {
+      continue;
+    }
+    await publishProduct(row);
+    if (await Product.findByPk(row.id)) {
+      liveNames.add(name);
+      published += 1;
+    }
+  }
+
+  return published;
+};
 
 export default router;

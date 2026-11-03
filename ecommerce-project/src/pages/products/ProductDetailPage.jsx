@@ -46,14 +46,13 @@ const normalizeCategoryKey = (value) => String(value || "").trim().toLowerCase()
 
 const normalizeProduct = (product = {}) => {
   const ratingValue = Number(product.rating?.stars || 0);
-  const keywordList = Array.isArray(product.keywords) ? product.keywords : [product.keywords].filter(Boolean);
   const details = product.details || {};
   const detailImages = Array.isArray(details.galleryImages) ? details.galleryImages : [];
 
   return {
     id: product.id,
     title: product.name || "Product",
-    subtitle: details.description || keywordList.slice(0, 3).join(" • ") || "Featured item",
+    subtitle: details.description || "",
     brand: details.phoneSpecs?.brand || details.sellerName || product.brand || "NorthPeak",
     category: details.category || product.category || "Vehicles",
     subcategory: details.subcategory || "",
@@ -291,15 +290,15 @@ export function ProductDetailPage() {
       <div style={{ color: "#374151", lineHeight: 1.8 }}>
         <p>{product.subtitle}</p>
         <p>
-          Designed for everyday performance and premium usability, this product combines modern design,
-          dependable quality, and a customer-first experience. It brings together durable construction,
-          reliable functionality, and an elegant finish that fits naturally into your home, lifestyle, or workspace.
+        {/* Designed for everyday performance and premium usability, this product combines modern design,
+        dependable quality, and a customer-first experience. It brings together durable construction,
+        reliable functionality, and an elegant finish that fits naturally into your home, lifestyle, or workspace. */}
         </p>
         <ul style={{ margin: "1rem 0 0", paddingLeft: "1.25rem" }}>
-          <li>Premium build quality and finish</li>
+          {/* <li>Premium build quality and finish</li>
           <li>Responsive, intuitive experience</li>
           <li>Reliable shipping and support</li>
-          <li>Backed by trusted customer satisfaction</li>
+          <li>Backed by trusted customer satisfaction</li>*/}
         </ul>
       </div>
     ),

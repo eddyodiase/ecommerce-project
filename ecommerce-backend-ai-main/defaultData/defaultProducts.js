@@ -589,7 +589,6 @@ export const defaultProducts = [
     "details": {
       "category": "Vehicles",
       "subcategory": "Suv",
-      "description": "Red Dodge Journey SUV with a spacious interior and practical cargo area.",
       "galleryImages": [
         "images/products/listing-1793472725704-1.jpg",
         "images/products/listing-1793472725704-2.jpg",
@@ -611,7 +610,6 @@ export const defaultProducts = [
     "details": {
       "category": "Vehicles",
       "subcategory": "Buses",
-      "description": "1997 Bluebird school bus with a Cummins engine, 48 seats, and air conditioning.",
       "galleryImages": [
         "images/products/listing-1793623270508-1.jpg",
         "images/products/listing-1793623270508-2.jpg",

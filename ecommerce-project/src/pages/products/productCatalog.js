@@ -48,7 +48,7 @@ const RAW_PRODUCTS = [
   {
     id: "nexa-phone-1",
     title: "Nexa X9 Pro 5G",
-    subtitle: "AI-powered smartphone with 256GB storage",
+    subtitle: "",
     brand: "Nexa",
     category: "Smart Phones",
     seller: "Nexa Mobile",
@@ -63,7 +63,7 @@ const RAW_PRODUCTS = [
   {
     id: "luma-phone-2",
     title: "Luma Pulse 8",
-    subtitle: "Ultra-bright AMOLED display and fast charging",
+    subtitle: "",
     brand: "Luma",
     category: "Smart Phones",
     seller: "Luma Tech",
@@ -78,7 +78,7 @@ const RAW_PRODUCTS = [
   {
     id: "zenith-phone-3",
     title: "Zenith Aster Max",
-    subtitle: "Pocket-friendly flagship with dual cameras",
+    subtitle: "",
     brand: "Zenith",
     category: "Smart Phones",
     seller: "Zenith Mobile",
@@ -93,7 +93,7 @@ const RAW_PRODUCTS = [
   {
     id: "nova-phone-4",
     title: "Nova Echo Mini",
-    subtitle: "Compact 5G device with all-day battery life",
+    subtitle: "",
     brand: "Nova",
     category: "Smart Phones",
     seller: "Nova Devices",
@@ -108,7 +108,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-1",
     title: "NorthPeak Towel Hook",
-    subtitle: "Chrome finish bathroom accessory",
+    subtitle: "",
     brand: "NorthPeak",
     category: "Home",
     seller: "NorthPeak Living",
@@ -123,7 +123,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-2",
     title: "Aster Wall Shelf",
-    subtitle: "Floating wall organizer with brass trim",
+    subtitle: "",
     brand: "Aurelia",
     category: "Home",
     seller: "NorthPeak Living",
@@ -138,7 +138,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-3",
     title: "Nova LED Desk Lamp",
-    subtitle: "Adjustable task light with USB-C power",
+    subtitle: "",
     brand: "Peak & Co",
     category: "Appliances",
     seller: "Peak & Co",
@@ -153,7 +153,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-4",
     title: "Cedar Bath Towel Set",
-    subtitle: "Ultra-soft 2-piece towel set in soft ivory",
+    subtitle: "",
     brand: "HomeStyle",
     category: "Home",
     seller: "HomeStyle Living",
@@ -168,7 +168,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-5",
     title: "Noor Premium Gift Card",
-    subtitle: "Instant digital gift card, delivered fast",
+    subtitle: "",
     brand: "NorthPeak",
     category: "Gift Cards",
     seller: "NorthPeak Rewards",
@@ -183,7 +183,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-6",
     title: "Cleo Knit Sweater",
-    subtitle: "Relaxed fit sweatshirt in ash gray",
+    subtitle: "",
     brand: "Edgewell",
     category: "Fashion",
     seller: "Edgewell Studio",
@@ -198,7 +198,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-7",
     title: "Mira Glass Food Containers",
-    subtitle: "3-piece airtight storage set",
+    subtitle: "",
     brand: "Nestline",
     category: "Food",
     seller: "Nestline Home",
@@ -213,7 +213,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-8",
     title: "Revel Travel Mug",
-    subtitle: "Double-wall insulated stainless steel",
+    subtitle: "",
     brand: "Peak & Co",
     category: "Food",
     seller: "Peak & Co",
@@ -228,7 +228,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-9",
     title: "Sora Cosmetics Organizer",
-    subtitle: "Compact vanity tray with soft-touch finish",
+    subtitle: "",
     brand: "Aurelia",
     category: "Beauty",
     seller: "Aurelia Beauty",
@@ -243,7 +243,7 @@ const RAW_PRODUCTS = [
   {
     id: "northpeak-hook-10",
     title: "Luna Cotton Towel Set",
-    subtitle: "Two-tone cotton towels for everyday use",
+    subtitle: "",
     brand: "NorthPeak",
     category: "Home",
     seller: "NorthPeak Living",
