@@ -1,12 +1,14 @@
 ﻿import axios from "axios";
 import { useEffect, useState } from "react";
 
+import { useCart } from "../../context/CartContext";
 import { OrderSummary } from "./orderSummary";
 import { PaymentSummary } from "./paymentSummary";
 import "./CheckoutHeader.css";
 import "./CheckoutPage.css";
 
 export function CheckoutPage({ onCartChange }) {
+  const { refreshCartCount } = useCart();
   const [cartItems, setCartItems] = useState([]);
   const [deliveryOptions, setDeliveryOptions] = useState([]);
   const [summary, setSummary] = useState({
@@ -113,6 +115,7 @@ export function CheckoutPage({ onCartChange }) {
     try {
       await axios.put(`/api/cart-items/${productId}`, { quantity });
       await loadCheckoutData();
+      await refreshCartCount();
       onCartChange?.();
     } catch (error) {
       console.error("Error updating cart quantity:", error);
@@ -123,6 +126,7 @@ export function CheckoutPage({ onCartChange }) {
     try {
       await axios.delete(`/api/cart-items/${productId}`);
       await loadCheckoutData();
+      await refreshCartCount();
       onCartChange?.();
     } catch (error) {
       console.error("Error removing cart item:", error);
@@ -133,6 +137,7 @@ export function CheckoutPage({ onCartChange }) {
     try {
       await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId });
       await loadCheckoutData();
+      await refreshCartCount();
       onCartChange?.();
     } catch (error) {
       console.error("Error updating delivery option:", error);

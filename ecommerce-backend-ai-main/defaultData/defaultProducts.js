@@ -1,6 +1,7 @@
 export const defaultProducts = [
   {
     "id": "e43638ce-6aa0-4b85-b27f-e1d07eb678c6",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/athletic-cotton-socks-6-pairs.jpg",
     "name": "Black and Gray Athletic Cotton Socks - 6 Pairs",
     "rating": {
@@ -12,6 +13,7 @@ export const defaultProducts = [
   },
   {
     "id": "15b6fc6f-327a-4ec4-896f-486349e85a3d",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/intermediate-composite-basketball.jpg",
     "name": "Intermediate Size Basketball",
     "rating": {
@@ -23,6 +25,7 @@ export const defaultProducts = [
   },
   {
     "id": "83d4ca15-0f35-48f5-b7a3-1ea210004f2e",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/adults-plain-cotton-tshirt-2-pack-teal.jpg",
     "name": "Adults Plain Cotton T-Shirt - 2 Pack",
     "rating": {
@@ -34,6 +37,7 @@ export const defaultProducts = [
   },
   {
     "id": "54e0eccd-8f36-462b-b68a-8182611d9add",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/2-slot-toaster-white.jpg",
     "name": "2 Slot Toaster - White",
     "rating": {
@@ -45,6 +49,7 @@ export const defaultProducts = [
   },
   {
     "id": "3ebe75dc-64d2-4137-8860-1f5a963e534b",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/elegant-white-dinner-plate-set.jpg",
     "name": "2 Piece White Dinner Plate Set",
     "rating": {
@@ -56,6 +61,7 @@ export const defaultProducts = [
   },
   {
     "id": "8c9c52b5-5a19-4bcb-a5d1-158a74287c53",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/3-piece-cooking-set.jpg",
     "name": "3 Piece Non-Stick, Black Cooking Pot Set",
     "rating": {
@@ -67,6 +73,7 @@ export const defaultProducts = [
   },
   {
     "id": "dd82ca78-a18b-4e2a-9250-31e67412f98d",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/women-plain-cotton-oversized-sweater-gray.jpg",
     "name": "Cotton Oversized Sweater - Gray",
     "rating": {
@@ -78,6 +85,7 @@ export const defaultProducts = [
   },
   {
     "id": "77919bbe-0e56-475b-adde-4f24dfed3a04",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/luxury-towel-set.jpg",
     "name": "2 Piece Luxury Towel Set - White",
     "rating": {
@@ -89,6 +97,7 @@ export const defaultProducts = [
   },
   {
     "id": "6b07d4e7-f540-454e-8a1e-363f25dbae7d",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/facial-tissue-2-ply-8-boxes.jpg",
     "name": "Ultra Soft Tissue 2-Ply - 8 Boxes",
     "rating": {
@@ -100,6 +109,7 @@ export const defaultProducts = [
   },
   {
     "id": "5968897c-4d27-4872-89f6-5bcb052746d7",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/women-striped-beach-dress.jpg",
     "name": "Women's Striped Beach Dress",
     "rating": {
@@ -111,6 +121,7 @@ export const defaultProducts = [
   },
   {
     "id": "b86ddc8b-3501-4b17-9889-a3bad6fb585f",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/women-sandal-heels-white-pink.jpg",
     "name": "Women's Sandal Heels - Pink",
     "rating": {
@@ -122,6 +133,7 @@ export const defaultProducts = [
   },
   {
     "id": "aad29d11-ea98-41ee-9285-b916638cac4a",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/round-sunglasses-gold.jpg",
     "name": "Round Sunglasses",
     "rating": {
@@ -133,6 +145,7 @@ export const defaultProducts = [
   },
   {
     "id": "901eb2ca-386d-432e-82f0-6fb1ee7bf969",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/blackout-curtain-set-beige.jpg",
     "name": "Blackout Curtains Set - Beige",
     "rating": {
@@ -144,6 +157,7 @@ export const defaultProducts = [
   },
   {
     "id": "82bb68d7-ebc9-476a-989c-c78a40ee5cd9",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/women-summer-jean-shorts.jpg",
     "name": "Women's Summer Jean Shorts",
     "rating": {
@@ -155,6 +169,7 @@ export const defaultProducts = [
   },
   {
     "id": "c2a82c5e-aff4-435f-9975-517cfaba2ece",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/electric-steel-hot-water-kettle-white.jpg",
     "name": "Electric Hot Water Kettle - White",
     "rating": {
@@ -166,6 +181,7 @@ export const defaultProducts = [
   },
   {
     "id": "58b4fc92-e98c-42aa-8c55-b6b79996769a",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/knit-athletic-sneakers-gray.jpg",
     "name": "Waterproof Knit Athletic Sneakers - Gray",
     "rating": {
@@ -177,6 +193,7 @@ export const defaultProducts = [
   },
   {
     "id": "a82c6bac-3067-4e68-a5ba-d827ac0be010",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/straw-sunhat.jpg",
     "name": "Straw Wide Brim Sun Hat",
     "rating": {
@@ -188,6 +205,7 @@ export const defaultProducts = [
   },
   {
     "id": "1c079479-8586-494f-ab53-219325432536",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/men-athletic-shoes-white.jpg",
     "name": "Men's Athletic Sneaker - White",
     "rating": {
@@ -199,6 +217,7 @@ export const defaultProducts = [
   },
   {
     "id": "b0f17cc5-8b40-4ca5-9142-b61fe3d98c85",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/men-stretch-wool-sweater-black.jpg",
     "name": "Men's Wool Sweater - Black",
     "rating": {
@@ -210,6 +229,7 @@ export const defaultProducts = [
   },
   {
     "id": "a93a101d-79ef-4cf3-a6cf-6dbe532a1b4a",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/bathroom-mat.jpg",
     "name": "Bathroom Bath Mat 16 x 32 Inch - Grey",
     "rating": {
@@ -221,6 +241,7 @@ export const defaultProducts = [
   },
   {
     "id": "4f4fbcc2-4e72-45cc-935c-9e13d79cc57f",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/women-knit-ballet-flat-white.jpg",
     "name": "Women's Ballet Flat - White",
     "rating": {
@@ -232,6 +253,7 @@ export const defaultProducts = [
   },
   {
     "id": "8b5a2ee1-6055-422a-a666-b34ba28b76d4",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/men-golf-polo-t-shirt-gray.jpg",
     "name": "Men's Golf Polo Shirt - Gray",
     "rating": {
@@ -243,6 +265,7 @@ export const defaultProducts = [
   },
   {
     "id": "3fdfe8d6-9a15-4979-b459-585b0d0545b9",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/laundry-detergent-tabs.jpg",
     "name": "Laundry Detergent Tabs, 50 Loads",
     "rating": {
@@ -254,6 +277,7 @@ export const defaultProducts = [
   },
   {
     "id": "e4f64a65-1377-42bc-89a5-e572d19252e2",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/sky-leaf-branch-earrings.jpg",
     "name": "Sterling Silver Leaf Branch Earrings",
     "rating": {
@@ -265,6 +289,7 @@ export const defaultProducts = [
   },
   {
     "id": "19c6a64a-5463-4d45-9af8-e41140a4100c",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/duvet-cover-set-gray-queen.jpg",
     "name": "Duvet Cover Set, Diamond Pattern",
     "rating": {
@@ -276,6 +301,7 @@ export const defaultProducts = [
   },
   {
     "id": "d2785924-743d-49b3-8f03-ec258e640503",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/women-knit-beanie-pom-pom-blue.jpg",
     "name": "Women's Knit Winter Beanie - Blue",
     "rating": {
@@ -287,6 +313,7 @@ export const defaultProducts = [
   },
   {
     "id": "ee1f7c56-f977-40a4-9642-12ba5072e2b0",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/men-chino-pants-beige.jpg",
     "name": "Men's Chino Pants - Beige",
     "rating": {
@@ -298,6 +325,7 @@ export const defaultProducts = [
   },
   {
     "id": "4df68c27-fd59-4a6a-bbd1-e754ddb6d53c",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/men-navigator-sunglasses-black.jpg",
     "name": "Men's Navigator Sunglasses",
     "rating": {
@@ -309,6 +337,7 @@ export const defaultProducts = [
   },
   {
     "id": "04701903-bc79-49c6-bc11-1af7e3651358",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/men-brown-flat-sneakers.jpg",
     "name": "Men's Brown Flat Sneakers",
     "rating": {
@@ -320,6 +349,7 @@ export const defaultProducts = [
   },
   {
     "id": "4e37dd03-3b23-4bc6-9ff8-44e112a92c64",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/non-stick-cooking-set-4-pieces.jpg",
     "name": "Non-Stick Cook Set With Lids - 4 Pieces",
     "rating": {
@@ -331,6 +361,7 @@ export const defaultProducts = [
   },
   {
     "id": "a434b69f-1bc1-482d-9ce7-cd7f4a66ce8d",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/vanity-mirror-pink.jpg",
     "name": "Vanity Mirror with LED Lights - Pink",
     "rating": {
@@ -342,6 +373,7 @@ export const defaultProducts = [
   },
   {
     "id": "a45cfa0a-66d6-4dc7-9475-e2b01595f7d7",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/women-relaxed-lounge-pants-pink.jpg",
     "name": "Women's Relaxed Lounge Pants - Pink",
     "rating": {
@@ -353,6 +385,7 @@ export const defaultProducts = [
   },
   {
     "id": "d339adf3-e004-4c20-a120-40e8874c66cb",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/crystal-zirconia-stud-earrings-pink.jpg",
     "name": "Crystal Zirconia Stud Earrings - Pink",
     "rating": {
@@ -364,6 +397,7 @@ export const defaultProducts = [
   },
   {
     "id": "d37a651a-d501-483b-aae6-a9659b0757a0",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/glass-screw-lid-food-containers.jpg",
     "name": "Glass Screw Lid Containers - 3 Pieces",
     "rating": {
@@ -375,6 +409,7 @@ export const defaultProducts = [
   },
   {
     "id": "0d7f9afa-2efe-4fd9-b0fd-ba5663e0a524",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/black-and-silver-espresso-maker.jpg",
     "name": "Black and Silver Espresso Maker",
     "rating": {
@@ -386,6 +421,7 @@ export const defaultProducts = [
   },
   {
     "id": "02e3a47e-dd68-467e-9f71-8bf6f723fdae",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/blackout-curtains-set-teal.jpg",
     "name": "Blackout Curtains Set 42 x 84-Inch - Teal",
     "rating": {
@@ -397,6 +433,7 @@ export const defaultProducts = [
   },
   {
     "id": "8a53b080-6d40-4a65-ab26-b24ecf700bce",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/bath-towel-set-gray-rosewood.jpg",
     "name": "Bath Towels 2 Pack - Gray, Rosewood",
     "rating": {
@@ -408,6 +445,7 @@ export const defaultProducts = [
   },
   {
     "id": "10ed8504-57db-433c-b0a3-fc71a35c88a1",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/athletic-skateboard-shoes-gray.jpg",
     "name": "Athletic Skateboard Shoes - Gray",
     "rating": {
@@ -419,6 +457,7 @@ export const defaultProducts = [
   },
   {
     "id": "77a845b1-16ed-4eac-bdf9-5b591882113d",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/countertop-push-blender-black.jpg",
     "name": "Countertop Push Blender - Black",
     "rating": {
@@ -430,6 +469,7 @@ export const defaultProducts = [
   },
   {
     "id": "bc2847e9-5323-403f-b7cf-57fde044a955",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/men-cozy-fleece-hoodie-light-teal.jpg",
     "name": "Men's Fleece Hoodie - Light Teal",
     "rating": {
@@ -441,6 +481,7 @@ export const defaultProducts = [
   },
   {
     "id": "36c64692-677f-4f58-b5ec-0dc2cf109e27",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/artistic-bowl-set-6-piece.jpg",
     "name": "Artistic Bowl and Plate Set - 6 Pieces",
     "rating": {
@@ -452,6 +493,7 @@ export const defaultProducts = [
   },
   {
     "id": "aaa65ef3-8d6f-4eb3-bc9b-a6ea49047d8f",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/kitchen-paper-towels-8-pack.jpg",
     "name": "2-Ply Kitchen Paper Towels - 8 Pack",
     "rating": {
@@ -463,6 +505,7 @@ export const defaultProducts = [
   },
   {
     "id": "7d8d5f72-3dd8-4f6d-bf84-1da8f2ea9a11",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/paw-paw-home-garden-product-color.jpg",
     "name": "PAW PAW-Home-Garden - Color",
     "rating": {
@@ -474,6 +517,7 @@ export const defaultProducts = [
   },
   {
     "id": "7f6dc8e1-9cf1-4b0f-aa9c-bd9e224f96f2",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/Pineapple-Home-Garden.jpg",
     "name": "Pineapple - Home Garden",
     "rating": {
@@ -485,6 +529,7 @@ export const defaultProducts = [
   },
   {
     "id": "bc1e5bb0-1eb8-4b3d-b35f-0df36d58cb33",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/Plantain Home-Garden.jpg",
     "name": "Plantain - Home Garden",
     "rating": {
@@ -496,6 +541,7 @@ export const defaultProducts = [
   },
   {
     "id": "8f8df7cf-e419-4f5a-86ac-833c8f613e35",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/Itel P23 Pro.jpg",
     "name": "Itel P23 Pro",
     "rating": {
@@ -507,6 +553,7 @@ export const defaultProducts = [
   },
   {
     "id": "9a4ca557-f2db-4c08-8aa4-ec52bf4736b4",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/Savo A05.jpg",
     "name": "Savo A05",
     "rating": {
@@ -518,6 +565,7 @@ export const defaultProducts = [
   },
   {
     "id": "c1439ed8-3b89-4661-ae62-bdcf4be27d51",
+    "ownerEmail": "eddyodiase@yahoo.com",
     "image": "images/products/vivo B2 Pro.jpg",
     "name": "vivo B2 Pro",
     "rating": {
@@ -526,5 +574,49 @@ export const defaultProducts = [
     },
     "priceCents": 214900,
     "keywords": ["smartphone", "5g", "android", "phone"]
+  },
+  {
+    "id": "17934727-2704-4a1b-8c2d-3e4f5a6b7c8d",
+    "ownerEmail": "eddyodiase@yahoo.com",
+    "image": "images/products/listing-1793472725704-1.jpg",
+    "name": "Red Dodge Journey SUV",
+    "rating": {
+      "stars": 4.5,
+      "count": 0
+    },
+    "priceCents": 6500000,
+    "keywords": ["vehicle", "suv", "dodge", "journey", "red"],
+    "details": {
+      "category": "Vehicles",
+      "subcategory": "Suv",
+      "description": "Red Dodge Journey SUV with a spacious interior and practical cargo area.",
+      "galleryImages": [
+        "images/products/listing-1793472725704-1.jpg",
+        "images/products/listing-1793472725704-2.jpg",
+        "images/products/listing-1793472725704-3.jpg"
+      ]
+    }
+  },
+  {
+    "id": "17936232-7050-48c1-9d2e-6f7a8b9c0d1e",
+    "ownerEmail": "eddyodiase@yahoo.com",
+    "image": "images/products/listing-1793623270508-1.jpg",
+    "name": "1997 Bluebird School Bus",
+    "rating": {
+      "stars": 4.5,
+      "count": 0
+    },
+    "priceCents": 3800000000,
+    "keywords": ["vehicle", "bus", "school bus", "bluebird", "cummins", "48 seater"],
+    "details": {
+      "category": "Vehicles",
+      "subcategory": "Buses",
+      "description": "1997 Bluebird school bus with a Cummins engine, 48 seats, and air conditioning.",
+      "galleryImages": [
+        "images/products/listing-1793623270508-1.jpg",
+        "images/products/listing-1793623270508-2.jpg",
+        "images/products/listing-1793623270508-3.jpg"
+      ]
+    }
   }
 ];

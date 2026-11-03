@@ -8,7 +8,7 @@ import {
 } from "../../utils/categories";
 import {
   canDeleteListing,
-  getCachedListing,
+  getEditableSellerListing,
   getLoggedInSellerEmail,
   submitSellerListing,
   syncSellerListings,
@@ -33,6 +33,7 @@ const listingToFormData = (listing) => {
     nestedSubcategory: hasNested ? nested : "",
     nafdacNo: listing.nafdacNo || "",
     condition: CONDITIONS.includes(listing.condition) ? listing.condition : "",
+    price: listing.price != null ? String(listing.price) : "",
     description: listing.description || "",
     sellerName: listing.sellerName || "",
     originLocation: listing.originLocation || "",
@@ -87,7 +88,7 @@ export function SellPage() {
         return;
       }
 
-      const listing = getCachedListing(listingId);
+      const listing = await getEditableSellerListing(listingId);
       if (!listing || !canDeleteListing(listing.ownerEmail)) {
         setSubmitError("You can only edit listings that you created while logged in.");
         setIsLoadingListing(false);
@@ -97,7 +98,7 @@ export function SellPage() {
       setFormData(listingToFormData(listing));
       const images = Array.isArray(listing.imageDataUrls) && listing.imageDataUrls.length
         ? listing.imageDataUrls
-        : [listing.imageDataUrl].filter(Boolean);
+        : [listing.imageDataUrl || listing.imageUrl].filter(Boolean);
       const names = listing.imageNames || [];
       setUploadedImages(images.map((dataUrl, index) => ({ dataUrl, name: names[index] || `Photo ${index + 1}` })));
       setIsLoadingListing(false);
@@ -182,7 +183,7 @@ export function SellPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (requiresNafdacNo && !formData.nafdacNo.trim()) {
+    if (!isEditing && requiresNafdacNo && !formData.nafdacNo.trim()) {
       setSubmitError("Please enter the NAFDAC No before publishing this listing.");
       return;
     }
@@ -192,7 +193,7 @@ export function SellPage() {
       return;
     }
 
-    if (uploadedImages.length === 0) {
+    if (!isEditing && uploadedImages.length === 0) {
       setSubmitError("Please upload at least one product photo before publishing your listing.");
       return;
     }
@@ -219,10 +220,6 @@ export function SellPage() {
         sellerName: formData.sellerName.trim(),
         ownerEmail: getLoggedInSellerEmail() || undefined,
         originLocation: formData.originLocation.trim(),
-        imageDataUrls: uploadedImages.map((entry) => entry.dataUrl),
-        imageNames: uploadedImages.map((entry) => entry.name),
-        imageDataUrl: uploadedImages[0]?.dataUrl || "",
-        imageName: uploadedImages[0]?.name || "",
         phoneSpecs: isSmartPhoneCategory
           ? {
             brand: formData.phoneBrand.trim(),
@@ -236,6 +233,13 @@ export function SellPage() {
         status: "pending",
         createdAt: new Date().toISOString(),
       };
+      const imageEntries = uploadedImages.filter((entry) => entry.dataUrl.startsWith("data:"));
+      if (!isEditing || imageEntries.length > 0) {
+        nextListing.imageDataUrls = imageEntries.map((entry) => entry.dataUrl);
+        nextListing.imageNames = imageEntries.map((entry) => entry.name);
+        nextListing.imageDataUrl = imageEntries[0]?.dataUrl || "";
+        nextListing.imageName = imageEntries[0]?.name || "";
+      }
 
       if (isEditing) {
         const { id, status, createdAt, ownerEmail, ...changes } = nextListing;
@@ -307,7 +311,7 @@ export function SellPage() {
                 value={formData.productName}
                 onChange={handleChange}
                 placeholder="Example: Coastal ceramic lamp"
-                required
+                required={!isEditing}
               />
             </label>
 
@@ -326,7 +330,7 @@ export function SellPage() {
               {SUBCATEGORIES_BY_CATEGORY[formData.category] ? (
                 <label>
                   Subcategory
-                  <select name="subcategory" value={formData.subcategory} onChange={handleChange} required>
+                  <select name="subcategory" value={formData.subcategory} onChange={handleChange} required={!isEditing}>
                     <option value="" disabled>Select a subcategory</option>
                     {SUBCATEGORIES_BY_CATEGORY[formData.category].map((subcategory) => (
                       <option key={subcategory} value={subcategory}>
@@ -344,7 +348,7 @@ export function SellPage() {
                     name="nestedSubcategory"
                     value={formData.nestedSubcategory}
                     onChange={handleChange}
-                    required
+                    required={!isEditing}
                   >
                     <option value="" disabled>Select an audience</option>
                     {nestedSubcategoryOptions.map((subcategory) => (
@@ -366,14 +370,14 @@ export function SellPage() {
                   value={formData.price}
                   onChange={handleChange}
                   placeholder="25000"
-                  required
+                  required={!isEditing}
                 />
               </label>
             </div>
 
             <label>
               Condition
-              <select name="condition" value={formData.condition} onChange={handleChange} required>
+              <select name="condition" value={formData.condition} onChange={handleChange} required={!isEditing}>
                 <option value="" disabled>Select the product condition</option>
                 {CONDITIONS.map((condition) => (
                   <option key={condition} value={condition}>
@@ -392,7 +396,7 @@ export function SellPage() {
                   value={formData.nafdacNo}
                   onChange={handleChange}
                   placeholder="NAFDAC No:"
-                  required
+                  required={!isEditing}
                 />
               </label>
             ) : null}
@@ -405,7 +409,7 @@ export function SellPage() {
                 value={formData.sellerName}
                 onChange={handleChange}
                 placeholder="Your business or brand name"
-                required
+                required={!isEditing}
               />
             </label>
 
@@ -417,7 +421,7 @@ export function SellPage() {
                 value={formData.originLocation}
                 onChange={handleChange}
                 placeholder="Example: Ikeja, Lagos"
-                required
+                required={!isEditing}
               />
             </label>
 
@@ -428,12 +432,16 @@ export function SellPage() {
                 type="file"
                 accept="image/*"
                 multiple
-                required={uploadedImages.length === 0}
+                required={!isEditing && uploadedImages.length === 0}
                 disabled={uploadedImages.length >= MAX_PRODUCT_IMAGES}
                 onChange={handleImageUpload}
               />
             </label>
-            <p className="upload-note">At least one product photo is required to publish a listing.</p>
+            <p className="upload-note">
+              {isEditing
+                ? "Leave existing photos unchanged unless you want to replace them."
+                : "At least one product photo is required to publish a listing."}
+            </p>
 
             {uploadedImages.length > 0 ? (
               <p className="upload-note">Uploaded: {uploadedImages.length} photo(s)</p>
@@ -488,7 +496,7 @@ export function SellPage() {
                       value={formData.phoneBrand}
                       onChange={handleChange}
                       placeholder="Example: vivo"
-                      required={isSmartPhoneCategory}
+                      required={!isEditing && isSmartPhoneCategory}
                     />
                   </label>
 
@@ -513,7 +521,7 @@ export function SellPage() {
                       value={formData.ramOptionsGb}
                       onChange={handleChange}
                       placeholder="4, 8, 12"
-                      required={isSmartPhoneCategory}
+                      required={!isEditing && isSmartPhoneCategory}
                     />
                   </label>
 
@@ -525,7 +533,7 @@ export function SellPage() {
                       value={formData.storageOptionsGb}
                       onChange={handleChange}
                       placeholder="64, 128, 256"
-                      required={isSmartPhoneCategory}
+                      required={!isEditing && isSmartPhoneCategory}
                     />
                   </label>
                 </div>
@@ -566,7 +574,7 @@ export function SellPage() {
                 onChange={handleChange}
                 placeholder="Describe your product, materials, and shipping details"
                 rows="5"
-                required
+                required={!isEditing}
               />
             </label>
 

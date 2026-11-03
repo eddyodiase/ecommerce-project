@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { Header } from "../../components/Header";
 import { syncSellerListings, updateSellerListingStatus } from "../../utils/sellerListings";
 import "./AdminPage.css";
 
@@ -50,7 +51,9 @@ export function AdminPage() {
   };
 
   return (
-    <div className="admin-page">
+    <>
+      <Header />
+      <div className="admin-page">
       <header className="admin-page-header">
         <div>
           <p className="admin-eyebrow">Admin dashboard</p>
@@ -109,6 +112,7 @@ export function AdminPage() {
           </div>
         )}
       </main>
-    </div>
+      </div>
+    </>
   );
 }

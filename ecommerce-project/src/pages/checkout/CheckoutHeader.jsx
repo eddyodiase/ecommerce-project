@@ -24,8 +24,10 @@ export function CheckoutHeader({ cartRefreshKey = 0, user, onLogout }) {
       <div className="header-content">
         <div className="checkout-header-left-section">
           <Link to="/">
-            <img className="logo" src="/images/logo-white.png" alt="logo" />
-            <img className="mobile-logo" src="/images/mobile-logo.png" alt="mobile logo" />
+            <span className="checkout-brand-link">
+              <span className="checkout-brand-mark">N</span>
+              <span>NorthPeak</span>
+            </span>
           </Link>
         </div>
         <div className="checkout-header-middle-section">

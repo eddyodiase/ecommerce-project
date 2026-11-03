@@ -64,7 +64,10 @@ describe("seller listing deletion", () => {
     await deleteSellerListing("listing-1");
 
     expect(axios.delete).toHaveBeenCalledWith("/api/listings/listing-1", {
-      headers: { "x-seller-email": "seller@example.com" },
+      headers: {
+        Authorization: "Bearer token",
+        "x-seller-email": "seller@example.com",
+      },
     });
     expect(JSON.parse(localStorage.getItem("sellerListings"))).toEqual([]);
   });

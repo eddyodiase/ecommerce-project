@@ -29,6 +29,29 @@
   margin-top: 1px;
 }
 
+.checkout-header .checkout-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.checkout-header .checkout-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
 .checkout-header .mobile-logo {
   display: none;
 }
@@ -93,13 +116,15 @@
     width: auto;
   }
 
-  .checkout-header .logo {
-    display: none;
+  .checkout-header .checkout-brand-link {
+    font-size: 1.15rem;
+    gap: 8px;
   }
 
-  .checkout-header .mobile-logo {
-    display: inline-block;
-    height: 26px;
+  .checkout-header .checkout-brand-mark {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
   }
 
   .checkout-header .checkout-header-middle-section {

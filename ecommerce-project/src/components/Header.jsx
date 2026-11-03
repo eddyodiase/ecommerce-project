@@ -46,8 +46,10 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
     <header className="header">
       <div className="left-section">
         <Link to="/" className="header-link">
-          <img className="logo" src="/images/logo-white.png" alt="logo" />
-          <img className="mobile-logo" src="/images/mobile-logo-white.png" alt="mobile logo" />
+          <span className="brand-link">
+            <span className="brand-mark">N</span>
+            <span>NorthPeak</span>
+          </span>
         </Link>
       </div>
 

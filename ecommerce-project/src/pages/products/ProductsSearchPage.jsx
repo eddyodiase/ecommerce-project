@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useCart } from "../../context/CartContext";
+import { classifyHomeProduct } from "../../utils/homeCatalog";
 import { formatMoney } from "../../utils/money";
 import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import {
@@ -59,6 +60,17 @@ const inferSubcategoryFromKeywords = (category, keywords = []) => {
   return options.find((option) => normalizedKeywords.includes(option.toLowerCase())) || "";
 };
 
+const inferTaxonomyFromKeywords = (keywords = []) => {
+  for (const category of Object.keys(SUBCATEGORIES_BY_CATEGORY)) {
+    const subcategory = inferSubcategoryFromKeywords(category, keywords);
+    if (subcategory) {
+      return { category, subcategory };
+    }
+  }
+
+  return null;
+};
+
 const normalizeBackendImagePath = (image) => {
   if (!image || typeof image !== "string") {
     return image;
@@ -71,7 +83,13 @@ const normalizeBackendImagePath = (image) => {
 const normalizeBackendProduct = (product = {}) => {
   const ratingValue = Number(product.rating?.stars || 0);
   const details = product.details || {};
-  const category = details.category || inferCategoryFromKeywords([product.name, ...(product.keywords || [])]);
+  const keywords = [product.name, ...(product.keywords || [])];
+  const inferredHomeClassification = classifyHomeProduct(product);
+  const inferredTaxonomy = inferTaxonomyFromKeywords(keywords);
+  const inferredCategory = inferredHomeClassification.category !== "Other"
+    ? inferredHomeClassification.category
+    : inferredTaxonomy?.category || inferCategoryFromKeywords(keywords);
+  const category = details.category || inferredCategory;
   const galleryImages = Array.isArray(details.galleryImages)
     ? details.galleryImages.map((image) => normalizeBackendImagePath(image)).filter(Boolean)
     : [];
@@ -82,7 +100,11 @@ const normalizeBackendProduct = (product = {}) => {
     subtitle: details.description || (product.keywords || []).slice(0, 3).join(" • ") || "Featured item",
     brand: details.phoneSpecs?.brand || details.sellerName || "NorthPeak",
     category,
-    subcategory: details.subcategory || inferSubcategoryFromKeywords(category, product.keywords),
+    subcategory: details.subcategory
+      || inferredHomeClassification.subcategory
+      || inferredTaxonomy?.subcategory
+      || inferSubcategoryFromKeywords(category, product.keywords),
+    nestedSubcategory: details.nestedSubcategory || "",
     condition: details.condition || "",
     nafdacNo: details.nafdacNo || "",
     seller: details.sellerName || "NorthPeak Marketplace",
@@ -142,6 +164,7 @@ const readApprovedSellerListings = () => {
           brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
           category: listing.category || "Vehicles",
           subcategory: listing.subcategory || "",
+          nestedSubcategory: listing.nestedSubcategory || "",
           condition: listing.condition || "",
           nafdacNo: listing.nafdacNo || "",
           seller: listing.sellerName || "Marketplace Seller",
@@ -179,8 +202,15 @@ const getSampleProductMatch = (product, query, category, brandFilters, deliveryF
       [product.title, product.subtitle, product.brand, product.category, product.subcategory, product.seller]
         .some((value) => value?.toLowerCase().includes(normalizedQuery));
 
-    const matchesCategory = matchesCategoryFilter(category, product)
-      && (!subcategory || product.subcategory === subcategory);
+    const [subcategoryName, nestedSubcategoryName] = subcategory.split(" - ");
+    const matchesSelectedSubcategory = !subcategory
+      || (
+        product.subcategory === subcategoryName
+        && (!nestedSubcategoryName
+          || !product.nestedSubcategory
+          || product.nestedSubcategory === nestedSubcategoryName)
+      );
+    const matchesCategory = matchesCategoryFilter(category, product) && matchesSelectedSubcategory;
     const matchesBrand = brandFilters.length === 0 || brandFilters.includes(product.brand);
     const matchesDelivery = deliveryFilters.length === 0 || deliveryFilters.includes(product.deliveryType);
     const matchesCard = cardFilters.length === 0 || cardFilters.includes(product.cardType);
@@ -214,10 +244,12 @@ export function ProductsSearchPage() {
   const [selectedSellers, setSelectedSellers] = useState([]);
   const [sortBy, setSortBy] = useState("featured");
   const [page, setPage] = useState(1);
-  const [products, setProducts] = useState(() => buildSampleProducts());
+  const [products, setProducts] = useState([]);
   const [totalResults, setTotalResults] = useState(98);
   const [totalPages, setTotalPages] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
+  const [cartErrorProductId, setCartErrorProductId] = useState("");
+  const [cartAddedProductId, setCartAddedProductId] = useState("");
   const navigate = useNavigate();
   const { cartCount, addToCart } = useCart();
 
@@ -249,7 +281,7 @@ export function ProductsSearchPage() {
     try {
       const response = await axios.get("/api/products", {
         params,
-        timeout: 1500,
+        timeout: 10000,
       });
 
       const payload = response.data || {};
@@ -261,9 +293,11 @@ export function ProductsSearchPage() {
       const normalizedProducts = backendProducts
         .filter((product) => !approvedIds.has(product.id))
         .map(normalizeBackendProduct);
+      const backendProductIds = new Set(backendProducts.map((product) => product.id));
+      const availableSellerProducts = approvedSellerProducts.filter((product) => backendProductIds.has(product.id));
 
       const fallbackSource = normalizedProducts.length > 0
-        ? [...approvedSellerProducts, ...normalizedProducts]
+        ? [...availableSellerProducts, ...normalizedProducts]
         : [...approvedSellerProducts, ...buildSampleProducts()];
       const filteredProducts = fallbackSource.filter((product) => getSampleProductMatch(
         product,
@@ -326,10 +360,6 @@ export function ProductsSearchPage() {
     setPage(1);
   }
 
-  const handleOpenProduct = (productId) => {
-    navigate(`/products/${productId}`);
-  };
-
   const handleDeleteListing = async (product) => {
     if (!window.confirm(`Delete "${product.title}"? This cannot be undone.`)) {
       return;
@@ -345,11 +375,12 @@ export function ProductsSearchPage() {
 
   const handleAddToCart = async (productId) => {
     try {
+      setCartErrorProductId("");
       await addToCart(productId, 1);
-      handleOpenProduct(productId);
+      setCartAddedProductId(productId);
     } catch (error) {
       console.error("Error adding product to cart:", error);
-      handleOpenProduct(productId);
+      setCartErrorProductId(productId);
     }
   };
 
@@ -664,8 +695,13 @@ export function ProductsSearchPage() {
                       className="add-to-cart-button"
                       onClick={() => handleAddToCart(product.id)}
                     >
-                      Add to cart
+                      {cartAddedProductId === product.id ? "Added to cart" : "Add to cart"}
                     </button>
+                    {cartErrorProductId === product.id ? (
+                      <p className="cart-error" role="alert">
+                        We could not add this item to your cart. Please try again.
+                      </p>
+                    ) : null}
                     {canDeleteListing(product.ownerEmail) ? (
                       <button
                         type="button"

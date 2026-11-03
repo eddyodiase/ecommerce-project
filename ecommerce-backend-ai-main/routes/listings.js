@@ -109,6 +109,11 @@ router.patch('/:id', async (req, res) => {
 
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
+const isAuthenticatedSeller = (req) => {
+  const authorization = String(req.get('authorization') || '');
+  return /^Bearer\s+\S+$/i.test(authorization) && Boolean(normalizeEmail(req.get('x-seller-email')));
+};
+
 // Removes every image file written by saveImage for a listing.
 const removeImages = (listingId) => {
   const safeId = listingId.replace(/[^a-zA-Z0-9-_]/g, '');
@@ -124,28 +129,60 @@ const removeImages = (listingId) => {
 // Only the seller who created a listing may edit it. Status and ownership are never changed here.
 router.put('/:id', async (req, res) => {
   const row = await Listing.findByPk(req.params.id);
-  if (!row) {
+  const product = row ? null : await Product.findByPk(req.params.id);
+  if (!row && !product) {
     return res.status(404).json({ error: 'Listing not found' });
   }
 
-  const owner = normalizeEmail(row.data?.ownerEmail);
+  const owner = normalizeEmail(row ? row.data?.ownerEmail : product.ownerEmail);
   if (!owner || owner !== normalizeEmail(req.get('x-seller-email'))) {
     return res.status(403).json({ error: 'Only the seller who listed this product can edit it' });
   }
 
   const updates = req.body || {};
-  const price = Number(updates.price);
-  if (!String(updates.productName || '').trim() || !Number.isFinite(price) || price <= 0) {
-    return res.status(400).json({ error: 'Product name and a valid price are required' });
+  if (!row) {
+    const currentDetails = product.details || {};
+    const nextDetails = {
+      ...currentDetails,
+      category: updates.category ?? currentDetails.category ?? '',
+      subcategory: updates.subcategory ?? currentDetails.subcategory ?? '',
+      condition: updates.condition ?? currentDetails.condition ?? '',
+      description: updates.description ?? currentDetails.description ?? '',
+      sellerName: updates.sellerName ?? currentDetails.sellerName ?? '',
+      originLocation: updates.originLocation ?? currentDetails.originLocation ?? '',
+      nafdacNo: updates.nafdacNo ?? currentDetails.nafdacNo ?? '',
+      phoneSpecs: updates.phoneSpecs ?? currentDetails.phoneSpecs ?? null,
+    };
+    const nextPrice = Number(updates.price ?? Number(product.priceCents || 0) / 100);
+    if (updates.productName !== undefined) {
+      product.name = String(updates.productName).trim();
+    }
+    if (!product.name || !Number.isFinite(nextPrice) || nextPrice <= 0) {
+      return res.status(400).json({ error: 'Product name and a valid price are required' });
+    }
+    product.priceCents = Math.round(nextPrice * 100);
+    product.details = nextDetails;
+    await product.save();
+    return res.json({
+      ...product.toJSON(),
+      details: product.details,
+    });
   }
 
-  row.data = {
+  const nextData = {
+    ...row.data,
     ...updates,
     id: row.id,
     ownerEmail: row.data.ownerEmail,
     createdAt: row.data.createdAt,
     status: 'pending'
   };
+  const price = Number(nextData.price);
+  if (!String(nextData.productName || '').trim() || !Number.isFinite(price) || price <= 0) {
+    return res.status(400).json({ error: 'Product name and a valid price are required' });
+  }
+
+  row.data = nextData;
   row.status = 'pending';
   await row.save();
 
@@ -159,6 +196,10 @@ router.put('/:id', async (req, res) => {
 
 // Only the logged-in seller who created a listing may delete it.
 router.delete('/:id', async (req, res) => {
+  if (!isAuthenticatedSeller(req)) {
+    return res.status(401).json({ error: 'Seller login is required to delete a listing' });
+  }
+
   const row = await Listing.findByPk(req.params.id);
   // Catalogue products without a listing record (e.g. default products) carry their own owner.
   const product = await Product.findByPk(req.params.id);

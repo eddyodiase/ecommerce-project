@@ -84,14 +84,18 @@ export const canDeleteListing = (ownerEmail) => {
 // Deletes a product the logged-in seller owns. Throws when not allowed or the backend refuses.
 export async function deleteSellerListing(listingId, ownerEmail) {
   const sellerEmail = getLoggedInSellerEmail();
+  const authToken = localStorage.getItem("authToken");
   const cached = readLocal().find((listing) => listing.id === listingId);
-  if (!sellerEmail || !canDeleteListing(ownerEmail ?? cached?.ownerEmail)) {
+  if (!authToken || !sellerEmail || !canDeleteListing(ownerEmail ?? cached?.ownerEmail)) {
     throw new Error("not-allowed");
   }
 
   try {
     await axios.delete(`/api/listings/${encodeURIComponent(listingId)}`, {
-      headers: { "x-seller-email": sellerEmail },
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "x-seller-email": sellerEmail,
+      },
     });
   } catch (error) {
     // A 404 means the backend never had it (local-only listing), so local removal is still correct.
@@ -104,6 +108,42 @@ export async function deleteSellerListing(listingId, ownerEmail) {
 }
 
 export const getCachedListing = (listingId) => readLocal().find((listing) => listing.id === listingId);
+
+export async function getEditableSellerListing(listingId) {
+  await syncSellerListings();
+  const cached = getCachedListing(listingId);
+  if (cached) {
+    return cached;
+  }
+
+  const response = await axios.get("/api/products", { timeout: 5000 });
+  const product = (Array.isArray(response.data) ? response.data : [])
+    .find((entry) => entry?.id === listingId);
+  if (!product) {
+    return null;
+  }
+
+  const details = product.details || {};
+  const listing = {
+    id: product.id,
+    productName: product.name || "",
+    category: details.category || "Vehicles",
+    subcategory: details.subcategory || "",
+    price: Number(product.priceCents || 0) / 100,
+    description: details.description || "",
+    sellerName: details.sellerName || "",
+    ownerEmail: product.ownerEmail || "",
+    condition: details.condition || "",
+    nafdacNo: details.nafdacNo || "",
+    originLocation: details.originLocation || "",
+    phoneSpecs: details.phoneSpecs || {},
+    imageUrl: product.image || "",
+    imageNames: product.image ? ["Current product image"] : [],
+    status: "approved",
+  };
+  writeLocal([listing, ...readLocal()]);
+  return listing;
+}
 
 // Updates a listing the logged-in seller owns. Throws when not allowed or the backend refuses.
 export async function updateSellerListing(listingId, updates) {
