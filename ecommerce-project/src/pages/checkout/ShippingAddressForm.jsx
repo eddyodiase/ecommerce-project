@@ -1,5 +1,6 @@
 const FIELDS = [
   { key: "fullName", label: "Full name", autoComplete: "name", required: true },
+  { key: "email", label: "Email address", autoComplete: "email", type: "email", required: true },
   { key: "phone", label: "Phone number", autoComplete: "tel", type: "tel", required: true },
   { key: "addressLine1", label: "Street address", autoComplete: "address-line1", required: true },
   { key: "addressLine2", label: "Apartment, suite, landmark (optional)", autoComplete: "address-line2" },

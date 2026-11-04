@@ -12,6 +12,7 @@ import { ProfilePage } from "./pages/profile/ProfilePage";
 import { ProductsSearchPage } from "./pages/products/ProductsSearchPage";
 import { ProductDetailPage } from "./pages/products/ProductDetailPage";
 import { SellPage } from "./pages/sell/SellPage";
+import { PaymentCallbackPage } from "./pages/payment/PaymentCallbackPage";
 import { AdminPage } from "./pages/admin/AdminPage";
 import { CartProvider } from "./context/CartContext";
 import "./App.css";
@@ -126,6 +127,7 @@ function App() {
         <Route path="sell" element={<SellPage />} />
         <Route path="sell/:listingId/edit" element={<SellPage />} />
         <Route path="admin" element={<AdminPage />} />
+        <Route path="payment/callback" element={<PaymentCallbackPage />} />
       </Routes>
     </CartProvider>
   );

@@ -247,3 +247,4 @@
   }
 }
 .order-shipping-address { padding: 8px 20px; font-size: 14px; color: rgb(80, 80, 80); }
+.order-payment-info { padding: 8px 20px; font-size: 14px; display: grid; gap: 6px; justify-items: start; }

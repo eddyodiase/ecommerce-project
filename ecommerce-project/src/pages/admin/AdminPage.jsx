@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Header } from "../../components/Header";
+import { AdminOrdersPanel } from "./AdminOrdersPanel";
 import { syncSellerListings, updateSellerListingStatus } from "../../utils/sellerListings";
 import "./AdminPage.css";
 
@@ -112,6 +113,7 @@ export function AdminPage() {
           </div>
         )}
       </main>
+      <AdminOrdersPanel />
       </div>
     </>
   );

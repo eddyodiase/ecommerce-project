@@ -8,6 +8,8 @@ import deliveryOptionRoutes from './routes/deliveryOptions.js';
 import cartItemRoutes from './routes/cartItems.js';
 import orderRoutes from './routes/orders.js';
 import resetRoutes from './routes/reset.js';
+import paymentRoutes from './routes/payments.js';
+import { expireUnpaidOrders } from './utils/orderPayments.js';
 import paymentSummaryRoutes from './routes/paymentSummary.js';
 import listingRoutes, { republishApprovedListings } from './routes/listings.js';
 import './models/Listing.js';
@@ -22,6 +24,11 @@ import { defaultOrders } from './defaultData/defaultOrders.js';
 import fs from 'fs';
 import { DataTypes } from 'sequelize';
 
+// Secrets (PAYSTACK_SECRET_KEY, ADMIN_API_KEY, bank details) come from a git-ignored .env file.
+if (fs.existsSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '.env'))) {
+  process.loadEnvFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '.env'));
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +36,15 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+// Paystack signs the exact bytes it sends, so the webhook keeps the raw body for signature checks.
+app.use(express.json({
+  limit: '50mb',
+  verify: (req, res, buf) => {
+    if (req.originalUrl.startsWith('/api/payments/paystack/webhook')) {
+      req.rawBody = buf;
+    }
+  }
+}));
 
 // Serve images from the images folder
 app.use('/images', express.static(path.join(__dirname, 'images')));
@@ -39,6 +54,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/delivery-options', deliveryOptionRoutes);
 app.use('/api/cart-items', cartItemRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/reset', resetRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/payment-summary', paymentSummaryRoutes);
@@ -89,6 +105,30 @@ if (!orderColumns.shippingAddress) {
   await sequelize.getQueryInterface().addColumn('Orders', 'shippingAddress', { type: DataTypes.JSON, allowNull: true });
 }
 
+const queryInterface = sequelize.getQueryInterface();
+const paymentColumns = {
+  status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'placed' },
+  paymentMethod: { type: DataTypes.STRING, allowNull: true },
+  paymentStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'pending' },
+  paymentReference: { type: DataTypes.STRING, allowNull: true },
+  paidAtMs: { type: DataTypes.BIGINT, allowNull: true },
+  refundedCents: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  refunds: { type: DataTypes.JSON, allowNull: true },
+  paymentLog: { type: DataTypes.JSON, allowNull: true },
+  stockReleased: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+  idempotencyKey: { type: DataTypes.STRING, allowNull: true }
+};
+const firstPaymentMigration = !orderColumns.paymentMethod;
+for (const [name, definition] of Object.entries(paymentColumns)) {
+  if (!orderColumns[name]) {
+    await queryInterface.addColumn('Orders', name, definition);
+  }
+}
+if (firstPaymentMigration) {
+  // Orders placed before payments existed are treated as already settled.
+  await sequelize.query("UPDATE Orders SET paymentMethod = 'legacy', paymentStatus = 'paid'");
+}
+
 if (typeof saveDatabaseToFile === 'function' && !process.env.RDS_HOSTNAME) {
   await saveDatabaseToFile();
 }
@@ -136,6 +176,11 @@ if (republished > 0) {
     await saveDatabaseToFile();
   }
 }
+
+// Unpaid card and transfer orders release their reserved stock after the payment window.
+const sweepUnpaidOrders = () => expireUnpaidOrders().catch((error) => console.error('Order expiry failed:', error.message));
+setInterval(sweepUnpaidOrders, 15 * 60 * 1000).unref();
+sweepUnpaidOrders();
 
 // Start server
 app.listen(PORT, () => {

@@ -2,6 +2,7 @@ export const SHIPPING_ADDRESS_STORAGE_KEY = "shippingAddress";
 
 export const EMPTY_SHIPPING_ADDRESS = {
   fullName: "",
+  email: "",
   phone: "",
   addressLine1: "",
   addressLine2: "",
@@ -19,6 +20,8 @@ export function validateShippingAddress(address) {
   const value = (key) => String(address?.[key] ?? "").trim();
 
   if (!value("fullName")) errors.fullName = "Enter your full name.";
+  if (!value("email")) errors.email = "Enter your email address.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value("email"))) errors.email = "Enter a valid email address.";
   if (!value("phone")) errors.phone = "Enter your phone number.";
   else if (!PHONE_PATTERN.test(value("phone"))) errors.phone = "Enter a valid phone number.";
   if (!value("addressLine1")) errors.addressLine1 = "Enter your street address.";

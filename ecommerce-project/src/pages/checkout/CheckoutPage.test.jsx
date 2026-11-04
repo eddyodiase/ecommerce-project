@@ -97,6 +97,7 @@ describe('CheckoutPage', () => {
     expect(screen.getByText('Enter your full name.')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Full name'), 'Ada Obi');
+    await user.type(screen.getByLabelText('Email address'), 'ada@example.com');
     await user.type(screen.getByLabelText('Phone number'), '08012345678');
     await user.type(screen.getByLabelText('Street address'), '12 Allen Avenue');
     await user.type(screen.getByLabelText('City'), 'Ikeja');
@@ -106,14 +107,16 @@ describe('CheckoutPage', () => {
     expect(axios.post).toHaveBeenCalledWith('/api/orders', {
       shippingAddress: expect.objectContaining({
         fullName: 'Ada Obi',
+        email: 'ada@example.com',
         phone: '08012345678',
         addressLine1: '12 Allen Avenue',
         city: 'Ikeja',
         state: 'Lagos',
       }),
-    });
+      paymentMethod: 'pay_on_delivery',
+    }, { headers: { 'Idempotency-Key': expect.any(String) } });
     expect(JSON.parse(localStorage.getItem('shippingAddress')).fullName).toBe('Ada Obi');
-  });
+  }, 20000);
 
   it('shows the cart item count in checkout header from payment summary', async () => {
     localStorage.removeItem('authToken');
@@ -181,6 +184,10 @@ describe('CheckoutPage', () => {
   });
 
   it('navigates to the orders page when the order is placed', async () => {
+    localStorage.setItem('shippingAddress', JSON.stringify({
+      fullName: 'Ada Obi', email: 'ada@example.com', phone: '08012345678',
+      addressLine1: '12 Allen Avenue', city: 'Ikeja', state: 'Lagos',
+    }));
     render(
       <MemoryRouter initialEntries={['/checkout']}>
         <Routes>

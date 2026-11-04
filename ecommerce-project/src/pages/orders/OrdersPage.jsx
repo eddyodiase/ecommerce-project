@@ -65,6 +65,63 @@ function OrderRow({ order, product, quantity, size, estimatedDeliveryTimeMs, onC
   );
 }
 
+const PAYMENT_STATUS_LABELS = {
+  pending: "Awaiting payment",
+  paid: "Paid",
+  failed: "Payment failed",
+  partially_refunded: "Partially refunded",
+  refunded: "Refunded",
+};
+const METHOD_NAMES = { paystack: "Card / Paystack", bank_transfer: "Bank transfer", pay_on_delivery: "Pay on delivery" };
+
+function PaymentInfo({ order }) {
+  const [bank, setBank] = useState(null);
+  const [error, setError] = useState("");
+  const awaitingPayment = order.status === "placed" && order.paymentStatus === "pending";
+
+  useEffect(() => {
+    if (!(awaitingPayment && order.paymentMethod === "bank_transfer")) return;
+    Promise.resolve()
+      .then(() => axios.get("/api/payments/methods"))
+      .then((response) => setBank(response?.data?.bank_transfer?.account || null))
+      .catch(() => {});
+  }, [awaitingPayment, order.paymentMethod]);
+
+  if (!order.paymentMethod || order.paymentMethod === "legacy") return null;
+
+  const payNow = async () => {
+    try {
+      setError("");
+      const response = await axios.post(`/api/orders/${order.id}/pay`);
+      window.location.assign(response.data.authorizationUrl);
+    } catch (err) {
+      setError(err?.response?.data?.paymentError || err?.response?.data?.error || "Could not start payment.");
+    }
+  };
+
+  const statusText = order.status === "cancelled" ? "Cancelled" : PAYMENT_STATUS_LABELS[order.paymentStatus] || order.paymentStatus;
+
+  return (
+    <div className="order-payment-info">
+      <div>
+        Payment: {METHOD_NAMES[order.paymentMethod] || order.paymentMethod} · <strong>{statusText}</strong>
+        {order.refundedCents > 0 ? ` · Refunded ${toCurrency(order.refundedCents)}` : ""}
+      </div>
+      {awaitingPayment && order.paymentMethod === "paystack" && (
+        <button type="button" className="button-primary" onClick={payNow}>Pay now</button>
+      )}
+      {awaitingPayment && order.paymentMethod === "bank_transfer" && (
+        <div>
+          Transfer {toCurrency(order.totalCostCents || 0)}
+          {bank?.accountNumber ? ` to ${bank.bankName} ${bank.accountNumber} (${bank.accountName})` : ""} using reference{" "}
+          <strong>{order.id}</strong>. We confirm your order once the transfer is received.
+        </div>
+      )}
+      {error && <div className="shipping-address-error" role="alert">{error}</div>}
+    </div>
+  );
+}
+
 function OrderCard({ order, onCartRefresh }) {
   return (
     <div className="order-container">
@@ -92,6 +149,8 @@ function OrderCard({ order, onCartRefresh }) {
           {order.shippingAddress.addressLine2 ? `, ${order.shippingAddress.addressLine2}` : ""}, {order.shippingAddress.city}, {order.shippingAddress.state} · {order.shippingAddress.phone}
         </div>
       )}
+
+      <PaymentInfo order={order} />
 
       <div className="order-details-grid">
         {order.products?.map((productEntry) => {
