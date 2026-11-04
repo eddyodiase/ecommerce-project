@@ -2,6 +2,7 @@ import express from 'express';
 import { CartItem } from '../models/CartItem.js';
 import { Product } from '../models/Product.js';
 import { DeliveryOption } from '../models/DeliveryOption.js';
+import { checkSizeAvailability, hasSizeStock } from '../utils/sizeStock.js';
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { productId, quantity } = req.body;
+  const size = typeof req.body.size === 'string' ? req.body.size.trim() : '';
 
   const product = await Product.findByPk(productId);
   if (!product) {
@@ -34,12 +36,18 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Quantity must be a number between 1 and 10' });
   }
 
-  let cartItem = await CartItem.findOne({ where: { productId } });
+  let cartItem = await CartItem.findOne({ where: { productId, size } });
+  const nextQuantity = (cartItem ? cartItem.quantity : 0) + quantity;
+  const stockError = checkSizeAvailability(product, size, nextQuantity);
+  if (stockError) {
+    return res.status(400).json({ error: stockError, requiresSize: !size && hasSizeStock(product.sizeStock) });
+  }
+
   if (cartItem) {
-    cartItem.quantity += quantity;
+    cartItem.quantity = nextQuantity;
     await cartItem.save();
   } else {
-    cartItem = await CartItem.create({ productId, quantity, deliveryOptionId: "1" });
+    cartItem = await CartItem.create({ productId, size, quantity, deliveryOptionId: "1" });
   }
 
   res.status(201).json(cartItem);
@@ -47,9 +55,10 @@ router.post('/', async (req, res) => {
 
 router.put('/:productId', async (req, res) => {
   const { productId } = req.params;
+  const size = typeof req.query.size === 'string' ? req.query.size : '';
   const { quantity, deliveryOptionId } = req.body;
 
-  const cartItem = await CartItem.findOne({ where: { productId } });
+  const cartItem = await CartItem.findOne({ where: { productId, size } });
   if (!cartItem) {
     return res.status(404).json({ error: 'Cart item not found' });
   }
@@ -57,6 +66,11 @@ router.put('/:productId', async (req, res) => {
   if (quantity !== undefined) {
     if (typeof quantity !== 'number' || quantity < 1) {
       return res.status(400).json({ error: 'Quantity must be a number greater than 0' });
+    }
+    const product = await Product.findByPk(productId);
+    const stockError = product ? checkSizeAvailability(product, size, quantity) : '';
+    if (stockError) {
+      return res.status(400).json({ error: stockError });
     }
     cartItem.quantity = quantity;
   }
@@ -75,8 +89,9 @@ router.put('/:productId', async (req, res) => {
 
 router.delete('/:productId', async (req, res) => {
   const { productId } = req.params;
+  const size = typeof req.query.size === 'string' ? req.query.size : '';
 
-  const cartItem = await CartItem.findOne({ where: { productId } });
+  const cartItem = await CartItem.findOne({ where: { productId, size } });
   if (!cartItem) {
     return res.status(404).json({ error: 'Cart item not found' });
   }

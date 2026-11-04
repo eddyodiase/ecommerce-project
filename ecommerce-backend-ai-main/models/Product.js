@@ -42,6 +42,11 @@ export const Product = sequelize.define('Product', {
     type: DataTypes.JSON,
     allowNull: true
   },
+  // Remaining stock per size, e.g. { "M": 4, "L": 0 }. Null for products that are not sold by size.
+  sizeStock: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   createdAt: {
     type: DataTypes.DATE(3)
   },

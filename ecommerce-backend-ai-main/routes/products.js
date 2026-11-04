@@ -1,5 +1,6 @@
 import express from 'express';
 import { Product } from '../models/Product.js';
+import { totalStock } from '../utils/sizeStock.js';
 
 const router = express.Router();
 
@@ -26,6 +27,20 @@ router.get('/', async (req, res) => {
   }
 
   res.json(products);
+});
+
+// Remaining stock by size, e.g. { sizeStock: { M: 4, L: 0 }, totalStock: 4 }.
+router.get('/:id/stock', async (req, res) => {
+  const product = await Product.findByPk(req.params.id);
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  res.json({
+    productId: product.id,
+    sizeStock: product.sizeStock || {},
+    totalStock: totalStock(product.sizeStock)
+  });
 });
 
 export default router;

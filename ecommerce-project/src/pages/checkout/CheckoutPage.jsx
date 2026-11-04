@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { OrderSummary } from "./orderSummary";
 import { PaymentSummary } from "./paymentSummary";
+import { ShippingAddressForm } from "./ShippingAddressForm";
+import { loadShippingAddress } from "../../utils/shippingAddress";
 import "./CheckoutHeader.css";
 import "./CheckoutPage.css";
 
@@ -20,7 +22,14 @@ export function CheckoutPage({ onCartChange }) {
     totalCostCents: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [shippingAddress, setShippingAddress] = useState(loadShippingAddress);
+  const [addressErrors, setAddressErrors] = useState({});
+  const [cartMessage, setCartMessage] = useState("");
 
+  const onAddressChange = (key, value) => {
+    setShippingAddress((current) => ({ ...current, [key]: value }));
+    setAddressErrors((current) => ({ ...current, [key]: undefined }));
+  };
   const calculateSummary = (items, options) => {
     const totalItems = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
     const productCostCents = items.reduce(
@@ -111,20 +120,24 @@ export function CheckoutPage({ onCartChange }) {
     };
   }, []);
 
-  const onQuantityChange = async (productId, quantity) => {
+  const cartItemUrl = (productId, size) =>
+    `/api/cart-items/${productId}${size ? `?size=${encodeURIComponent(size)}` : ""}`;
+
+  const onQuantityChange = async (productId, quantity, size = "") => {
     try {
-      await axios.put(`/api/cart-items/${productId}`, { quantity });
+      await axios.put(cartItemUrl(productId, size), { quantity });
       await loadCheckoutData();
       await refreshCartCount();
       onCartChange?.();
     } catch (error) {
       console.error("Error updating cart quantity:", error);
+      setCartMessage(error?.response?.data?.error || "We could not update the quantity.");
     }
   };
 
-  const onRemoveItem = async (productId) => {
+  const onRemoveItem = async (productId, size = "") => {
     try {
-      await axios.delete(`/api/cart-items/${productId}`);
+      await axios.delete(cartItemUrl(productId, size));
       await loadCheckoutData();
       await refreshCartCount();
       onCartChange?.();
@@ -133,9 +146,9 @@ export function CheckoutPage({ onCartChange }) {
     }
   };
 
-  const onDeliveryOptionChange = async (productId, deliveryOptionId) => {
+  const onDeliveryOptionChange = async (productId, deliveryOptionId, size = "") => {
     try {
-      await axios.put(`/api/cart-items/${productId}`, { deliveryOptionId });
+      await axios.put(cartItemUrl(productId, size), { deliveryOptionId });
       await loadCheckoutData();
       await refreshCartCount();
       onCartChange?.();
@@ -147,6 +160,7 @@ export function CheckoutPage({ onCartChange }) {
   return (
     <div className="checkout-page">
       <div className="page-title">Review your order</div>
+      {cartMessage && <div className="shipping-address-error" role="alert">{cartMessage}</div>}
 
       {loading ? (
         <div className="checkout-loading">Loading your cart...</div>
@@ -162,7 +176,14 @@ export function CheckoutPage({ onCartChange }) {
             onDeliveryOptionChange={onDeliveryOptionChange}
           />
 
-          <PaymentSummary paymentSummary={summary} />
+          <div>
+            <ShippingAddressForm address={shippingAddress} errors={addressErrors} onChange={onAddressChange} />
+            <PaymentSummary
+              paymentSummary={summary}
+              shippingAddress={shippingAddress}
+              onAddressInvalid={setAddressErrors}
+            />
+          </div>
         </div>
       )}
     </div>

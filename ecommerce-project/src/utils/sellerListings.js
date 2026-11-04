@@ -1,4 +1,5 @@
 import axios from "axios";
+import { classifyHomeProduct } from "./homeCatalog";
 
 export const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
 
@@ -12,6 +13,10 @@ const readLocal = () => {
     return [];
   }
 };
+
+const hasPhotos = (listing) => (
+  (Array.isArray(listing.imageDataUrls) && listing.imageDataUrls.length > 0) || Boolean(listing.imageDataUrl)
+);
 
 const stripImages = (listing) => {
   const rest = { ...listing };
@@ -46,7 +51,8 @@ export async function syncSellerListings() {
     const remoteIds = new Set(remote.map((listing) => listing.id));
     const localOnly = readLocal().filter((listing) => isListing(listing) && !remoteIds.has(listing.id));
 
-    await Promise.allSettled(localOnly.map((listing) => axios.post("/api/listings", listing)));
+    // Photo-less cached copies would create listings that can never be published.
+    await Promise.allSettled(localOnly.filter(hasPhotos).map((listing) => axios.post("/api/listings", listing)));
 
     writeLocal([...localOnly, ...remote]);
   } catch {
@@ -57,8 +63,17 @@ export async function syncSellerListings() {
 export async function submitSellerListing(listing) {
   try {
     await axios.post("/api/listings", listing);
-  } catch {
-    // Cached locally below; it is pushed to the backend on the next sync.
+  } catch (error) {
+    // A rejected listing (4xx) or one whose photos cannot be cached would be lost, so report it.
+    if (error?.response && error.response.status < 500) {
+      throw error;
+    }
+    try {
+      localStorage.setItem(SELLER_LISTINGS_STORAGE_KEY, JSON.stringify([listing, ...readLocal()]));
+    } catch {
+      throw error;
+    }
+    return;
   }
   writeLocal([listing, ...readLocal()]);
 }
@@ -127,7 +142,7 @@ export async function getEditableSellerListing(listingId) {
   const listing = {
     id: product.id,
     productName: product.name || "",
-    category: details.category || "Vehicles",
+    category: details.category || classifyHomeProduct({ name: product.name, keywords: product.keywords }).category,
     subcategory: details.subcategory || "",
     price: Number(product.priceCents || 0) / 100,
     description: details.description || "",
@@ -174,8 +189,11 @@ export async function updateSellerListingStatus(listingId, status) {
   await syncSellerListings();
   try {
     await axios.patch(`/api/listings/${encodeURIComponent(listingId)}`, { status });
-  } catch {
-    // Fall through: the local cache is still updated.
+  } catch (error) {
+    // The backend refused (e.g. approving a listing without photos): don't pretend it worked.
+    if (error?.response && error.response.status < 500) {
+      throw error;
+    }
   }
   writeLocal(readLocal().map((listing) => (listing.id === listingId ? { ...listing, status } : listing)));
 }

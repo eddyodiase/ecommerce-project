@@ -235,3 +235,10 @@
     display: grid;
   }
 }
+
+.size-stock-fieldset { border: 1px solid #d1d5db; border-radius: 12px; padding: 12px 16px; margin: 0; }
+.size-stock-fieldset legend { font-weight: 700; padding: 0 6px; }
+.size-stock-hint { margin: 0 0 10px; color: #6b7280; font-size: 0.9rem; }
+.size-stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.size-stock-item { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+.size-stock-item input { width: 100%; box-sizing: border-box; }

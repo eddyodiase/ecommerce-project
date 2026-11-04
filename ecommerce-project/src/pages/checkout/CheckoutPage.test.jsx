@@ -81,6 +81,40 @@ describe('CheckoutPage', () => {
     expect(screen.getByRole('button', { name: /place your order/i })).toBeInTheDocument();
   });
 
+  it('blocks the order until the shipping address is complete, then posts it to the backend', async () => {
+    const user = userEvent.setup();
+    localStorage.removeItem('shippingAddress');
+    axios.post.mockResolvedValue({ data: {} });
+
+    render(
+      <MemoryRouter>
+        <CheckoutPage />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: /place your order/i }));
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(screen.getByText('Enter your full name.')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Full name'), 'Ada Obi');
+    await user.type(screen.getByLabelText('Phone number'), '08012345678');
+    await user.type(screen.getByLabelText('Street address'), '12 Allen Avenue');
+    await user.type(screen.getByLabelText('City'), 'Ikeja');
+    await user.type(screen.getByLabelText('State'), 'Lagos');
+    await user.click(screen.getByRole('button', { name: /place your order/i }));
+
+    expect(axios.post).toHaveBeenCalledWith('/api/orders', {
+      shippingAddress: expect.objectContaining({
+        fullName: 'Ada Obi',
+        phone: '08012345678',
+        addressLine1: '12 Allen Avenue',
+        city: 'Ikeja',
+        state: 'Lagos',
+      }),
+    });
+    expect(JSON.parse(localStorage.getItem('shippingAddress')).fullName).toBe('Ada Obi');
+  });
+
   it('shows the cart item count in checkout header from payment summary', async () => {
     localStorage.removeItem('authToken');
 

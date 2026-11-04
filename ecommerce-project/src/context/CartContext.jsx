@@ -19,10 +19,11 @@ export function CartProvider({ children }) {
     setCartCount(nextCount);
   };
 
-  const addToCart = async (productId, amount = 1) => {
+  const addToCart = async (productId, amount = 1, size = "") => {
     await axios.post("/api/cart-items", {
       productId,
       quantity: amount,
+      ...(size ? { size } : {}),
     });
     await refreshCartCount();
   };

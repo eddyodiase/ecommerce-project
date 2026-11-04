@@ -106,6 +106,29 @@ describe('Sell flow', () => {
     ]);
   });
 
+  it('shows per-size stock inputs for Fashion subcategories and clears them on change', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByText('Sizes and stock')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^category$/i), { target: { value: 'Fashion' } });
+    expect(screen.queryByText('Sizes and stock')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^subcategory$/i), { target: { value: 'Mens Clothing' } });
+    expect(screen.getByText('Sizes and stock')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Stock for size M'), { target: { value: '5' } });
+    expect(screen.getByLabelText('Stock for size M')).toHaveValue(5);
+    expect(screen.getByLabelText('Stock for size XL')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^subcategory$/i), { target: { value: 'Men Shoes' } });
+    expect(screen.queryByLabelText('Stock for size M')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Stock for size 42')).toHaveValue(null);
+  });
+
   it('shows Men and Women choices for Fashion Accoutrements', () => {
     render(
       <MemoryRouter>

@@ -6,7 +6,7 @@ import { Header } from "../../components/Header";
 import { toCurrency } from "../../utils/money";
 import "./OrdersPage.css";
 
-function OrderRow({ order, product, quantity, estimatedDeliveryTimeMs, onCartRefresh }) {
+function OrderRow({ order, product, quantity, size, estimatedDeliveryTimeMs, onCartRefresh }) {
   const navigate = useNavigate();
 
   const handleAddToCart = async () => {
@@ -14,6 +14,7 @@ function OrderRow({ order, product, quantity, estimatedDeliveryTimeMs, onCartRef
       await axios.post("/api/cart-items", {
         productId: product.id,
         quantity,
+        ...(size ? { size } : {}),
       });
       onCartRefresh?.();
     } catch (error) {
@@ -35,6 +36,7 @@ function OrderRow({ order, product, quantity, estimatedDeliveryTimeMs, onCartRef
             : "Delivery date pending"}
         </div>
         <div className="product-quantity">Quantity: {quantity}</div>
+        {size ? <div className="product-quantity">Size: {size}</div> : null}
         <button type="button" className="buy-again-button button-primary" onClick={handleAddToCart}>
           <img className="buy-again-icon" src="/images/icons/buy-again.png" alt="buy again" />
           <span className="buy-again-message">Add to Cart</span>
@@ -84,6 +86,13 @@ function OrderCard({ order, onCartRefresh }) {
         </div>
       </div>
 
+      {order.shippingAddress && (
+        <div className="order-shipping-address">
+          Ship to: {order.shippingAddress.fullName}, {order.shippingAddress.addressLine1}
+          {order.shippingAddress.addressLine2 ? `, ${order.shippingAddress.addressLine2}` : ""}, {order.shippingAddress.city}, {order.shippingAddress.state} · {order.shippingAddress.phone}
+        </div>
+      )}
+
       <div className="order-details-grid">
         {order.products?.map((productEntry) => {
           const product = productEntry.product || {};
@@ -95,6 +104,7 @@ function OrderCard({ order, onCartRefresh }) {
               order={order}
               product={product}
               quantity={productEntry.quantity}
+              size={productEntry.size}
               estimatedDeliveryTimeMs={productEntry.estimatedDeliveryTimeMs}
               onCartRefresh={onCartRefresh}
             />

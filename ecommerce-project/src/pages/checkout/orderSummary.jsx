@@ -21,7 +21,7 @@ export function OrderSummary({
           deliveryOptions[0];
 
         return (
-          <div key={item.productId} className="cart-item-container">
+          <div key={`${item.productId}-${item.size || ""}`} className="cart-item-container">
             <div className="delivery-date">
               Delivery date: {selectedDeliveryOption
                 ? dayjs(selectedDeliveryOption.estimatedDeliveryTimeMs).format("MMM D")
@@ -31,6 +31,7 @@ export function OrderSummary({
               <img className="product-image" src={product.image} alt={productName} />
               <div className="cart-item-details">
                 <div className="product-name">{productName}</div>
+                {item.size ? <div className="product-size">Size: {item.size}</div> : null}
                 <div className="product-price">{toCurrency(product.priceCents || 0)}</div>
                 <div className="product-quantity">
                   <span>Quantity:</span>
@@ -38,7 +39,7 @@ export function OrderSummary({
                     className="quantity-selector"
                     value={item.quantity || 1}
                     onChange={(event) =>
-                      onQuantityChange(item.productId, Number(event.target.value))
+                      onQuantityChange(item.productId, Number(event.target.value), item.size || "")
                     }
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
@@ -50,7 +51,7 @@ export function OrderSummary({
                   <button
                     type="button"
                     className="delete-quantity-link"
-                    onClick={() => onRemoveItem(item.productId)}
+                    onClick={() => onRemoveItem(item.productId, item.size || "")}
                   >
                     Delete
                   </button>

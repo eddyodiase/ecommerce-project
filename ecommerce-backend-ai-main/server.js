@@ -76,6 +76,19 @@ if (!productColumns.details) {
   await sequelize.getQueryInterface().addColumn('Products', 'details', { type: DataTypes.JSON, allowNull: true });
 }
 
+if (!productColumns.sizeStock) {
+  await sequelize.getQueryInterface().addColumn('Products', 'sizeStock', { type: DataTypes.JSON, allowNull: true });
+}
+const cartColumns = await sequelize.getQueryInterface().describeTable('CartItems');
+if (!cartColumns.size) {
+  await sequelize.getQueryInterface().addColumn('CartItems', 'size', { type: DataTypes.STRING, allowNull: false, defaultValue: '' });
+}
+
+const orderColumns = await sequelize.getQueryInterface().describeTable('Orders');
+if (!orderColumns.shippingAddress) {
+  await sequelize.getQueryInterface().addColumn('Orders', 'shippingAddress', { type: DataTypes.JSON, allowNull: true });
+}
+
 if (typeof saveDatabaseToFile === 'function' && !process.env.RDS_HOSTNAME) {
   await saveDatabaseToFile();
 }

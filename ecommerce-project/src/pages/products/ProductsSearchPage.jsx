@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { classifyHomeProduct } from "../../utils/homeCatalog";
 import { formatMoney } from "../../utils/money";
+import { hasSizeStock } from "../../utils/sizes";
 import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import {
   buildSampleProducts,
@@ -119,6 +120,7 @@ const normalizeBackendProduct = (product = {}) => {
     galleryImages,
     badge: ratingValue >= 4.5 ? "Best Seller" : "",
     phoneSpecs: details.phoneSpecs || product.phoneSpecs || undefined,
+    sizeStock: product.sizeStock || details.sizeStock || undefined,
     originLocation: details.originLocation || product.originLocation || "Warehouse - NG",
   };
 };
@@ -163,7 +165,7 @@ const readApprovedSellerListings = () => {
           title: listing.productName || "Seller listing",
           subtitle: listing.description || "Seller listed product",
           brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
-          category: listing.category || "Vehicles",
+          category: listing.category || classifyHomeProduct({ name: listing.productName }).category,
           subcategory: listing.subcategory || "",
           nestedSubcategory: listing.nestedSubcategory || "",
           keywords: String(listing.productName || "").split(/\s+/).filter(Boolean),
@@ -180,6 +182,7 @@ const readApprovedSellerListings = () => {
           image: normalizedListingImages[0] || normalizeSellerListingImagePath(listing.imageDataUrl || listing.imageUrl),
           galleryImages: normalizedListingImages,
           badge: "Seller Pick",
+          sizeStock: listing.sizeStock,
           phoneSpecs: isSmartPhone
             ? {
               brand: phoneSpecs.brand || listing.sellerName || "Marketplace Seller",
@@ -697,7 +700,9 @@ export function ProductsSearchPage() {
                     <button
                       type="button"
                       className="add-to-cart-button"
-                      onClick={() => handleAddToCart(product.id)}
+                      onClick={() => (hasSizeStock(product.sizeStock)
+                        ? navigate(`/products/${product.id}`)
+                        : handleAddToCart(product.id))}
                     >
                       {cartAddedProductId === product.id ? "Added to cart" : "Add to cart"}
                     </button>

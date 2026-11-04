@@ -5,6 +5,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { formatMoney } from "../../utils/money";
 import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
+import { classifyHomeProduct } from "../../utils/homeCatalog";
+import { hasSizeStock, sortSizeEntries } from "../../utils/sizes";
 import { buildSampleProducts } from "./productCatalog";
 
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
@@ -54,7 +56,7 @@ const normalizeProduct = (product = {}) => {
     title: product.name || "Product",
     subtitle: details.description || "",
     brand: details.phoneSpecs?.brand || details.sellerName || product.brand || "NorthPeak",
-    category: details.category || product.category || "Vehicles",
+    category: details.category || product.category || classifyHomeProduct(product).category,
     subcategory: details.subcategory || "",
     condition: details.condition || "",
     nafdacNo: details.nafdacNo || "",
@@ -71,6 +73,7 @@ const normalizeProduct = (product = {}) => {
       : detailImages.map((image) => normalizeImagePath(image)).filter(Boolean),
     badge: ratingValue >= 4.5 ? "Best Seller" : "",
     phoneSpecs: product.phoneSpecs || details.phoneSpecs || undefined,
+    sizeStock: product.sizeStock || details.sizeStock || undefined,
     originLocation: details.originLocation || product.originLocation || "Warehouse - NG",
   };
 };
@@ -100,7 +103,7 @@ const readApprovedSellerListings = () => {
           title: listing.productName || "Seller listing",
           subtitle: listing.description || "Seller listed product",
           brand: listing.phoneSpecs?.brand || listing.sellerName || "Marketplace Seller",
-          category: listing.category || "Vehicles",
+          category: listing.category || classifyHomeProduct({ name: listing.productName }).category,
           subcategory: listing.subcategory || "",
           nafdacNo: listing.nafdacNo || "",
           seller: listing.sellerName || "Marketplace Seller",
@@ -116,6 +119,7 @@ const readApprovedSellerListings = () => {
           galleryImages: normalizedListingImages,
           badge: "Seller Pick",
           phoneSpecs: listing.phoneSpecs,
+          sizeStock: listing.sizeStock,
         };
       });
   } catch {
@@ -170,6 +174,8 @@ export function ProductDetailPage() {
   const [selectedRam, setSelectedRam] = useState(defaultRamOptions[1]);
   const [selectedImage, setSelectedImage] = useState(product?.image || "");
   const [showAddedToast, setShowAddedToast] = useState(false);
+  const [selectedFashionSize, setSelectedFashionSize] = useState("");
+  const [cartError, setCartError] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -183,7 +189,11 @@ export function ProductDetailPage() {
         });
 
         const payload = Array.isArray(response.data) ? response.data : response.data?.products || [];
-        const approvedSellerProducts = readApprovedSellerListings();
+        const approvedSellerProducts = readApprovedSellerListings().map((item) => {
+          // The backend product holds the live stock; cached listings can lag behind it.
+          const liveStock = payload.find((entry) => entry.id === item.id)?.sizeStock;
+          return liveStock ? { ...item, sizeStock: liveStock } : item;
+        });
         const approvedIds = new Set(approvedSellerProducts.map((item) => item.id));
         const normalizedProducts = payload.filter((item) => !approvedIds.has(item.id)).map(normalizeProduct);
         const nextCatalog = normalizedProducts.length > 0
@@ -211,6 +221,9 @@ export function ProductDetailPage() {
   if (selectionProductId !== product?.id) {
     setSelectionProductId(product?.id);
     setSelectedImage(product?.image || "");
+    setSelectedFashionSize("");
+    setCartError("");
+    setQuantity(1);
     const storageChoices = Array.isArray(product?.phoneSpecs?.storageOptionsGb) && product.phoneSpecs.storageOptionsGb.length > 0
       ? product.phoneSpecs.storageOptionsGb
       : sizeOptions.map((option) => Number(String(option).replace(/[^0-9]/g, ""))).filter((value) => Number.isFinite(value));
@@ -239,8 +252,23 @@ export function ProductDetailPage() {
       return;
     }
 
-    await addToCart(product.id, quantity);
-    setShowAddedToast(true);
+    const needsSize = hasSizeStock(product.sizeStock);
+    if (needsSize && !selectedFashionSize) {
+      setCartError("Please select a size.");
+      return;
+    }
+
+    try {
+      setCartError("");
+      if (needsSize) {
+        await addToCart(product.id, quantity, selectedFashionSize);
+      } else {
+        await addToCart(product.id, quantity);
+      }
+      setShowAddedToast(true);
+    } catch (error) {
+      setCartError(error?.response?.data?.error || "We could not add this item to your cart.");
+    }
   };
 
   const handleDeleteListing = async () => {
@@ -356,6 +384,10 @@ export function ProductDetailPage() {
       ? product.phoneSpecs.ramOptionsGb
       : defaultRamOptions)
     : [];
+
+  const sizeEntries = sortSizeEntries(product.sizeStock, product.category, product.subcategory);
+  const selectedSizeStock = Number(product.sizeStock?.[selectedFashionSize]) || 0;
+  const maxQuantity = selectedFashionSize ? Math.max(1, Math.min(10, selectedSizeStock)) : 10;
 
   return (
     <main style={{ maxWidth: "1280px", margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
@@ -511,14 +543,69 @@ export function ProductDetailPage() {
             </>
           ) : null}
 
+          {sizeEntries.length > 0 ? (
+            <div style={{ marginBottom: "1.25rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+                <strong>Select size</strong>
+                <span style={{ color: "#6b7280" }}>
+                  {selectedFashionSize
+                    ? `${selectedFashionSize} · ${selectedSizeStock} in stock`
+                    : "Choose a size"}
+                </span>
+              </div>
+              <div role="radiogroup" aria-label="Select size" style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+                {sizeEntries.map(([size, stock]) => {
+                  const soldOut = Number(stock) <= 0;
+                  const isSelected = selectedFashionSize === size;
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      disabled={soldOut}
+                      title={soldOut ? "Out of stock" : `${stock} left`}
+                      onClick={() => {
+                        setSelectedFashionSize(size);
+                        setQuantity(1);
+                        setCartError("");
+                      }}
+                      style={{
+                        padding: "0.65rem 0.9rem",
+                        minWidth: "56px",
+                        borderRadius: "10px",
+                        border: isSelected ? "1px solid #111827" : "1px solid #d1d5db",
+                        background: isSelected ? "#111827" : "#fff",
+                        color: isSelected ? "#fff" : "#111827",
+                        fontWeight: 700,
+                        cursor: soldOut ? "not-allowed" : "pointer",
+                        opacity: soldOut ? 0.4 : 1,
+                        textDecoration: soldOut ? "line-through" : "none",
+                      }}
+                    >
+                      {size}
+                      <span style={{ display: "block", fontSize: "0.7rem", fontWeight: 500 }}>
+                        {soldOut ? "Out of stock" : Number(stock) <= 5 ? `Only ${stock} left` : `${stock} in stock`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
             <span style={{ fontWeight: 600 }}>Quantity</span>
             <div style={{ display: "inline-flex", border: "1px solid #d1d5db", borderRadius: "10px", overflow: "hidden" }}>
               <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} style={{ width: "38px", height: "38px", border: "none", background: "#f3f4f6", cursor: "pointer", fontSize: "1.2rem" }}>−</button>
               <span style={{ width: "42px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{quantity}</span>
-              <button type="button" onClick={() => setQuantity((value) => value + 1)} style={{ width: "38px", height: "38px", border: "none", background: "#f3f4f6", cursor: "pointer", fontSize: "1.2rem" }}>+</button>
+              <button type="button" onClick={() => setQuantity((value) => Math.min(maxQuantity, value + 1))} style={{ width: "38px", height: "38px", border: "none", background: "#f3f4f6", cursor: "pointer", fontSize: "1.2rem" }}>+</button>
             </div>
           </div>
+
+          {cartError ? (
+            <div role="alert" style={{ color: "#b91c1c", marginBottom: "0.9rem", fontWeight: 600 }}>{cartError}</div>
+          ) : null}
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.65rem", marginBottom: "1.25rem" }}>
             <button

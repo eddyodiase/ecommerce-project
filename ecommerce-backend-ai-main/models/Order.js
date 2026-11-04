@@ -19,6 +19,10 @@ export const Order = sequelize.define('Order', {
     type: DataTypes.JSON,
     allowNull: false
   },
+  shippingAddress: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   createdAt: {
     type: DataTypes.DATE(3)
   },

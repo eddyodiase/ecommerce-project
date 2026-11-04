@@ -15,7 +15,7 @@ const BACKEND_CATEGORY_KEYWORDS = {
 export const inferCategoryFromKeywords = (keywords = []) => {
   const normalizedKeywords = keywords.map((keyword) => String(keyword || "").toLowerCase());
   for (const [category, terms] of Object.entries(BACKEND_CATEGORY_KEYWORDS)) {
-    const matchesCategory = category === "Vehicles"
+    const matchesCategory = category === "Vehicle"
       ? normalizedKeywords.some((keyword) => /\b(vehicle|sedan|suv|truck|bus|pickup|van|automobile|car)\b/.test(keyword))
       : terms.some((term) => normalizedKeywords.some((keyword) => keyword.includes(term)));
 

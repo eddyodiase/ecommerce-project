@@ -14,6 +14,12 @@ export const CartItem = sequelize.define('CartItem', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+  // Selected size for products sold by size; '' otherwise. A product can appear once per size.
+  size: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: ''
+  },
   deliveryOptionId: {
     type: DataTypes.STRING,
     allowNull: false,

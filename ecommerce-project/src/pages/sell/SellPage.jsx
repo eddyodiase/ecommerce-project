@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { classifyHomeProduct } from "../../utils/homeCatalog";
+import { getSizeOptions, isFashionCategory, toSizeStock } from "../../utils/sizes";
 
 import {
   NESTED_SUBCATEGORIES_BY_CATEGORY,
@@ -28,7 +30,7 @@ const listingToFormData = (listing) => {
 
   return {
     productName: listing.productName || "",
-    category: listing.category || "Vehicles",
+    category: listing.category || classifyHomeProduct({ name: listing.productName }).category,
     subcategory: hasNested ? baseSubcategory : listing.subcategory || "",
     nestedSubcategory: hasNested ? nested : "",
     nafdacNo: listing.nafdacNo || "",
@@ -42,7 +44,8 @@ const listingToFormData = (listing) => {
     storageOptionsGb: (specs.storageOptionsGb || []).join(", "),
     os: specs.os || "",
     batteryMah: specs.batteryMah ? String(specs.batteryMah) : "",
-    cameraMp: specs.cameraMp ? String(specs.cameraMp) : "",
+    cameraMp: listing.phoneSpecs?.cameraMp ? String(listing.phoneSpecs.cameraMp) : "",
+    sizeQuantities: { ...(listing.sizeStock || {}) },
   };
 };
 
@@ -68,6 +71,7 @@ export function SellPage() {
     os: "",
     batteryMah: "",
     cameraMp: "",
+    sizeQuantities: {},
   });
   const [uploadedImages, setUploadedImages] = useState([]);
   const [draggedImageIndex, setDraggedImageIndex] = useState(null);
@@ -114,10 +118,21 @@ export function SellPage() {
     setFormData((current) => ({
       ...current,
       [name]: value,
-      ...(name === "category" ? { subcategory: "", nestedSubcategory: "", nafdacNo: "" } : {}),
-      ...(name === "subcategory" ? { nestedSubcategory: "" } : {}),
+      ...(name === "category" ? { subcategory: "", nestedSubcategory: "", nafdacNo: "", sizeQuantities: {} } : {}),
+      ...(name === "subcategory" ? { nestedSubcategory: "", sizeQuantities: {} } : {}),
     }));
   };
+
+  const handleSizeQuantityChange = (size, value) => {
+    setFormData((current) => ({
+      ...current,
+      sizeQuantities: { ...current.sizeQuantities, [size]: value },
+    }));
+    setSubmitError("");
+  };
+
+  const sizeOptions = getSizeOptions(formData.category, formData.subcategory);
+  const sizeStock = toSizeStock(formData.sizeQuantities);
 
   const isSmartPhoneCategory = formData.category === "Smart Phones";
   const requiresNafdacNo = ["Food", "Beauty"].includes(formData.category);
@@ -193,6 +208,11 @@ export function SellPage() {
       return;
     }
 
+    if (isFashionCategory(formData.category) && Object.keys(sizeStock).length === 0) {
+      setSubmitError("Please enter the stock quantity for at least one size.");
+      return;
+    }
+
     if (!isEditing && uploadedImages.length === 0) {
       setSubmitError("Please upload at least one product photo before publishing your listing.");
       return;
@@ -216,6 +236,7 @@ export function SellPage() {
             ? formData.subcategory
             : "",
         price: Number(formData.price),
+        sizeStock: isFashionCategory(formData.category) ? sizeStock : undefined,
         description: formData.description.trim(),
         sellerName: formData.sellerName.trim(),
         ownerEmail: getLoggedInSellerEmail() || undefined,
@@ -386,6 +407,30 @@ export function SellPage() {
                 ))}
               </select>
             </label>
+
+            {sizeOptions.length > 0 ? (
+              <fieldset className="size-stock-fieldset">
+                <legend>Sizes and stock</legend>
+                <p className="size-stock-hint">Enter how many you have for each size you sell. Leave blank for sizes you don't offer.</p>
+                <div className="size-stock-grid">
+                  {sizeOptions.map((size) => (
+                    <label key={size} className="size-stock-item">
+                      <span>{size}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputMode="numeric"
+                        aria-label={`Stock for size ${size}`}
+                        value={formData.sizeQuantities[size] ?? ""}
+                        onChange={(event) => handleSizeQuantityChange(size, event.target.value)}
+                        placeholder="0"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ) : null}
 
             {requiresNafdacNo ? (
               <label>

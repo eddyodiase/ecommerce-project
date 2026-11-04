@@ -6,6 +6,7 @@ import { Listing } from '../models/Listing.js';
 import { Product } from '../models/Product.js';
 import { CartItem } from '../models/CartItem.js';
 import { defaultProducts } from '../defaultData/defaultProducts.js';
+import { hasSizeStock, normalizeSizeStock, totalStock } from '../utils/sizeStock.js';
 
 const router = express.Router();
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
@@ -32,7 +33,24 @@ const saveImage = (listingId, dataUrl, index = 0) => {
   return `images/products/${fileName}`;
 };
 
+const hasPhotos = (data) => (
+  (Array.isArray(data?.imageDataUrls) && data.imageDataUrls.length > 0) || Boolean(data?.imageDataUrl)
+);
+
+// Cleans data.sizeStock in place. Fashion listings must offer at least one size with stock.
+const prepareSizeStock = (data) => {
+  data.sizeStock = normalizeSizeStock(data.sizeStock);
+  if (data.category === 'Fashion' && totalStock(data.sizeStock) <= 0) {
+    return 'Fashion listings need at least one size with stock available';
+  }
+  if (!hasSizeStock(data.sizeStock)) {
+    delete data.sizeStock;
+  }
+  return '';
+};
+
 // Approved listings become real catalogue products (same id as the listing).
+// Returns true when the product is live afterwards, false when it could not be published (no photos).
 const publishProduct = async (row) => {
   const data = row.data || {};
   const dataUrls = Array.isArray(data.imageDataUrls) && data.imageDataUrls.length
@@ -48,8 +66,11 @@ const publishProduct = async (row) => {
     ? savedImages
     : (Array.isArray(data.existingImages) && data.existingImages.length ? data.existingImages : defaultImages);
   const image = galleryImages[0];
-  if (!image || await Product.findByPk(row.id)) {
-    return;
+  if (await Product.findByPk(row.id)) {
+    return true;
+  }
+  if (!image) {
+    return false;
   }
 
   const keywords = [data.category, data.subcategory, data.sellerName, ...String(data.productName || '').split(/\s+/)]
@@ -63,6 +84,7 @@ const publishProduct = async (row) => {
     rating: { stars: 0, count: 0 },
     priceCents: Math.round(Number(data.price || 0) * 100),
     ownerEmail: data.ownerEmail || null,
+    sizeStock: hasSizeStock(data.sizeStock) ? normalizeSizeStock(data.sizeStock) : null,
     keywords,
     details: {
       category: data.category || '',
@@ -76,6 +98,7 @@ const publishProduct = async (row) => {
       galleryImages
     }
   });
+  return true;
 };
 
 router.get('/', async (req, res) => {
@@ -87,6 +110,15 @@ router.post('/', async (req, res) => {
   const listing = req.body;
   if (!listing || typeof listing.id !== 'string' || !listing.id) {
     return res.status(400).json({ error: 'Listing id is required' });
+  }
+
+  if (!hasPhotos(listing)) {
+    return res.status(400).json({ error: 'At least one product photo is required' });
+  }
+
+  const sizeError = prepareSizeStock(listing);
+  if (sizeError) {
+    return res.status(400).json({ error: sizeError });
   }
 
   const status = VALID_STATUSES.includes(listing.status) ? listing.status : 'pending';
@@ -106,12 +138,13 @@ router.patch('/:id', async (req, res) => {
     return res.status(404).json({ error: 'Listing not found' });
   }
 
+  // A listing is only approved once its product is live, so it can never be approved yet missing from the store.
+  if (status === 'approved' && !(await publishProduct(row))) {
+    return res.status(422).json({ error: 'This listing has no photos, so it cannot be approved. Ask the seller to relist it with photos.' });
+  }
+
   row.status = status;
   await row.save();
-
-  if (status === 'approved') {
-    await publishProduct(row);
-  }
 
   res.json(toListing(row));
 });
@@ -171,6 +204,13 @@ router.put('/:id', async (req, res) => {
     }
     product.priceCents = Math.round(nextPrice * 100);
     product.details = nextDetails;
+    if (updates.sizeStock !== undefined) {
+      const nextSizeStock = normalizeSizeStock(updates.sizeStock);
+      if (nextDetails.category === 'Fashion' && totalStock(nextSizeStock) <= 0) {
+        return res.status(400).json({ error: 'Fashion listings need at least one size with stock available' });
+      }
+      product.sizeStock = hasSizeStock(nextSizeStock) ? nextSizeStock : null;
+    }
     await product.save();
     return res.json({
       ...product.toJSON(),
@@ -190,7 +230,10 @@ router.put('/:id', async (req, res) => {
   if (!String(nextData.productName || '').trim() || !Number.isFinite(price) || price <= 0) {
     return res.status(400).json({ error: 'Product name and a valid price are required' });
   }
-
+  const sizeError = prepareSizeStock(nextData);
+  if (sizeError) {
+    return res.status(400).json({ error: sizeError });
+  }
   const hasNewImages = (Array.isArray(nextData.imageDataUrls) && nextData.imageDataUrls.length > 0)
     || Boolean(nextData.imageDataUrl);
   const published = await Product.findByPk(row.id);

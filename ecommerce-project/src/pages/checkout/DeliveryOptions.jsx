@@ -15,9 +15,9 @@ export function DeliveryOptions({
           <input
             className="delivery-option-input"
             type="radio"
-            name={`delivery-option-${item.productId}`}
+            name={`delivery-option-${item.productId}-${item.size || ""}`}
             checked={selectedDeliveryOption?.id === option.id}
-            onChange={() => onDeliveryOptionChange(item.productId, option.id)}
+            onChange={() => onDeliveryOptionChange(item.productId, option.id, item.size || "")}
           />
           <div>
             <div className="delivery-option-date">
