@@ -10,17 +10,26 @@ const SIZES_BY_SUBCATEGORY = {
   "Women Shoes": SHOE_SIZES,
   "kids Fashion": KIDS_SIZES,
   Accoutrements: ACCESSORY_SIZES,
+  "Sports - Shoes": SHOE_SIZES,
+  "Sports - Apparels": CLOTHING_SIZES,
 };
 
 export const isFashionCategory = (category) => String(category || "").trim().toLowerCase() === "fashion";
 
-// Listing subcategories can look like "Accoutrements - Men"; sizes depend on the base subcategory.
-export const getSizeOptions = (category, subcategory) => {
+export const isQuantityOnlyFashionProduct = (category, subcategory) => (
+  isFashionCategory(category)
+  && String(subcategory || "").trim().toLowerCase() === "sports - sports goods"
+);
+
+// Listing subcategories can include a nested choice, such as "Sports - Shoes".
+export const getSizeOptions = (category, subcategory, nestedSubcategory = "") => {
   if (!isFashionCategory(category)) {
     return [];
   }
-  const base = String(subcategory || "").split(" - ")[0];
-  return SIZES_BY_SUBCATEGORY[base] || [];
+  const [base, embeddedNested] = String(subcategory || "").split(" - ");
+  const nested = nestedSubcategory || embeddedNested || "";
+  const key = nested ? `${base} - ${nested}` : base;
+  return SIZES_BY_SUBCATEGORY[key] || SIZES_BY_SUBCATEGORY[base] || [];
 };
 
 /** Keeps only sizes with a whole, positive quantity, as { size: quantity }. */

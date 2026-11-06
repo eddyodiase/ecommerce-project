@@ -4,7 +4,7 @@ import { Product } from '../models/Product.js';
 import { DeliveryOption } from '../models/DeliveryOption.js';
 import { CartItem } from '../models/CartItem.js';
 import { Listing } from '../models/Listing.js';
-import { checkSizeAvailability, hasSizeStock } from '../utils/sizeStock.js';
+import { checkSizeAvailability, hasSizeStock, isQuantityOnlyProduct } from '../utils/sizeStock.js';
 import { PAYMENT_METHODS, availableMethods, requireAdmin } from '../utils/payments.js';
 import {
   cancelUnpaidOrder,
@@ -80,18 +80,18 @@ const parseShippingAddress = (input) => {
 // seller's listing, so editing a listing later starts from the real remaining stock.
 const decrementStock = async (cartItems) => {
   for (const item of cartItems) {
-    if (!item.size) {
-      continue;
-    }
-
     const product = await Product.findByPk(item.productId);
     if (!product || !hasSizeStock(product.sizeStock)) {
+      continue;
+    }
+    const stockKey = item.size || (isQuantityOnlyProduct(product) ? 'Stock' : '');
+    if (!stockKey) {
       continue;
     }
 
     const nextStock = {
       ...product.sizeStock,
-      [item.size]: Math.max(0, (Number(product.sizeStock[item.size]) || 0) - item.quantity)
+      [stockKey]: Math.max(0, (Number(product.sizeStock[stockKey]) || 0) - item.quantity)
     };
     product.sizeStock = nextStock;
     await product.save();

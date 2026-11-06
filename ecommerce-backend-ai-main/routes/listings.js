@@ -6,7 +6,12 @@ import { Listing } from '../models/Listing.js';
 import { Product } from '../models/Product.js';
 import { CartItem } from '../models/CartItem.js';
 import { defaultProducts } from '../defaultData/defaultProducts.js';
-import { hasSizeStock, normalizeSizeStock, totalStock } from '../utils/sizeStock.js';
+import {
+  hasSizeStock,
+  isQuantityOnlyProduct,
+  normalizeSizeStock,
+  totalStock,
+} from '../utils/sizeStock.js';
 
 const router = express.Router();
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
@@ -41,7 +46,9 @@ const hasPhotos = (data) => (
 const prepareSizeStock = (data) => {
   data.sizeStock = normalizeSizeStock(data.sizeStock);
   if (data.category === 'Fashion' && totalStock(data.sizeStock) <= 0) {
-    return 'Fashion listings need at least one size with stock available';
+    return isQuantityOnlyProduct(data)
+      ? 'Sports Goods listings need a positive available quantity'
+      : 'Fashion listings need at least one size with stock available';
   }
   if (!hasSizeStock(data.sizeStock)) {
     delete data.sizeStock;
@@ -207,7 +214,12 @@ router.put('/:id', async (req, res) => {
     if (updates.sizeStock !== undefined) {
       const nextSizeStock = normalizeSizeStock(updates.sizeStock);
       if (nextDetails.category === 'Fashion' && totalStock(nextSizeStock) <= 0) {
-        return res.status(400).json({ error: 'Fashion listings need at least one size with stock available' });
+        const quantityOnlyProduct = isQuantityOnlyProduct({ details: nextDetails });
+        return res.status(400).json({
+          error: quantityOnlyProduct
+            ? 'Sports Goods listings need a positive available quantity'
+            : 'Fashion listings need at least one size with stock available'
+        });
       }
       product.sizeStock = hasSizeStock(nextSizeStock) ? nextSizeStock : null;
     }

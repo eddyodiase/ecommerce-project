@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
@@ -143,5 +143,37 @@ describe('ProductDetailPage', () => {
     expect(screen.getByText(/storage size/i)).toBeInTheDocument();
     expect(screen.getByText(/ram/i)).toBeInTheDocument();
     expect(screen.getByText(/phone specifications/i)).toBeInTheDocument();
+  });
+
+  it('shows a stock-limited quantity selector without a size selector for Sports Goods', async () => {
+    const product = {
+      id: 'sports-goods-1',
+      name: 'Training Cones',
+      image: '/images/products/training-cones.jpg',
+      priceCents: 5000,
+      rating: { stars: 4, count: 10 },
+      details: { category: 'Fashion', subcategory: 'Sports - Sports Goods' },
+      sizeStock: { Stock: 2 },
+    };
+
+    const { default: axios } = await import('axios');
+    const spy = vi.spyOn(axios, 'get').mockResolvedValue({ data: [product] });
+
+    render(
+      <MemoryRouter initialEntries={['/products/sports-goods-1']}>
+        <Routes>
+          <Route path="/products/:productId" element={<ProductDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByRole('heading', { name: /training cones/i });
+    expect(screen.queryByRole('radiogroup', { name: /select size/i })).not.toBeInTheDocument();
+    expect(screen.getByText('2 available')).toBeInTheDocument();
+    const increaseButton = screen.getByRole('button', { name: /increase quantity/i });
+    expect(increaseButton).toBeEnabled();
+    fireEvent.click(increaseButton);
+    expect(increaseButton).toBeDisabled();
+    spy.mockRestore();
   });
 });

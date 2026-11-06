@@ -41,11 +41,13 @@ export const SUBCATEGORIES_BY_CATEGORY = {
     "Women Shoes",
     "kids Fashion",
     "Accoutrements",
+    "Sports",
   ],
 };
 
 export const NESTED_SUBCATEGORIES_BY_CATEGORY = {
   Fashion: {
     Accoutrements: ["Men", "Women"],
+    Sports: ["Shoes", "Apparels", "Sports Goods"],
   },
 };

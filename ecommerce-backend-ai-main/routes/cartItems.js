@@ -2,7 +2,7 @@ import express from 'express';
 import { CartItem } from '../models/CartItem.js';
 import { Product } from '../models/Product.js';
 import { DeliveryOption } from '../models/DeliveryOption.js';
-import { checkSizeAvailability, hasSizeStock } from '../utils/sizeStock.js';
+import { checkSizeAvailability, hasSizeStock, isQuantityOnlyProduct } from '../utils/sizeStock.js';
 
 const router = express.Router();
 
@@ -40,7 +40,10 @@ router.post('/', async (req, res) => {
   const nextQuantity = (cartItem ? cartItem.quantity : 0) + quantity;
   const stockError = checkSizeAvailability(product, size, nextQuantity);
   if (stockError) {
-    return res.status(400).json({ error: stockError, requiresSize: !size && hasSizeStock(product.sizeStock) });
+    return res.status(400).json({
+      error: stockError,
+      requiresSize: !size && hasSizeStock(product.sizeStock) && !isQuantityOnlyProduct(product)
+    });
   }
 
   if (cartItem) {

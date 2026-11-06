@@ -25,11 +25,28 @@ export const totalStock = (sizeStock) => (
   hasSizeStock(sizeStock) ? Object.values(sizeStock).reduce((sum, quantity) => sum + Number(quantity || 0), 0) : null
 );
 
+export const isQuantityOnlyProduct = (product) => {
+  const category = product?.details?.category || product?.category;
+  const subcategory = product?.details?.subcategory || product?.subcategory;
+  return String(category || '').trim().toLowerCase() === 'fashion'
+    && String(subcategory || '').trim().toLowerCase() === 'sports - sports goods';
+};
+
 // Returns an error message when `quantity` of `size` cannot be supplied, otherwise ''.
 export const checkSizeAvailability = (product, size, quantity) => {
   const sizeStock = product.sizeStock;
   if (!hasSizeStock(sizeStock)) {
     return '';
+  }
+  if (isQuantityOnlyProduct(product)) {
+    const available = Number(sizeStock.Stock) || 0;
+    if (size) {
+      return 'This item does not have size options';
+    }
+    if (available <= 0) {
+      return 'This item is out of stock';
+    }
+    return quantity > available ? `Only ${available} left in stock` : '';
   }
   if (!size) {
     return 'Please select a size';

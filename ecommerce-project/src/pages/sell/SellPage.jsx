@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { classifyHomeProduct } from "../../utils/homeCatalog";
-import { getSizeOptions, isFashionCategory, toSizeStock } from "../../utils/sizes";
+import {
+  getSizeOptions,
+  isFashionCategory,
+  isQuantityOnlyFashionProduct,
+  toSizeStock,
+} from "../../utils/sizes";
 
 import {
   NESTED_SUBCATEGORIES_BY_CATEGORY,
@@ -46,6 +51,7 @@ const listingToFormData = (listing) => {
     batteryMah: specs.batteryMah ? String(specs.batteryMah) : "",
     cameraMp: listing.phoneSpecs?.cameraMp ? String(listing.phoneSpecs.cameraMp) : "",
     sizeQuantities: { ...(listing.sizeStock || {}) },
+    stockQuantity: listing.sizeStock?.Stock != null ? String(listing.sizeStock.Stock) : "",
   };
 };
 
@@ -118,8 +124,9 @@ export function SellPage() {
     setFormData((current) => ({
       ...current,
       [name]: value,
-      ...(name === "category" ? { subcategory: "", nestedSubcategory: "", nafdacNo: "", sizeQuantities: {} } : {}),
-      ...(name === "subcategory" ? { nestedSubcategory: "", sizeQuantities: {} } : {}),
+      ...(name === "category" ? { subcategory: "", nestedSubcategory: "", nafdacNo: "", sizeQuantities: {}, stockQuantity: "" } : {}),
+      ...(name === "subcategory" ? { nestedSubcategory: "", sizeQuantities: {}, stockQuantity: "" } : {}),
+      ...(name === "nestedSubcategory" ? { sizeQuantities: {}, stockQuantity: "" } : {}),
     }));
   };
 
@@ -131,8 +138,14 @@ export function SellPage() {
     setSubmitError("");
   };
 
-  const sizeOptions = getSizeOptions(formData.category, formData.subcategory);
-  const sizeStock = toSizeStock(formData.sizeQuantities);
+  const isQuantityOnlyFashion = isQuantityOnlyFashionProduct(
+    formData.category,
+    `${formData.subcategory} - ${formData.nestedSubcategory}`
+  );
+  const sizeOptions = getSizeOptions(formData.category, formData.subcategory, formData.nestedSubcategory);
+  const sizeStock = isQuantityOnlyFashion
+    ? toSizeStock({ Stock: formData.stockQuantity })
+    : toSizeStock(formData.sizeQuantities);
 
   const isSmartPhoneCategory = formData.category === "Smart Phones";
   const requiresNafdacNo = ["Food", "Beauty"].includes(formData.category);
@@ -209,7 +222,9 @@ export function SellPage() {
     }
 
     if (isFashionCategory(formData.category) && Object.keys(sizeStock).length === 0) {
-      setSubmitError("Please enter the stock quantity for at least one size.");
+      setSubmitError(isQuantityOnlyFashion
+        ? "Please enter the available quantity for this product."
+        : "Please enter the stock quantity for at least one size.");
       return;
     }
 
@@ -364,14 +379,16 @@ export function SellPage() {
 
               {nestedSubcategoryOptions.length > 0 ? (
                 <label>
-                  Accoutrements audience
+                  {formData.subcategory === "Accoutrements" ? "Accoutrements audience" : `${formData.subcategory} subcategory`}
                   <select
                     name="nestedSubcategory"
                     value={formData.nestedSubcategory}
                     onChange={handleChange}
                     required={!isEditing}
                   >
-                    <option value="" disabled>Select an audience</option>
+                    <option value="" disabled>
+                      {formData.subcategory === "Accoutrements" ? "Select an audience" : "Select a subcategory"}
+                    </option>
                     {nestedSubcategoryOptions.map((subcategory) => (
                       <option key={subcategory} value={subcategory}>
                         {subcategory}
@@ -430,6 +447,23 @@ export function SellPage() {
                   ))}
                 </div>
               </fieldset>
+            ) : null}
+
+            {isQuantityOnlyFashion ? (
+              <label>
+                Available quantity
+                <input
+                  name="stockQuantity"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  aria-label="Available quantity"
+                  value={formData.stockQuantity}
+                  onChange={handleChange}
+                  placeholder="0"
+                />
+              </label>
             ) : null}
 
             {requiresNafdacNo ? (

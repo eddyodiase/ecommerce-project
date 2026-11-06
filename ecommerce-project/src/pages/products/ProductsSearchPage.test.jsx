@@ -8,7 +8,7 @@ import {
 import { buildSampleProducts, inferCategoryFromKeywords, matchesCategoryFilter, sortProducts } from "./productCatalog";
 
 describe("ProductsSearchPage sample data", () => {
-  it("includes Fashion subcategories and nested Accoutrements audiences", () => {
+  it("includes Fashion subcategories and nested Accoutrements and Sports options", () => {
     expect(SUBCATEGORIES_BY_CATEGORY.Fashion).toEqual([
       "Mens Clothing",
       "Women Clothing",
@@ -16,8 +16,10 @@ describe("ProductsSearchPage sample data", () => {
       "Women Shoes",
       "kids Fashion",
       "Accoutrements",
+      "Sports",
     ]);
     expect(NESTED_SUBCATEGORIES_BY_CATEGORY.Fashion.Accoutrements).toEqual(["Men", "Women"]);
+    expect(NESTED_SUBCATEGORIES_BY_CATEGORY.Fashion.Sports).toEqual(["Shoes", "Apparels", "Sports Goods"]);
   });
 
   it("replaces Home with Vehicles and provides its vehicle subcategories", () => {

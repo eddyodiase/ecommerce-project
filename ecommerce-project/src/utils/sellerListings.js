@@ -152,6 +152,7 @@ export async function getEditableSellerListing(listingId) {
     nafdacNo: details.nafdacNo || "",
     originLocation: details.originLocation || "",
     phoneSpecs: details.phoneSpecs || {},
+    sizeStock: product.sizeStock || {},
     imageUrl: product.image || "",
     imageNames: product.image ? ["Current product image"] : [],
     status: "approved",

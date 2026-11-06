@@ -146,6 +146,48 @@ describe('Sell flow', () => {
     expect(screen.getByLabelText(/accoutrements audience/i).options).toHaveLength(3);
   });
 
+  it('shows nested subcategories for Fashion Sports', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^category$/i), { target: { value: 'Fashion' } });
+    fireEvent.change(screen.getByLabelText(/^subcategory$/i), { target: { value: 'Sports' } });
+
+    const nestedSubcategorySelect = screen.getByLabelText(/sports subcategory/i);
+    expect(nestedSubcategorySelect).toBeRequired();
+    expect(Array.from(nestedSubcategorySelect.options).map((option) => option.textContent)).toEqual([
+      'Select a subcategory',
+      'Shoes',
+      'Apparels',
+      'Sports Goods',
+    ]);
+  });
+
+  it('uses size stock for Sports Shoes and Apparels, and a quantity field for Sports Goods', () => {
+    render(
+      <MemoryRouter>
+        <SellPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^category$/i), { target: { value: 'Fashion' } });
+    fireEvent.change(screen.getByLabelText(/^subcategory$/i), { target: { value: 'Sports' } });
+    fireEvent.change(screen.getByLabelText(/sports subcategory/i), { target: { value: 'Shoes' } });
+    expect(screen.getByLabelText('Stock for size 42')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Stock for size M')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/sports subcategory/i), { target: { value: 'Apparels' } });
+    expect(screen.getByLabelText('Stock for size M')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Stock for size 42')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/sports subcategory/i), { target: { value: 'Sports Goods' } });
+    expect(screen.queryByText('Sizes and stock')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Available quantity')).toBeInTheDocument();
+  });
+
   it('requires a NAFDAC No for Food and Beauty listings only', () => {
     render(
       <MemoryRouter>

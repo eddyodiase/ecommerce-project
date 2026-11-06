@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getSizeOptions, hasSizeStock, sortSizeEntries, toSizeStock } from "./sizes";
+import {
+  getSizeOptions,
+  hasSizeStock,
+  isQuantityOnlyFashionProduct,
+  sortSizeEntries,
+  toSizeStock,
+} from "./sizes";
 
 describe("sizes", () => {
   it("offers clothing, shoe, kids and accessory sizes for Fashion only", () => {
@@ -15,6 +21,14 @@ describe("sizes", () => {
     expect(toSizeStock({ S: "3", M: "", L: "0", XL: "2.5", XXL: 4 })).toEqual({ S: 3, XXL: 4 });
     expect(hasSizeStock({})).toBe(false);
     expect(hasSizeStock({ S: 1 })).toBe(true);
+  });
+
+  it("uses shoe and apparel sizes for nested Fashion Sports listings", () => {
+    expect(getSizeOptions("Fashion", "Sports", "Shoes")).toContain("42");
+    expect(getSizeOptions("Fashion", "Sports - Apparels")).toContain("XL");
+    expect(getSizeOptions("Fashion", "Sports", "Sports Goods")).toEqual([]);
+    expect(isQuantityOnlyFashionProduct("Fashion", "Sports - Sports Goods")).toBe(true);
+    expect(isQuantityOnlyFashionProduct("Fashion", "Sports - Shoes")).toBe(false);
   });
 
   it("sorts sizes in display order", () => {

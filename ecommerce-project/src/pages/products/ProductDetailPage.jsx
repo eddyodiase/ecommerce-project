@@ -6,7 +6,11 @@ import { useCart } from "../../context/CartContext";
 import { formatMoney } from "../../utils/money";
 import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import { classifyHomeProduct } from "../../utils/homeCatalog";
-import { hasSizeStock, sortSizeEntries } from "../../utils/sizes";
+import {
+  hasSizeStock,
+  isQuantityOnlyFashionProduct,
+  sortSizeEntries,
+} from "../../utils/sizes";
 import { buildSampleProducts } from "./productCatalog";
 
 const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
@@ -252,7 +256,12 @@ export function ProductDetailPage() {
       return;
     }
 
-    const needsSize = hasSizeStock(product.sizeStock);
+    const quantityOnly = isQuantityOnlyFashionProduct(product.category, product.subcategory);
+    const needsSize = hasSizeStock(product.sizeStock) && !quantityOnly;
+    if (quantityOnly && Number(product.sizeStock?.Stock) <= 0) {
+      setCartError("This item is out of stock.");
+      return;
+    }
     if (needsSize && !selectedFashionSize) {
       setCartError("Please select a size.");
       return;
@@ -385,9 +394,15 @@ export function ProductDetailPage() {
       : defaultRamOptions)
     : [];
 
-  const sizeEntries = sortSizeEntries(product.sizeStock, product.category, product.subcategory);
+  const quantityOnly = isQuantityOnlyFashionProduct(product.category, product.subcategory);
+  const sizeEntries = quantityOnly
+    ? []
+    : sortSizeEntries(product.sizeStock, product.category, product.subcategory);
   const selectedSizeStock = Number(product.sizeStock?.[selectedFashionSize]) || 0;
-  const maxQuantity = selectedFashionSize ? Math.max(1, Math.min(10, selectedSizeStock)) : 10;
+  const quantityOnlyStock = Number(product.sizeStock?.Stock) || 0;
+  const maxQuantity = quantityOnly
+    ? Math.max(1, Math.min(10, quantityOnlyStock))
+    : selectedFashionSize ? Math.max(1, Math.min(10, selectedSizeStock)) : 10;
 
   return (
     <main style={{ maxWidth: "1280px", margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
@@ -596,10 +611,15 @@ export function ProductDetailPage() {
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
             <span style={{ fontWeight: 600 }}>Quantity</span>
+            {quantityOnly ? (
+              <span style={{ color: "#6b7280" }}>
+                {quantityOnlyStock > 0 ? `${quantityOnlyStock} available` : "Out of stock"}
+              </span>
+            ) : null}
             <div style={{ display: "inline-flex", border: "1px solid #d1d5db", borderRadius: "10px", overflow: "hidden" }}>
-              <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} style={{ width: "38px", height: "38px", border: "none", background: "#f3f4f6", cursor: "pointer", fontSize: "1.2rem" }}>−</button>
+              <button type="button" aria-label="Decrease quantity" onClick={() => setQuantity((value) => Math.max(1, value - 1))} style={{ width: "38px", height: "38px", border: "none", background: "#f3f4f6", cursor: "pointer", fontSize: "1.2rem" }}>−</button>
               <span style={{ width: "42px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{quantity}</span>
-              <button type="button" onClick={() => setQuantity((value) => Math.min(maxQuantity, value + 1))} style={{ width: "38px", height: "38px", border: "none", background: "#f3f4f6", cursor: "pointer", fontSize: "1.2rem" }}>+</button>
+              <button type="button" aria-label="Increase quantity" disabled={quantity >= maxQuantity} onClick={() => setQuantity((value) => Math.min(maxQuantity, value + 1))} style={{ width: "38px", height: "38px", border: "none", background: "#f3f4f6", cursor: quantity >= maxQuantity ? "not-allowed" : "pointer", fontSize: "1.2rem" }}>+</button>
             </div>
           </div>
 
@@ -611,9 +631,10 @@ export function ProductDetailPage() {
             <button
               type="button"
               onClick={handleAddToCart}
+              disabled={quantityOnly && quantityOnlyStock <= 0}
               style={{ background: "#111827", color: "#fff", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", fontWeight: 700, cursor: "pointer" }}
             >
-              Add to cart
+              {quantityOnly && quantityOnlyStock <= 0 ? "Out of stock" : "Add to cart"}
             </button>
             <button type="button" style={{ background: "#f3f4f6", color: "#111827", border: "none", borderRadius: "12px", padding: "0.9rem 1rem", fontWeight: 700, cursor: "pointer" }}>
               Buy now
@@ -846,7 +867,14 @@ export function ProductDetailPage() {
           <div style={{ color: "#6b7280", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>From</div>
           <div className="mobile-purchase-bar-price">{formatNaira(product.price)}</div>
         </div>
-        <button type="button" className="mobile-purchase-bar-button" onClick={handleAddToCart}>Add to cart</button>
+        <button
+          type="button"
+          className="mobile-purchase-bar-button"
+          onClick={handleAddToCart}
+          disabled={quantityOnly && quantityOnlyStock <= 0}
+        >
+          {quantityOnly && quantityOnlyStock <= 0 ? "Out of stock" : "Add to cart"}
+        </button>
       </div>
     </main>
   );
