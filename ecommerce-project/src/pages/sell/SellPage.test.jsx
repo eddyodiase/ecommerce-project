@@ -33,7 +33,9 @@ describe('Sell flow', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('heading', { name: /start selling on northpeak/i })).toBeInTheDocument();
+    expect(screen.getByText('Zambba marketplace')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /start selling on zambba/i })).toBeInTheDocument();
+    expect(screen.getByText(/browse the Zambba store/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/product name/i)).toBeInTheDocument();
     const categorySelect = screen.getByLabelText(/^category$/i);
     expect(Array.from(categorySelect.options).map((option) => option.textContent)).toEqual(PRODUCT_TAXONOMY);

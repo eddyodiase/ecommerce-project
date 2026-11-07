@@ -31,14 +31,16 @@ if (isUsingRDS) {
   });
 
   // Save database to file after write operations.
-  sequelize.addHook('afterCreate', saveDatabaseToFile);
-  sequelize.addHook('afterDestroy', saveDatabaseToFile);
-  sequelize.addHook('afterUpdate', saveDatabaseToFile);
-  sequelize.addHook('afterSave', saveDatabaseToFile);
-  sequelize.addHook('afterUpsert', saveDatabaseToFile);
-  sequelize.addHook('afterBulkCreate', saveDatabaseToFile);
-  sequelize.addHook('afterBulkDestroy', saveDatabaseToFile);
-  sequelize.addHook('afterBulkUpdate', saveDatabaseToFile);
+  if (process.env.NODE_ENV !== 'test') {
+    sequelize.addHook('afterCreate', saveDatabaseToFile);
+    sequelize.addHook('afterDestroy', saveDatabaseToFile);
+    sequelize.addHook('afterUpdate', saveDatabaseToFile);
+    sequelize.addHook('afterSave', saveDatabaseToFile);
+    sequelize.addHook('afterUpsert', saveDatabaseToFile);
+    sequelize.addHook('afterBulkCreate', saveDatabaseToFile);
+    sequelize.addHook('afterBulkDestroy', saveDatabaseToFile);
+    sequelize.addHook('afterBulkUpdate', saveDatabaseToFile);
+  }
 }
 
 export async function saveDatabaseToFile() {

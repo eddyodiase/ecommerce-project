@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../context/useCart";
 import { formatMoney } from "../../utils/money";
 import { canDeleteListing, deleteSellerListing, syncSellerListings } from "../../utils/sellerListings";
 import { classifyHomeProduct } from "../../utils/homeCatalog";

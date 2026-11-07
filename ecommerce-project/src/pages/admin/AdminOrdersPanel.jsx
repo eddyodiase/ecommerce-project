@@ -2,31 +2,28 @@ import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { toCurrency } from "../../utils/money";
 
-const KEY_STORAGE = "adminApiKey";
-
 // Order payment operations: confirm transfers / cash, cancel unpaid orders, refund paid ones.
-export function AdminOrdersPanel() {
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(KEY_STORAGE) || "");
+export function AdminOrdersPanel({ adminKey }) {
   const [orders, setOrders] = useState([]);
   const [message, setMessage] = useState("");
 
   const load = useCallback(async () => {
+    if (!adminKey) {
+      setOrders([]);
+      setMessage("");
+      return;
+    }
     try {
-      const response = await axios.get("/api/orders");
+      const response = await axios.get("/api/orders", { headers: { "x-admin-key": adminKey } });
       setOrders((response.data || []).filter((order) => order.paymentMethod && order.paymentMethod !== "legacy"));
     } catch {
       setMessage("We could not load orders.");
     }
-  }, []);
+  }, [adminKey]);
 
   useEffect(() => {
-    void load();
+    Promise.resolve().then(load);
   }, [load]);
-
-  const saveKey = (value) => {
-    setAdminKey(value);
-    sessionStorage.setItem(KEY_STORAGE, value);
-  };
 
   const act = async (order, action, body = {}) => {
     try {
@@ -52,10 +49,6 @@ export function AdminOrdersPanel() {
   return (
     <section className="admin-orders-panel">
       <h2>Order payments</h2>
-      <label>
-        Admin key{" "}
-        <input type="password" value={adminKey} onChange={(event) => saveKey(event.target.value)} />
-      </label>
       {message ? <div className="admin-error">{message}</div> : null}
       {orders.length === 0 ? <div className="admin-empty">No orders with payments yet.</div> : null}
       {orders.map((order) => {

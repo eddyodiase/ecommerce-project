@@ -36,6 +36,33 @@ describe("ProductsSearchPage sample data", () => {
     expect(inferCategoryFromKeywords(["Pickup truck"])).toBe("Vehicles");
   });
 
+  it("provides the requested Smart Phones subcategories", () => {
+    expect(SUBCATEGORIES_BY_CATEGORY["Smart Phones"]).toEqual([
+      "Alcatel",
+      "Apple IPhone",
+      "Nokia",
+      "Motorola",
+      "Infinix",
+      "Samsung",
+      "Redmi",
+      "Xiaomi",
+      "Huawei",
+      "Google Pixel",
+      "Itel",
+      "Vivo",
+      "Sony",
+      "LG",
+      "Lenovo",
+      "HTC",
+      "Okitel",
+      "Sharp",
+      "Umidigi",
+      "OPPO",
+      "Hornor",
+      "RealMe",
+    ]);
+  });
+
   it("includes Tools with its subcategories and recognizes tool products", () => {
     expect(PRODUCT_TAXONOMY).toContain("Tools");
     expect(SUBCATEGORIES_BY_CATEGORY.Tools).toEqual([

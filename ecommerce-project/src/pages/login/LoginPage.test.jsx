@@ -10,6 +10,18 @@ describe('LoginPage', () => {
     vi.clearAllMocks();
   });
 
+  it('displays the Zambba branding with a link to the home page', () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('link', { name: 'Zambba' })).toHaveAttribute('href', '/');
+    expect(screen.getByText('Welcome back to Zambba')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /create one/i })).toHaveAttribute('href', '/register');
+  });
+
   it('submits email and password and calls onLogin with locally generated auth data', async () => {
     const onLogin = vi.fn();
 

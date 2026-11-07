@@ -38,7 +38,7 @@ export function RegisterPage({ onRegister }) {
       }
 
       navigate("/");
-    } catch (requestError) {
+    } catch {
       setError("Unable to create account.");
     } finally {
       setIsSubmitting(false);

@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
+import { getOrderAccessConfig } from "../utils/orderAccess";
 import "./TrackingPage.css";
 
 export function TrackingPage() {
@@ -18,7 +19,7 @@ export function TrackingPage() {
       }
 
       try {
-        const response = await axios.get("/api/orders?expand=products");
+        const response = await axios.get("/api/orders?expand=products", getOrderAccessConfig());
         const latestOrder = response.data?.[0];
         const latestProduct = latestOrder?.products?.[0];
 

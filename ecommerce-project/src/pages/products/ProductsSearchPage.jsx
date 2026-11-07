@@ -7,7 +7,8 @@ import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useCart } from "../../context/CartContext";
+import { BrandMark } from "../../components/BrandMark";
+import { useCart } from "../../context/useCart";
 import { classifyHomeProduct } from "../../utils/homeCatalog";
 import { formatMoney } from "../../utils/money";
 import { hasSizeStock } from "../../utils/sizes";
@@ -30,29 +31,33 @@ const CATEGORY_LINKS = [
 ];
 
 const CATEGORY_BRANDS = {
-  "All": [
-    "NorthPeak",
-    "Aurelia",
-    "Peak & Co",
-    "HomeStyle",
-    "Nestline",
-    "Edgewell",
-    "Nexa",
-    "Luma",
-    "Zenith",
-    "Nova",
+  All: ["CottageBiology", "CB Farms Fresh", "CB Livestocks", "CB Engineered", "Smart Phones", "Cars", "Buses"],
+  Vehicles: ["Cars", "Buses"],
+  "Smart Phones": [
+    "Alcatel",
+    "Apple IPhone",
+    "Nokia",
+    "Motorola",
+    "Infinix",
+    "Samsung",
+    "Redmi",
+    "Xiaomi",
+    "Huawei",
+    "Google Pixel",
+    "Itel",
+    "Vivo",
+    "Sony",
+    "LG",
+    "Lenovo",
+    "HTC",
+    "Okitel",
+    "Sharp",
+    "Umidigi",
+    "OPPO",
+    "Hornor",
+    "RealMe",
   ],
-  Vehicles: ["NorthPeak"],
-  Appliances: ["Peak & Co", "Nexa", "Luma", "Zenith", "Nova"],
-  "Smart Phones": ["Nexa", "Luma", "Zenith", "Nova"],
-  Fashion: ["NorthPeak", "Edgewell"],
-  Beauty: ["Aurelia", "NorthPeak"],
-  Food: ["Nestline", "Peak & Co", "HomeStyle"],
-  "Gift Cards": ["NorthPeak", "Peak & Co"],
-  "Const. Materials": ["NorthPeak"],
-  Tools: ["NorthPeak"],
-  Furniture: ["NorthPeak", "HomeStyle", "Nestline"],
-  "Best Sellers": ["NorthPeak", "Aurelia", "Peak & Co", "HomeStyle", "Nestline", "Edgewell", "Nexa", "Luma", "Zenith", "Nova"],
+  "Best Sellers": ["CottageBiology", "CB Farms Fresh", "CB Livestocks", "CB Engineered", "Smart Phones", "Cars", "Buses"],
 };
 
 const inferSubcategoryFromKeywords = (category, keywords = []) => {
@@ -72,6 +77,13 @@ const inferTaxonomyFromKeywords = (keywords = []) => {
   return null;
 };
 
+const inferPhoneSubcategoryFromProductName = (productName = "") => {
+  const normalizedName = String(productName).trim().toLowerCase();
+  return (SUBCATEGORIES_BY_CATEGORY["Smart Phones"] || []).find((subcategory) =>
+    normalizedName.startsWith(subcategory.toLowerCase())
+  ) || "";
+};
+
 const normalizeBackendImagePath = (image) => {
   if (!image || typeof image !== "string") {
     return image;
@@ -87,9 +99,10 @@ const normalizeBackendProduct = (product = {}) => {
   const keywords = [product.name, ...(product.keywords || [])];
   const inferredHomeClassification = classifyHomeProduct(product);
   const inferredTaxonomy = inferTaxonomyFromKeywords(keywords);
+  const inferredPhoneSubcategory = inferPhoneSubcategoryFromProductName(product.name);
   const inferredCategory = inferredHomeClassification.category !== "Other"
     ? inferredHomeClassification.category
-    : inferredTaxonomy?.category || inferCategoryFromKeywords(keywords);
+    : inferredTaxonomy?.category || (inferredPhoneSubcategory ? "Smart Phones" : inferCategoryFromKeywords(keywords));
   const category = details.category || inferredCategory;
   const galleryImages = Array.isArray(details.galleryImages)
     ? details.galleryImages.map((image) => normalizeBackendImagePath(image)).filter(Boolean)
@@ -104,6 +117,7 @@ const normalizeBackendProduct = (product = {}) => {
     subcategory: details.subcategory
       || inferredHomeClassification.subcategory
       || inferredTaxonomy?.subcategory
+      || inferredPhoneSubcategory
       || inferSubcategoryFromKeywords(category, product.keywords),
     nestedSubcategory: details.nestedSubcategory || "",
     keywords: [...(product.keywords || [])],
@@ -396,8 +410,8 @@ export function ProductsSearchPage() {
       <header className="search-header">
         <div className="header-top-row">
           <Link to="/" className="brand-link">
-            <span className="brand-mark">N</span>
-            <span>NorthPeak</span>
+            <BrandMark className="brand-mark" />
+            <span>Zambba</span>
           </Link>
 
           <div className="header-search-wrap">

@@ -79,12 +79,15 @@ describe('CheckoutPage', () => {
     expect(await screen.findByText('Payment Summary')).toBeInTheDocument();
     expect(screen.getByText('Items (2):')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /place your order/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /pay online.*coming soon/i })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: /pay on delivery/i })).toBeChecked();
   });
 
   it('blocks the order until the shipping address is complete, then posts it to the backend', async () => {
     const user = userEvent.setup();
     localStorage.removeItem('shippingAddress');
-    axios.post.mockResolvedValue({ data: {} });
+    localStorage.removeItem('orderAccessToken');
+    axios.post.mockResolvedValue({ data: { orderAccessToken: 'issued-order-token' } });
 
     render(
       <MemoryRouter>
@@ -114,8 +117,14 @@ describe('CheckoutPage', () => {
         state: 'Lagos',
       }),
       paymentMethod: 'pay_on_delivery',
-    }, { headers: { 'Idempotency-Key': expect.any(String) } });
+    }, {
+      headers: {
+        'Idempotency-Key': expect.any(String),
+        'x-order-access-token': expect.any(String),
+      },
+    });
     expect(JSON.parse(localStorage.getItem('shippingAddress')).fullName).toBe('Ada Obi');
+    expect(localStorage.getItem('orderAccessToken')).toBe('issued-order-token');
   }, 20000);
 
   it('shows the cart item count in checkout header from payment summary', async () => {
@@ -131,6 +140,7 @@ describe('CheckoutPage', () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByRole('link', { name: /zambba/i })).toBeInTheDocument();
     expect(await screen.findByText(/3 items/i)).toBeInTheDocument();
   });
 

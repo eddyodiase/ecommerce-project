@@ -47,9 +47,14 @@ export async function syncSellerListings() {
       return;
     }
 
-    const remote = response.data.filter(isListing);
+    const cachedListings = readLocal();
+    const cachedById = new Map(cachedListings.map((listing) => [listing.id, listing]));
+    const remote = response.data.filter(isListing).map((listing) => {
+      const ownerEmail = cachedById.get(listing.id)?.ownerEmail;
+      return ownerEmail ? { ...listing, ownerEmail } : listing;
+    });
     const remoteIds = new Set(remote.map((listing) => listing.id));
-    const localOnly = readLocal().filter((listing) => isListing(listing) && !remoteIds.has(listing.id));
+    const localOnly = cachedListings.filter((listing) => isListing(listing) && !remoteIds.has(listing.id));
 
     // Photo-less cached copies would create listings that can never be published.
     await Promise.allSettled(localOnly.filter(hasPhotos).map((listing) => axios.post("/api/listings", listing)));
@@ -186,10 +191,11 @@ export async function updateSellerListing(listingId, updates) {
   return next;
 }
 
-export async function updateSellerListingStatus(listingId, status) {
-  await syncSellerListings();
+export async function updateSellerListingStatus(listingId, status, adminKey = sessionStorage.getItem("adminApiKey") || "") {
   try {
-    await axios.patch(`/api/listings/${encodeURIComponent(listingId)}`, { status });
+    await axios.patch(`/api/listings/${encodeURIComponent(listingId)}`, { status }, {
+      headers: { "x-admin-key": adminKey },
+    });
   } catch (error) {
     // The backend refused (e.g. approving a listing without photos): don't pretend it worked.
     if (error?.response && error.response.status < 500) {

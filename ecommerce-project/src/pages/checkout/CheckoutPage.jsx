@@ -1,7 +1,7 @@
 ﻿import axios from "axios";
 import { useEffect, useState } from "react";
 
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../context/useCart";
 import { OrderSummary } from "./orderSummary";
 import { PaymentSummary } from "./paymentSummary";
 import { ShippingAddressForm } from "./ShippingAddressForm";

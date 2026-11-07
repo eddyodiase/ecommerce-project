@@ -25,6 +25,7 @@ describe('Header', () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByRole('link', { name: /zambba/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /orders/i })).toBeInTheDocument();
     expect(screen.getByText('Cart')).toBeInTheDocument();
     expect(await screen.findByText('3')).toBeInTheDocument();

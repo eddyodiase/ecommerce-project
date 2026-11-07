@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+import { BrandMark } from "./BrandMark";
 import "./Header.css";
 
 export function Header({ cartRefreshKey = 0, user, onLogout }) {
@@ -47,8 +48,8 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
       <div className="left-section">
         <Link to="/" className="header-link">
           <span className="brand-link">
-            <span className="brand-mark">N</span>
-            <span>NorthPeak</span>
+            <BrandMark className="brand-mark" />
+            <span>Zambba</span>
           </span>
         </Link>
       </div>

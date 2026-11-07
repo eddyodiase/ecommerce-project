@@ -1,7 +1,13 @@
 import axios from "axios";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { canDeleteListing, deleteSellerListing, submitSellerListing, updateSellerListing } from "./sellerListings";
+import {
+  canDeleteListing,
+  deleteSellerListing,
+  submitSellerListing,
+  syncSellerListings,
+  updateSellerListing,
+} from "./sellerListings";
 
 vi.mock("axios");
 
@@ -44,6 +50,19 @@ describe("seller listing deletion", () => {
     localStorage.clear();
     vi.resetAllMocks();
     localStorage.setItem("sellerListings", JSON.stringify([listing]));
+  });
+
+  describe("syncing seller listing metadata", () => {
+    it("preserves locally cached ownership when public listing data omits seller email", async () => {
+      localStorage.setItem("sellerListings", JSON.stringify([listing]));
+      axios.get.mockResolvedValue({
+        data: [{ id: listing.id, productName: listing.productName, status: "approved" }],
+      });
+
+      await syncSellerListings();
+
+      expect(JSON.parse(localStorage.getItem("sellerListings"))[0].ownerEmail).toBe(listing.ownerEmail);
+    });
   });
 
   it("only lets the logged-in owner delete a listing", () => {

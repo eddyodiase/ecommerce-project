@@ -1,14 +1,15 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getOrderAccessConfig } from "../../utils/orderAccess";
 import "./ProfilePage.css";
 
 export function ProfilePage({ user, onLogout }) {
   const navigate = useNavigate();
-  const [profileUser, setProfileUser] = useState(
+  const [profileUser, setProfileUser] = useState(() => (
     user || JSON.parse(localStorage.getItem("authUser") || "null")
-  );
-  const currentUser = user || profileUser;
+  ));
+  const currentUser = profileUser;
   const [orders, setOrders] = useState([]);
   const [formData, setFormData] = useState({
     name: currentUser?.name || "",
@@ -18,19 +19,13 @@ export function ProfilePage({ user, onLogout }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (user) {
-      setProfileUser(user);
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (!currentUser) {
       navigate("/login");
       return;
     }
 
     axios
-      .get("/api/orders?expand=products")
+      .get("/api/orders?expand=products", getOrderAccessConfig())
       .then((response) => {
         setOrders(response.data || []);
       })
@@ -38,13 +33,6 @@ export function ProfilePage({ user, onLogout }) {
         console.error("Error loading profile orders:", requestError);
       });
   }, [currentUser, navigate]);
-
-  useEffect(() => {
-    setFormData({
-      name: currentUser?.name || "",
-      email: currentUser?.email || "",
-    });
-  }, [currentUser]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -70,7 +58,7 @@ export function ProfilePage({ user, onLogout }) {
         name: updatedUser.name || "",
         email: updatedUser.email || "",
       });
-    } catch (requestError) {
+    } catch {
       setError("Unable to update account.");
     } finally {
       setIsSaving(false);

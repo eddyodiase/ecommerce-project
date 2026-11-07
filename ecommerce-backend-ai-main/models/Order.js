@@ -74,6 +74,10 @@ export const Order = sequelize.define('Order', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  customerAccessTokenHash: {
+    type: DataTypes.STRING(64),
+    allowNull: true
+  },
   createdAt: {
     type: DataTypes.DATE(3)
   },

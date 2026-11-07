@@ -11,6 +11,7 @@ vi.mock('axios');
 describe('ProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('orderAccessToken', 'test-order-token');
     localStorage.setItem('authUser', JSON.stringify({
       id: 'u1',
       name: 'Jane Smith',

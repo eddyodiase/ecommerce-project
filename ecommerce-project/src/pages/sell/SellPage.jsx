@@ -278,7 +278,11 @@ export function SellPage() {
       }
 
       if (isEditing) {
-        const { id, status, createdAt, ownerEmail, ...changes } = nextListing;
+        const changes = { ...nextListing };
+        delete changes.id;
+        delete changes.status;
+        delete changes.createdAt;
+        delete changes.ownerEmail;
         await updateSellerListing(listingId, changes);
       } else {
         await submitSellerListing(nextListing);
@@ -323,8 +327,8 @@ export function SellPage() {
           ← Back to products
         </button>
         <div>
-          <p className="eyebrow">NorthPeak marketplace</p>
-          <h1>{isEditing ? "Edit your listing" : "Start selling on NorthPeak"}</h1>
+          <p className="eyebrow">Zambba marketplace</p>
+          <h1>{isEditing ? "Edit your listing" : "Start selling on Zambba"}</h1>
         </div>
       </header>
 
@@ -333,7 +337,7 @@ export function SellPage() {
           <div className="seller-card-copy">
             <h2>List a product in minutes</h2>
             <p>
-              Share your item details, set your price, and start reaching shoppers who already browse the NorthPeak store.
+              Share your item details, set your price, and start reaching shoppers who already browse the Zambba store.
             </p>
           </div>
 

@@ -1,13 +1,14 @@
+import './config/loadEnv.js';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getAllowedOrigins, validateProductionConfig } from './config/production.js';
 import { sequelize, saveDatabaseToFile } from './models/index.js';
 import productRoutes from './routes/products.js';
 import deliveryOptionRoutes from './routes/deliveryOptions.js';
 import cartItemRoutes from './routes/cartItems.js';
 import orderRoutes from './routes/orders.js';
-import resetRoutes from './routes/reset.js';
 import paymentRoutes from './routes/payments.js';
 import { expireUnpaidOrders } from './utils/orderPayments.js';
 import paymentSummaryRoutes from './routes/paymentSummary.js';
@@ -24,18 +25,23 @@ import { defaultOrders } from './defaultData/defaultOrders.js';
 import fs from 'fs';
 import { DataTypes } from 'sequelize';
 
-// Secrets (PAYSTACK_SECRET_KEY, ADMIN_API_KEY, bank details) come from a git-ignored .env file.
-if (fs.existsSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '.env'))) {
-  process.loadEnvFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '.env'));
-}
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+validateProductionConfig();
+
 // Middleware
-app.use(cors());
+const allowedOrigins = getAllowedOrigins();
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Origin not allowed'));
+  },
+}));
 // Paystack signs the exact bytes it sends, so the webhook keeps the raw body for signature checks.
 app.use(express.json({
   limit: '50mb',
@@ -55,7 +61,6 @@ app.use('/api/delivery-options', deliveryOptionRoutes);
 app.use('/api/cart-items', cartItemRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/reset', resetRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/payment-summary', paymentSummaryRoutes);
 
@@ -101,6 +106,12 @@ if (!cartColumns.size) {
 }
 
 const orderColumns = await sequelize.getQueryInterface().describeTable('Orders');
+if (!orderColumns.customerAccessTokenHash) {
+  await sequelize.getQueryInterface().addColumn('Orders', 'customerAccessTokenHash', {
+    type: DataTypes.STRING(64),
+    allowNull: true,
+  });
+}
 if (!orderColumns.shippingAddress) {
   await sequelize.getQueryInterface().addColumn('Orders', 'shippingAddress', { type: DataTypes.JSON, allowNull: true });
 }

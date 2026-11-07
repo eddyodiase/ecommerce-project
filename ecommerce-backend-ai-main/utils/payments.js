@@ -7,6 +7,7 @@ const readEnv = (key) => String(process.env[key] || '').trim();
 // Read lazily so tests and `.env` changes are picked up without code changes.
 export const paymentConfig = () => ({
   paystackSecretKey: readEnv('PAYSTACK_SECRET_KEY'),
+  paystackEnabled: readEnv('PAYSTACK_ENABLED') === 'true',
   paystackBaseUrl: readEnv('PAYSTACK_BASE_URL') || 'https://api.paystack.co',
   frontendUrl: (readEnv('FRONTEND_URL') || 'http://localhost:5173').replace(/\/+$/, ''),
   adminApiKey: readEnv('ADMIN_API_KEY'),
@@ -24,7 +25,10 @@ export const availableMethods = () => {
   const config = paymentConfig();
   const bankReady = Boolean(config.bank.bankName && config.bank.accountNumber && config.bank.accountName);
   return {
-    paystack: { enabled: Boolean(config.paystackSecretKey) },
+    paystack: {
+      enabled: config.paystackEnabled && Boolean(config.paystackSecretKey),
+      available: Boolean(config.paystackSecretKey),
+    },
     bank_transfer: { enabled: bankReady, account: bankReady ? config.bank : null },
     pay_on_delivery: { enabled: config.payOnDeliveryEnabled }
   };

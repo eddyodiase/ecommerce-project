@@ -12,12 +12,51 @@ import {
   markOrderPaid,
   startPaystackPayment
 } from '../utils/orderPayments.js';
+import {
+  createOrderAccessToken,
+  hashOrderAccessToken,
+  matchesOrderAccessToken
+} from '../utils/orderAccess.js';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-  const expand = req.query.expand;
-  let orders = await Order.unscoped().findAll({ order: [['orderTimeMs', 'DESC']] }); // Sort by most recent
+router.get('/', (req, res, next) => {
+  if (!req.get('x-admin-key')) {
+    return next();
+  }
+  return requireAdmin(req, res, () => {
+    req.isAdmin = true;
+    next();
+  });
+}, async (req, res) => {
+  if (req.isAdmin) {
+    const orders = await Order.unscoped().findAll({ order: [['orderTimeMs', 'DESC']] });
+    return res.json(await expandOrders(orders, req.query.expand));
+  }
+
+  const accessToken = req.get('x-order-access-token') || '';
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Order access token is required' });
+  }
+  const customerAccessTokenHash = hashOrderAccessToken(accessToken);
+  const hasAccess = await Order.unscoped().findOne({ where: { customerAccessTokenHash } });
+  if (!hasAccess) {
+    return res.status(401).json({ error: 'Invalid order access token' });
+  }
+
+  const orders = await Order.unscoped().findAll({
+    where: { customerAccessTokenHash },
+    order: [['orderTimeMs', 'DESC']]
+  });
+  res.json(await expandOrders(orders, req.query.expand));
+});
+
+const expandOrders = async (orders, expand) => {
+  orders = orders.map((order) => {
+    const data = order.toJSON();
+    delete data.customerAccessTokenHash;
+    return data;
+  });
 
   if (expand === 'products') {
     orders = await Promise.all(orders.map(async (order) => {
@@ -28,15 +67,12 @@ router.get('/', async (req, res) => {
           product: productDetails
         };
       }));
-      return {
-        ...order.toJSON(),
-        products
-      };
+      return { ...order, products };
     }));
   }
 
-  res.json(orders);
-});
+  return orders;
+};
 
 const clean = (value) => (typeof value === 'string' ? value.trim().slice(0, 200) : '');
 
@@ -112,7 +148,11 @@ const placeOneAtATime = (task) => {
   return run;
 };
 
-const paymentFields = (order) => ({ ...order.toJSON() });
+const paymentFields = (order) => {
+  const fields = order.toJSON();
+  delete fields.customerAccessTokenHash;
+  return fields;
+};
 
 router.post('/', (req, res, next) => placeOneAtATime(async () => {
   const { address: shippingAddress, error: addressError } = parseShippingAddress(req.body?.shippingAddress);
@@ -128,12 +168,25 @@ router.post('/', (req, res, next) => placeOneAtATime(async () => {
     return res.status(400).json({ error: 'That payment method is not available right now' });
   }
 
+  let orderAccessToken = req.get('x-order-access-token') || '';
+  if (!orderAccessToken) {
+    orderAccessToken = createOrderAccessToken();
+  }
+  const customerAccessTokenHash = hashOrderAccessToken(orderAccessToken);
+
   // A retried request (double click, flaky network) returns the original order instead of a duplicate.
   const idempotencyKey = String(req.get('idempotency-key') || req.body?.idempotencyKey || '').slice(0, 100);
   if (idempotencyKey) {
     const previous = await Order.unscoped().findOne({ where: { idempotencyKey } });
     if (previous) {
-      return res.status(200).json({ ...paymentFields(previous), ...(await tryStartPaystack(previous)) });
+      if (previous.customerAccessTokenHash !== customerAccessTokenHash) {
+        return res.status(409).json({ error: 'This order request belongs to a different customer session' });
+      }
+      return res.status(200).json({
+        ...paymentFields(previous),
+        orderAccessToken,
+        ...(await tryStartPaystack(previous))
+      });
     }
   }
 
@@ -184,6 +237,7 @@ router.post('/', (req, res, next) => placeOneAtATime(async () => {
     paymentMethod,
     paymentStatus: 'pending',
     idempotencyKey: idempotencyKey || null,
+    customerAccessTokenHash,
     refunds: [],
     paymentLog: [{ atMs: Date.now(), event: 'order_placed', detail: paymentMethod }]
   });
@@ -191,7 +245,11 @@ router.post('/', (req, res, next) => placeOneAtATime(async () => {
   await decrementStock(cartItems);
   await CartItem.destroy({ where: {} });
 
-  res.status(201).json({ ...paymentFields(order), ...(await tryStartPaystack(order)) });
+  res.status(201).json({
+    ...paymentFields(order),
+    orderAccessToken,
+    ...(await tryStartPaystack(order))
+  });
 }).catch(next));
 
 // Starts a Paystack payment for pending Paystack orders. A failure never loses the order:
@@ -199,6 +257,9 @@ router.post('/', (req, res, next) => placeOneAtATime(async () => {
 const tryStartPaystack = async (order) => {
   if (order.paymentMethod !== 'paystack' || order.paymentStatus !== 'pending' || order.status !== 'placed') {
     return {};
+  }
+  if (!availableMethods().paystack.enabled) {
+    return { paymentError: 'Paystack payments are temporarily unavailable. Choose another payment method.' };
   }
   try {
     return { authorizationUrl: await startPaystackPayment(order) };
@@ -210,8 +271,13 @@ const tryStartPaystack = async (order) => {
 
 // Buyer retry of an unpaid card payment.
 router.post('/:orderId/pay', async (req, res) => {
+  if (!availableMethods().paystack.enabled) {
+    return res.status(503).json({ error: 'Paystack payments are temporarily unavailable. Choose another payment method.' });
+  }
+
   const order = await Order.findByPk(req.params.orderId);
-  if (!order) {
+  const accessToken = req.get('x-order-access-token') || '';
+  if (!order || !accessToken || !matchesOrderAccessToken(order.customerAccessTokenHash, accessToken)) {
     return res.status(404).json({ error: 'Order not found' });
   }
   if (order.paymentMethod !== 'paystack' || order.paymentStatus !== 'pending' || order.status !== 'placed') {
@@ -281,7 +347,8 @@ router.get('/:orderId', async (req, res) => {
   const expand = req.query.expand;
 
   let order = await Order.findByPk(orderId);
-  if (!order) {
+  const accessToken = req.get('x-order-access-token') || '';
+  if (!order || !accessToken || !matchesOrderAccessToken(order.customerAccessTokenHash, accessToken)) {
     return res.status(404).json({ error: 'Order not found' });
   }
 
@@ -293,10 +360,9 @@ router.get('/:orderId', async (req, res) => {
         product: productDetails
       };
     }));
-    order = {
-      ...order.toJSON(),
-      products
-    };
+    order = { ...paymentFields(order), products };
+  } else {
+    order = paymentFields(order);
   }
 
   res.json(order);

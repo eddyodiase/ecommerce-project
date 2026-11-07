@@ -12,11 +12,31 @@ import {
   normalizeSizeStock,
   totalStock,
 } from '../utils/sizeStock.js';
+import { requireAdmin } from '../utils/payments.js';
 
 const router = express.Router();
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
 
 const toListing = (row) => ({ ...row.data, id: row.id, status: row.status });
+
+const listingReadAccess = (req, res, next) => {
+  if (!req.get('x-admin-key')) {
+    req.isAdmin = false;
+    return next();
+  }
+  return requireAdmin(req, res, () => {
+    req.isAdmin = true;
+    next();
+  });
+};
+
+const publicListing = (row) => {
+  const listing = toListing(row);
+  delete listing.ownerEmail;
+  delete listing.imageDataUrl;
+  delete listing.imageDataUrls;
+  return listing;
+};
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IMAGE_DIR = path.join(__dirname, '..', 'images', 'products');
@@ -108,9 +128,11 @@ const publishProduct = async (row) => {
   return true;
 };
 
-router.get('/', async (req, res) => {
+router.get('/', listingReadAccess, async (req, res) => {
   const rows = await Listing.findAll({ order: [['createdAt', 'DESC']] });
-  res.json(rows.map(toListing));
+  res.json(req.isAdmin
+    ? rows.map(publicListing)
+    : rows.filter((row) => row.status === 'approved').map(publicListing));
 });
 
 router.post('/', async (req, res) => {
@@ -128,13 +150,13 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: sizeError });
   }
 
-  const status = VALID_STATUSES.includes(listing.status) ? listing.status : 'pending';
+  const status = 'pending';
   const existing = await Listing.findByPk(listing.id);
   const row = existing || await Listing.create({ id: listing.id, status, data: listing });
   res.status(201).json(toListing(row));
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireAdmin, async (req, res) => {
   const { status } = req.body || {};
   if (!VALID_STATUSES.includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });

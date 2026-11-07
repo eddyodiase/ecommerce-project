@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { BrandMark } from "../../components/BrandMark";
 import "../auth/Auth.css";
+import "./LoginPage.css";
 
 export function LoginPage({ onLogin }) {
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export function LoginPage({ onLogin }) {
       }
 
       navigate("/");
-    } catch (requestError) {
+    } catch {
       setError("Unable to sign in right now.");
     } finally {
       setIsSubmitting(false);
@@ -45,11 +47,15 @@ export function LoginPage({ onLogin }) {
   };
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell login-shell">
       <section className="auth-card">
         <header className="auth-header">
-          <h2>Sign in</h2>
-          <p>Welcome back</p>
+          <Link className="login-brand" to="/">
+            <BrandMark className="login-brand-mark" />
+            <span>Zambba</span>
+          </Link>
+          <h1>Sign in</h1>
+          <p>Welcome back to Zambba</p>
         </header>
 
         <form className="auth-form" onSubmit={handleSubmit}>

@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "../../components/Header";
 import { toCurrency } from "../../utils/money";
+import { getOrderAccessConfig } from "../../utils/orderAccess";
 import "./OrdersPage.css";
 
 function OrderRow({ order, product, quantity, size, estimatedDeliveryTimeMs, onCartRefresh }) {
@@ -176,18 +177,21 @@ function OrderCard({ order, onCartRefresh }) {
 
 export function OrdersPage({ quantityByProduct, onCartRefresh, user, onLogout }) {
   const [orders, setOrders] = useState([]);
+  const [ordersError, setOrdersError] = useState("");
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get("/api/orders?expand=products");
+      setOrdersError("");
+      const response = await axios.get("/api/orders?expand=products", getOrderAccessConfig());
       setOrders(response.data || []);
     } catch (error) {
       console.error("Error fetching orders:", error);
+      setOrdersError("We could not load orders on this device. Place an order here to securely access its details.");
     }
   };
 
   useEffect(() => {
-    fetchOrders();
+    Promise.resolve().then(fetchOrders);
   }, []);
 
   return (
@@ -197,7 +201,9 @@ export function OrdersPage({ quantityByProduct, onCartRefresh, user, onLogout })
       <div className="orders-page">
         <div className="page-title">Your Orders</div>
 
-        {orders.length === 0 ? (
+        {ordersError ? (
+          <div className="empty-cart" role="alert">{ordersError}</div>
+        ) : orders.length === 0 ? (
           <div className="empty-cart">No orders yet.</div>
         ) : (
           <div className="orders-grid">

@@ -3,10 +3,11 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toCurrency } from "../../utils/money";
+import { getOrCreateOrderAccessToken, saveOrderAccessToken } from "../../utils/orderAccess";
 import { saveShippingAddress, validateShippingAddress } from "../../utils/shippingAddress";
 
 const METHOD_LABELS = {
-  paystack: "Pay online (card, bank, USSD via Paystack)",
+  paystack: "Pay online (card, bank, USSD via Paystack) — Coming soon",
   bank_transfer: "Bank transfer",
   pay_on_delivery: "Pay on delivery",
 };
@@ -14,18 +15,25 @@ const METHOD_LABELS = {
 export function PaymentSummary({ paymentSummary = {}, shippingAddress = {}, onAddressInvalid }) {
   const navigate = useNavigate();
   const [orderError, setOrderError] = useState("");
-  const [methods, setMethods] = useState({ pay_on_delivery: { enabled: true } });
+  const [methods, setMethods] = useState({
+    paystack: { enabled: false },
+    pay_on_delivery: { enabled: true },
+  });
   const [paymentMethod, setPaymentMethod] = useState("");
   const [placing, setPlacing] = useState(false);
-  // One key per checkout attempt, so a double click or retry cannot create two orders.
-  const idempotencyKey = useRef(`order-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const idempotencyKey = useRef("");
 
   useEffect(() => {
     let active = true;
     Promise.resolve()
       .then(() => axios.get("/api/payments/methods"))
       .then((response) => {
-        if (active && response?.data) setMethods(response.data);
+        if (active && response?.data) {
+          setMethods({
+            ...response.data,
+            paystack: { ...response.data.paystack, enabled: false },
+          });
+        }
       })
       .catch(() => {});
     return () => {
@@ -52,11 +60,21 @@ export function PaymentSummary({ paymentSummary = {}, shippingAddress = {}, onAd
     try {
       setOrderError("");
       setPlacing(true);
+      if (!idempotencyKey.current) {
+        idempotencyKey.current = `order-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+      const orderAccessToken = getOrCreateOrderAccessToken();
       const response = await axios.post(
         "/api/orders",
         { shippingAddress, paymentMethod: selectedMethod },
-        { headers: { "Idempotency-Key": idempotencyKey.current } },
+        {
+          headers: {
+            "Idempotency-Key": idempotencyKey.current,
+            "x-order-access-token": orderAccessToken,
+          },
+        },
       );
+      saveOrderAccessToken(response?.data?.orderAccessToken);
       saveShippingAddress(shippingAddress);
       const authorizationUrl = response?.data?.authorizationUrl;
       if (selectedMethod === "paystack" && authorizationUrl) {
@@ -96,18 +114,21 @@ export function PaymentSummary({ paymentSummary = {}, shippingAddress = {}, onAd
       </div>
       <fieldset className="payment-method-picker">
         <legend>Payment method</legend>
-        {enabledMethods.map((key) => (
+        {Object.keys(METHOD_LABELS)
+          .filter((key) => key === "paystack" || methods[key]?.enabled)
+          .map((key) => (
           <label key={key} className="payment-method-option">
             <input
               type="radio"
               name="paymentMethod"
               value={key}
               checked={selectedMethod === key}
+              disabled={key === "paystack" || !methods[key]?.enabled}
               onChange={() => setPaymentMethod(key)}
             />
             {METHOD_LABELS[key]}
           </label>
-        ))}
+          ))}
         {selectedMethod === "bank_transfer" && methods.bank_transfer?.account?.accountNumber && (
           <div className="payment-method-note">
             Transfer to {methods.bank_transfer.account.bankName} {methods.bank_transfer.account.accountNumber} (

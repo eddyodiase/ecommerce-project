@@ -30,6 +30,7 @@ describe('OrdersPage', () => {
   ];
 
   beforeEach(() => {
+    localStorage.setItem('orderAccessToken', 'test-order-token');
     axios.get.mockImplementation((url) => {
       if (url === '/api/orders?expand=products') {
         return Promise.resolve({ data: orders });
@@ -50,6 +51,7 @@ describe('OrdersPage', () => {
       </MemoryRouter>
     );
 
+    expect(screen.getByRole('link', { name: /zambba/i })).toHaveAttribute('href', '/');
     expect(screen.getByText('Your Orders')).toBeInTheDocument();
     expect(await screen.findByText('Black and Gray Athletic Cotton Socks - 6 Pairs')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /add to cart/i })).toBeInTheDocument();

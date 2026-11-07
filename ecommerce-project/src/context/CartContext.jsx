@@ -1,39 +1,34 @@
 import axios from "axios";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-const defaultCartContext = {
-  cartCount: 0,
-  refreshCartCount: async () => {},
-  addToCart: async () => {},
-};
-
-const CartContext = createContext(defaultCartContext);
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { CartContext } from "./cartContextValue";
 
 export function CartProvider({ children }) {
   const [cartCount, setCartCount] = useState(0);
 
-  const refreshCartCount = async () => {
+  const refreshCartCount = useCallback(async () => {
     const response = await axios.get("/api/cart-items");
     const items = Array.isArray(response.data) ? response.data : [];
     const nextCount = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
     setCartCount(nextCount);
-  };
+  }, []);
 
-  const addToCart = async (productId, amount = 1, size = "") => {
+  const addToCart = useCallback(async (productId, amount = 1, size = "") => {
     await axios.post("/api/cart-items", {
       productId,
       quantity: amount,
       ...(size ? { size } : {}),
     });
     await refreshCartCount();
-  };
+  }, [refreshCartCount]);
 
   useEffect(() => {
-    refreshCartCount().catch((error) => {
-      console.error("Error loading cart count:", error);
-      setCartCount(0);
-    });
-  }, []);
+    Promise.resolve()
+      .then(refreshCartCount)
+      .catch((error) => {
+        console.error("Error loading cart count:", error);
+        setCartCount(0);
+      });
+  }, [refreshCartCount]);
 
   const value = useMemo(
     () => ({
@@ -41,12 +36,8 @@ export function CartProvider({ children }) {
       refreshCartCount,
       addToCart,
     }),
-    [cartCount]
+    [cartCount, refreshCartCount, addToCart]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-}
-
-export function useCart() {
-  return useContext(CartContext);
 }

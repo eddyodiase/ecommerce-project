@@ -1,52 +1,42 @@
-import { useEffect, useState } from "react";
+import axios from "axios";
+import { useState } from "react";
 
 import { Header } from "../../components/Header";
 import { AdminOrdersPanel } from "./AdminOrdersPanel";
-import { syncSellerListings, updateSellerListingStatus } from "../../utils/sellerListings";
+import { updateSellerListingStatus } from "../../utils/sellerListings";
 import "./AdminPage.css";
-
-const SELLER_LISTINGS_STORAGE_KEY = "sellerListings";
-
-const readSellerListings = () => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(SELLER_LISTINGS_STORAGE_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    return [];
-  }
-};
 
 export function AdminPage() {
   const [listings, setListings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem("adminApiKey") || "");
+  const [activeAdminKey, setActiveAdminKey] = useState(() => sessionStorage.getItem("adminApiKey") || "");
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const loadListings = async () => {
+  const loadListings = async (key = activeAdminKey) => {
+    if (!key) return;
     try {
       setError("");
-      await syncSellerListings();
-      const allListings = readSellerListings();
-      const pendingListings = Array.isArray(allListings)
-        ? allListings.filter((listing) => listing.status === "pending")
+      setIsLoading(true);
+      const response = await axios.get("/api/listings", {
+        headers: { "x-admin-key": key },
+      });
+      const pendingListings = Array.isArray(response.data)
+        ? response.data.filter((listing) => listing.status === "pending")
         : [];
-
       setListings(pendingListings);
-    } catch (fetchError) {
+    } catch {
       setError("We could not load pending listings.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    void loadListings();
-  }, []);
-
   const handleDecision = async (listingId, status) => {
     try {
-      await updateSellerListingStatus(listingId, status);
+      await updateSellerListingStatus(listingId, status, activeAdminKey);
       await loadListings();
-    } catch (updateError) {
+    } catch {
       setError("We could not update that listing.");
     }
   };
@@ -63,10 +53,32 @@ export function AdminPage() {
       </header>
 
       <main className="admin-page-shell">
+        <form
+          className="admin-key-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const key = adminKey.trim();
+            sessionStorage.setItem("adminApiKey", key);
+            setActiveAdminKey(key);
+            void loadListings(key);
+          }}
+        >
+          <label htmlFor="admin-api-key">Admin key</label>
+          <input
+            id="admin-api-key"
+            type="password"
+            autoComplete="current-password"
+            value={adminKey}
+            onChange={(event) => setAdminKey(event.target.value)}
+          />
+          <button type="submit">Load admin data</button>
+        </form>
         {error ? <div className="admin-error">{error}</div> : null}
 
         {isLoading ? (
           <div className="admin-empty">Loading pending listings...</div>
+        ) : !activeAdminKey ? (
+          <div className="admin-empty">Enter the server admin key to review listings and orders.</div>
         ) : listings.length === 0 ? (
           <div className="admin-empty">No pending listings need review.</div>
         ) : (
@@ -113,7 +125,7 @@ export function AdminPage() {
           </div>
         )}
       </main>
-      <AdminOrdersPanel />
+      <AdminOrdersPanel adminKey={activeAdminKey} />
       </div>
     </>
   );
