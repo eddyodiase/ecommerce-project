@@ -1,8 +1,11 @@
+import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BrandMark } from "../../components/BrandMark";
 import "../auth/Auth.css";
 import "./LoginPage.css";
+
+const ADMIN_LOGIN_EMAIL = "eddyodiase@yahoo.com";
 
 export function LoginPage({ onLogin }) {
   const navigate = useNavigate();
@@ -27,6 +30,23 @@ export function LoginPage({ onLogin }) {
     setIsSubmitting(true);
 
     try {
+      if (formData.email.trim().toLowerCase() === ADMIN_LOGIN_EMAIL) {
+        const response = await axios.post("/api/admin/login", {
+          email: formData.email.trim(),
+          password: formData.password,
+        });
+        sessionStorage.setItem("adminApiKey", response.data.adminApiKey);
+
+        const user = {
+          id: `admin-${Date.now()}`,
+          name: "Admin",
+          email: ADMIN_LOGIN_EMAIL,
+        };
+        onLogin?.(user, `admin-session-${Date.now()}`);
+        navigate("/admin");
+        return;
+      }
+
       const token = `local-${Date.now()}`;
       const user = {
         id: `user-${Date.now()}`,
@@ -39,8 +59,12 @@ export function LoginPage({ onLogin }) {
       }
 
       navigate("/");
-    } catch {
-      setError("Unable to sign in right now.");
+    } catch (loginError) {
+      setError(
+        loginError.response?.status === 401
+          ? "Invalid admin email or password."
+          : "Unable to sign in right now."
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Header } from "../../components/Header";
 import { AdminOrdersPanel } from "./AdminOrdersPanel";
@@ -10,7 +10,7 @@ export function AdminPage() {
   const [listings, setListings] = useState([]);
   const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem("adminApiKey") || "");
   const [activeAdminKey, setActiveAdminKey] = useState(() => sessionStorage.getItem("adminApiKey") || "");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => Boolean(sessionStorage.getItem("adminApiKey")));
   const [error, setError] = useState("");
 
   const loadListings = async (key = activeAdminKey) => {
@@ -31,6 +31,37 @@ export function AdminPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!activeAdminKey) return undefined;
+
+    let isCurrent = true;
+    axios
+      .get("/api/listings", {
+        headers: { "x-admin-key": activeAdminKey },
+      })
+      .then((response) => {
+        if (!isCurrent) return;
+        const pendingListings = Array.isArray(response.data)
+          ? response.data.filter((listing) => listing.status === "pending")
+          : [];
+        setListings(pendingListings);
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setError("We could not load pending listings.");
+        }
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [activeAdminKey]);
 
   const handleDecision = async (listingId, status) => {
     try {

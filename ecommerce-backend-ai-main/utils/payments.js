@@ -52,6 +52,14 @@ export const requireAdmin = (req, res, next) => {
   next();
 };
 
+export const authenticateAdmin = (email, password) => {
+  const configuredEmail = readEnv('ADMIN_LOGIN_EMAIL').toLowerCase();
+  const { adminApiKey } = paymentConfig();
+  return Boolean(configuredEmail && adminApiKey)
+    && safeEqual(String(email || '').trim().toLowerCase(), configuredEmail)
+    && safeEqual(String(password || ''), adminApiKey);
+};
+
 // References look like NP.<orderId>.<timestamp>, so a webhook can find its order directly.
 export const buildReference = (orderId) => `NP.${orderId}.${Date.now()}`;
 export const orderIdFromReference = (reference) => {

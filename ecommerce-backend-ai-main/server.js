@@ -13,6 +13,7 @@ import paymentRoutes from './routes/payments.js';
 import { expireUnpaidOrders } from './utils/orderPayments.js';
 import paymentSummaryRoutes from './routes/paymentSummary.js';
 import listingRoutes, { republishApprovedListings } from './routes/listings.js';
+import adminAuthRoutes from './routes/adminAuth.js';
 import './models/Listing.js';
 import { Product } from './models/Product.js';
 import { DeliveryOption } from './models/DeliveryOption.js';
@@ -62,6 +63,7 @@ app.use('/api/cart-items', cartItemRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/listings', listingRoutes);
+app.use('/api/admin', adminAuthRoutes);
 app.use('/api/payment-summary', paymentSummaryRoutes);
 
 // Serve static files from the dist folder

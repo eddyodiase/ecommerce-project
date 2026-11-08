@@ -22,7 +22,9 @@ is written to this backend's `dist` directory and served by the Express app.
 Set `NODE_ENV=production`, `FRONTEND_URL` to the public HTTPS storefront URL, and configure
 `DB_TYPE` (`mysql` or `postgres`) plus `RDS_HOSTNAME`, `RDS_PORT`, `RDS_DB_NAME`, `RDS_USERNAME`,
 and `RDS_PASSWORD` for a durable managed database. Configure `ADMIN_API_KEY` with a unique random
-value of at least 32 characters, and set real payment/bank details only when those payment methods
+value of at least 32 characters; the admin signs in with `ADMIN_LOGIN_EMAIL` and that same key as
+the password. Set `ADMIN_LOGIN_EMAIL` to `eddyodiase@yahoo.com` (or another intended admin address)
+and keep both values server-side. Set real payment/bank details only when those payment methods
 are enabled. Paystack is disabled unless `PAYSTACK_ENABLED=true` and a secret key is configured;
 Pay on Delivery is enabled by default. `CORS_ORIGINS` is optional and accepts comma-separated
 HTTPS origins.

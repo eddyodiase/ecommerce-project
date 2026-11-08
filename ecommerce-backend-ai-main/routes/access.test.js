@@ -7,6 +7,7 @@ import express from 'express';
 
 process.env.NODE_ENV = 'test';
 process.env.ADMIN_API_KEY = 'test-admin-key';
+process.env.ADMIN_LOGIN_EMAIL = 'eddyodiase@yahoo.com';
 process.env.PAYSTACK_SECRET_KEY = 'test-paystack-key';
 process.env.PAYSTACK_ENABLED = 'false';
 process.env.PAY_ON_DELIVERY_ENABLED = 'true';
@@ -18,6 +19,7 @@ const [
   { default: ordersRouter },
   { default: listingsRouter },
   { default: paymentsRouter },
+  { default: adminAuthRouter },
   { sequelize },
   { Order },
   { Listing },
@@ -27,6 +29,7 @@ const [
     import('./orders.js'),
     import('./listings.js'),
     import('./payments.js'),
+    import('./adminAuth.js'),
     import('../models/index.js'),
     import('../models/Order.js'),
     import('../models/Listing.js'),
@@ -77,10 +80,25 @@ test('protects customer order reads and admin listing moderation', async (contex
   app.use('/api/orders', ordersRouter);
   app.use('/api/listings', listingsRouter);
   app.use('/api/payments', paymentsRouter);
+  app.use('/api/admin', adminAuthRouter);
   server = app.listen(0);
   await new Promise((resolve) => server.once('listening', resolve));
 
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
+  const adminLogin = await fetch(`${baseUrl}/api/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: process.env.ADMIN_LOGIN_EMAIL, password: process.env.ADMIN_API_KEY }),
+  });
+  assert.equal(adminLogin.status, 200);
+  assert.deepEqual(await adminLogin.json(), { adminApiKey: process.env.ADMIN_API_KEY });
+  const invalidAdminLogin = await fetch(`${baseUrl}/api/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: process.env.ADMIN_LOGIN_EMAIL, password: 'wrong-password' }),
+  });
+  assert.equal(invalidAdminLogin.status, 401);
+
   const paymentMethodsResponse = await fetch(`${baseUrl}/api/payments/methods`);
   const paymentMethods = await paymentMethodsResponse.json();
   assert.equal(paymentMethods.paystack.enabled, false);

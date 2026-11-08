@@ -1,6 +1,6 @@
 .header {
   display: flex;
-  background-color: rgb(8, 79, 45);
+  background-color: rgb(24, 163, 96);
   color: white;
   padding-left: 12px;
   padding-right: 12px;
@@ -68,8 +68,8 @@
   height: 32px;
   border-radius: 9px;
   background: linear-gradient(145deg, #e1ffe3, #a4eeb0);
-  box-shadow: inset 0 0 0 1px rgba(8, 79, 45, 0.14);
-  color: rgb(8, 79, 45);
+  box-shadow: inset 0 0 0 1px rgba(50, 236, 146, 0.14);
+  color: rgb(15, 212, 117);
 }
 
 .header .brand-mark svg {
@@ -157,7 +157,7 @@
 
 .header .search-button {
   cursor: pointer;
-  background-color: rgb(186, 255, 190);
+  background-color: rgb(103, 221, 109);
   border: none;
   width: 40px;
   height: 34px;

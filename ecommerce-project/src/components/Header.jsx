@@ -5,14 +5,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
 import "./Header.css";
 
-export function Header({ cartRefreshKey = 0, user, onLogout }) {
+export function Header({ cartRefreshKey = 0 }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState(() => new URLSearchParams(location.search).get("q") || "");
   const [cartItems, setCartItems] = useState([]);
-  const authToken = localStorage.getItem("authToken");
-  const isLoggedIn = Boolean(user || authToken);
-  const firstName = user?.name?.split(" ")?.[0] || "User";
 
   const loadCart = () => {
     axios
@@ -94,40 +91,10 @@ export function Header({ cartRefreshKey = 0, user, onLogout }) {
       </form>
 
       <div className="right-section">
-        {isLoggedIn ? (
-          <>
-            <button
-              type="button"
-              className="user-badge header-link"
-              onClick={() => navigate("/profile")}
-              style={{
-                color: "#fff",
-                fontSize: "0.85rem",
-                padding: "6px 10px",
-                borderRadius: "999px",
-                background: "rgba(255,255,255,0.12)",
-                border: "1px solid rgba(255,255,255,0.14)",
-              }}
-            >
-              Hi, {firstName}
-            </button>
-            <button
-              type="button"
-              className="logout-link header-link"
-              onClick={() => {
-                onLogout?.();
-                navigate("/");
-              }}
-            >
-              <span className="login-text">Logout</span>
-            </button>
-          </>
-        ) : (
-          <button type="button" className="login-link header-link" onClick={() => navigate("/login")}>
-            <img className="login-icon" src="/images/login-icon.png" alt="login" />
-            <span className="login-text">Login</span>
-          </button>
-        )}
+        <button type="button" className="login-link header-link" onClick={() => navigate("/login")}>
+          <img className="login-icon" src="/images/login-icon.png" alt="login" />
+          <span className="login-text">LOGIN</span>
+        </button>
         <button type="button" className="orders-link header-link" onClick={() => navigate("/orders")}>
           <span className="orders-text">Orders</span>
         </button>
